@@ -1,0 +1,42 @@
+# Unity generated directories
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+[Tt]est[Rr]esults/
+
+# IDE and editor state
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.opendb
+*.VC.db
+
+# Unity and platform build artifacts
+*.apk
+*.aab
+*.app
+*.unitypackage
+*.pdb
+*.mdb
+*.tmp
+*.bak
+*.orig
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
