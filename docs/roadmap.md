@@ -1,6 +1,6 @@
 # SimpleBlend roadmap
 
-Status: planning approved; package implementation has not started.
+Status: M1 package foundation complete; M2 data safety has not started.
 
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
 
@@ -75,7 +75,7 @@ The risky interfaces are Scene view hit testing, serialized array undo, source t
 | Milestone | Working release | Demonstrable outcome | Gate |
 |---|---|---|---|
 | M0 — API verification | Complete | Installed Unity behavior documented | `docs/api-notes.md` reviewed |
-| M1 — Package foundation | `0.1.0-dev.1` | Empty embedded package imports cleanly | Editor and player compilation pass |
+| M1 — Package foundation | Complete — `0.1.0-dev.1` | Empty embedded package imports cleanly | Editor and player compilation pass |
 | M2 — Data safety | `0.1.0-dev.2` | Colors persist per renderer without touching source assets | Data EditMode suite passes |
 | M3 — First visible paint | `0.2.0-alpha.1` | Paint one red-channel stroke and see it | One-stroke undo/redo observed |
 | M4 — Production storage and prefabs | `0.2.0-alpha.2` | Streams, fallback assets, prefab overrides, and play-mode restoration work | Acceptance tests 1–8 pass except shader build parity |

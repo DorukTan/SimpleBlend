@@ -181,13 +181,19 @@ Checkpoint H: parity and terrain limitations are documented before samples are a
 The exact installed editor can run EditMode tests with a command shaped like:
 
 ```powershell
+New-Item -ItemType Directory -Force `
+  -Path 'D:\Projects\SimpleBlend\TestResults', 'D:\Projects\SimpleBlend\Logs' | Out-Null
+
 & 'C:\Program Files\Unity\Hub\Editor\6000.4.8f1\Editor\Unity.exe' `
   -batchmode -nographics `
   -projectPath 'D:\Projects\SimpleBlend' `
   -runTests -testPlatform EditMode `
+  -testFilter 'SimpleBlend.Editor.Tests' `
   -testResults 'D:\Projects\SimpleBlend\TestResults\SimpleBlend-EditMode.xml' `
   -logFile 'D:\Projects\SimpleBlend\Logs\SimpleBlend-EditMode.log'
 ```
+
+Do not add `-quit` to this `-runTests` invocation on the tested Unity 6000.4 editor. The Test Framework exits the batch process after the run; `-quit` can end the initial import before test dispatch.
 
 Player-build and reference-capture entry points will be added only when their implementation exists; the roadmap does not invent method names in advance.
 
@@ -204,10 +210,12 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-Start with `FND-001` through `FND-005`. Stop after Checkpoint A and report:
+Checkpoint A is complete. Start Batch B with `DATA-001` through `DATA-005`, review the serialized model and validation vocabulary, then continue through `DATA-010` only if that boundary remains coherent.
 
-- files created,
-- Unity compile result,
-- EditMode smoke-test result,
-- package metadata decisions,
-- any project changes outside `Packages/com.simpletools.simpleblend`.
+Stop at Checkpoint B and report:
+
+- serialized YAML and round-trip results,
+- source-mesh hash evidence,
+- topology mutation results,
+- stream and clone lifecycle results,
+- any Unity-generated changes outside the package.

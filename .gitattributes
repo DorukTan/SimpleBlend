@@ -1,0 +1,2 @@
+# Unity writes significant-looking trailing spaces after empty YAML values in .meta files.
+*.meta whitespace=-trailing-space

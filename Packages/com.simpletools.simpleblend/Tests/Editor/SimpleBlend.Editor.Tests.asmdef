@@ -1,0 +1,22 @@
+{
+  "name": "SimpleBlend.Editor.Tests",
+  "rootNamespace": "SimpleBlend.Editor.Tests",
+  "references": [
+    "SimpleBlend.Runtime",
+    "SimpleBlend.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}
