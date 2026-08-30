@@ -1,7 +1,9 @@
 {
   "name": "SimpleBlend.Runtime",
   "rootNamespace": "SimpleBlend",
-  "references": [],
+  "references": [
+    "Unity.Collections"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

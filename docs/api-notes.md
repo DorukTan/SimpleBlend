@@ -143,3 +143,15 @@ Proceed with the brief after applying these corrections:
 3. Extend cloned-mesh fallback to static batching and conservatively to GPU Resident Drawer.
 4. Keep `additionalVertexStreams` as the primary ordinary `MeshRenderer` path.
 5. Ship custom URP shaders; stock URP Lit is not sufficient.
+
+## M2 implementation observations
+
+Verified during the `0.1.0-dev.2` data-safety slice on 2026-08-30:
+
+- `Mesh.MeshData.GetColors(NativeArray<Color32>)` returned the complete color channel after `UploadMeshData(true)` made a procedural source non-readable.
+- Read-only MeshData plus writable MeshData copied all ordinary vertex streams, index buffers, index format, and submesh descriptors into a readable generated mesh. Bind poses, bone weights, and blend shapes were copied through their dedicated public Mesh APIs.
+- A color-only transient Mesh created with `SetVertexBufferParams` and an `UNorm8` Color descriptor worked as `MeshRenderer.additionalVertexStreams`; it did not require duplicate positions or indices.
+- `UniversalRenderPipelineAsset.gpuResidentDrawerMode` is public in URP 17.4, but its public enum is defined by the separate `Unity.RenderPipelines.GPUDriven.Runtime` assembly. The Editor asmdef must reference both assemblies.
+- The MeshData boundary requires the `Unity.Collections` assembly. SimpleBlend uses NativeArray only for public mesh-data transfer; it does not call Burst APIs or add Burst as a package dependency. URP 17 already supplies Collections through Render Pipelines Core.
+- The imported URP sample `UVSphere.fbx` remained SHA-256 byte-identical before and after two renderers received independent red and blue streams: `42ee416f3a28f520588bb1254d60c991a63e9dfbf03046e9565c7d5fe39a3306`.
+- Reimporting a generated OBJ fixture from three to four vertices produced `VertexCountMismatch`, detached the stale stream, and left the serialized colors available for an explicit clear or future migration workflow.

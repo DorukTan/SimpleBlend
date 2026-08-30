@@ -4,7 +4,7 @@ SimpleBlend is an open-source Unity editor toolkit for painting vertex colors on
 
 ## Current status
 
-Version `0.1.0-dev.1` is the package-foundation checkpoint. It contains the package metadata, assembly boundaries, documentation structure, and foundation test only. Vertex painting and blend shaders are not implemented yet.
+Version `0.1.0-dev.2` is the durable-data checkpoint. It contains versioned per-renderer color data, deterministic topology validation, transient Additional Vertex Streams, explicit cloned-mesh fallback assets, and EditMode safety tests. Scene view painting and blend shaders are not implemented yet.
 
 ## Compatibility
 

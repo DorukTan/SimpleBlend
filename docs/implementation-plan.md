@@ -210,12 +210,13 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-Checkpoint A is complete. Start Batch B with `DATA-001` through `DATA-005`, review the serialized model and validation vocabulary, then continue through `DATA-010` only if that boundary remains coherent.
+Checkpoint B is complete. Start Batch C with `HIT-001` and `HIT-002`, then build the cache and first-red-stroke slice through `VIS-001`.
 
-Stop at Checkpoint B and report:
+Stop at Checkpoint C and report:
 
-- serialized YAML and round-trip results,
-- source-mesh hash evidence,
-- topology mutation results,
-- stream and clone lifecycle results,
+- collider-free Scene view hit behavior,
+- projected brush-disc behavior,
+- one-stroke undo/redo evidence,
+- shared-mesh isolation after a real stroke,
+- first-red-channel visual result,
 - any Unity-generated changes outside the package.

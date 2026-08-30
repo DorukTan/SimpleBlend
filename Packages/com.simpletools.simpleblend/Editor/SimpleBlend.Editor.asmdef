@@ -2,7 +2,10 @@
   "name": "SimpleBlend.Editor",
   "rootNamespace": "SimpleBlend.Editor",
   "references": [
-    "SimpleBlend.Runtime"
+    "SimpleBlend.Runtime",
+    "Unity.Collections",
+    "Unity.RenderPipelines.GPUDriven.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime"
   ],
   "includePlatforms": [
     "Editor"
