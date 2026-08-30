@@ -21,4 +21,4 @@ Clearing or reinitializing paint data never deletes a generated asset automatica
 
 ## Current boundary
 
-Version `0.1.0-dev.2` does not provide Scene view painting, brush undo, prefab override UI, or blend shaders. Those capabilities build on this data layer in later milestones.
+Version `0.1.0-dev.3` adds fixed red-channel Scene view painting and one-stroke Undo/Redo for initialized `MeshRenderer` targets. Prefab workflows, skinned painting, complete brush controls, and blend shaders remain later milestones.

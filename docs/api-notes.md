@@ -155,3 +155,17 @@ Verified during the `0.1.0-dev.2` data-safety slice on 2026-08-30:
 - The MeshData boundary requires the `Unity.Collections` assembly. SimpleBlend uses NativeArray only for public mesh-data transfer; it does not call Burst APIs or add Burst as a package dependency. URP 17 already supplies Collections through Render Pipelines Core.
 - The imported URP sample `UVSphere.fbx` remained SHA-256 byte-identical before and after two renderers received independent red and blue streams: `42ee416f3a28f520588bb1254d60c991a63e9dfbf03046e9565c7d5fe39a3306`.
 - Reimporting a generated OBJ fixture from three to four vertices produced `VertexCountMismatch`, detached the stale stream, and left the serialized colors available for an explicit clear or future migration workflow.
+
+## M3 implementation observations
+
+Verified during the `0.1.0-dev.3` first-visible-stroke slice on 2026-08-30:
+
+- `Mesh.AcquireReadOnlyMeshData` supplied positions, normals, submesh descriptors, and index buffers for the paint snapshot without requiring `Mesh.isReadable` or changing the source asset.
+- The authoritative hit path is a double-sided Möller–Trumbore CPU triangle raycast. A live built-in Plane remained paintable with its `MeshCollider` disabled, so the tool does not depend on `HandleUtility.RaySnap`, physics components, or temporary target mutation.
+- One `MeshPaintCache` owns topology snapshots, transformed world vertices/normals, the uniform vertex grid, and their revision boundaries. Project, selection, source/topology, and transform changes invalidate only the affected layer.
+- A hidden editor-only shader drawn through `Graphics.DrawMeshNow` displayed the serialized red channel over the URP Scene view without replacing `sharedMaterials`.
+- Registering `Undo.RegisterCompleteObjectUndo` once on mouse-down and collapsing that group on mouse-up produced exact one-step Ctrl+Z/Ctrl+Y restoration in both automated and live tests.
+- A collider-disabled renderer and a sibling renderer shared Unity's built-in Plane mesh during the live check. Painting the selected target produced a localized red preview, preserved selection, and left the sibling gray.
+- `EditorGUIUtility.IconContent` is unsafe from an `EditorTool` static initializer in Unity 6000.4; it throws `get_skinIndex` during `ScriptableObject` construction. The palette now uses static text-only `GUIContent` (`SB`), and a construction regression test protects this lifecycle boundary.
+- Unity's Asset Database did not compile a package file changed externally until an explicit refresh. Acceptance checks must compare source and `Library/ScriptAssemblies` timestamps before attributing behavior to a new patch.
+- The final EditMode suite passed 29/29 tests. The fixture that exercises skinned fallback stores all generated meshes inside a disposable `TestAssetScope`, preventing `Assets/SimpleBlendGenerated` leakage.

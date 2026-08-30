@@ -1,6 +1,6 @@
 # SimpleBlend roadmap
 
-Status: M2 data safety complete; M3 first visible paint has not started.
+Status: M3 first visible paint complete; M4 production storage and prefab behavior is next.
 
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
 
@@ -77,7 +77,7 @@ The risky interfaces are Scene view hit testing, serialized array undo, source t
 | M0 — API verification | Complete | Installed Unity behavior documented | `docs/api-notes.md` reviewed |
 | M1 — Package foundation | Complete — `0.1.0-dev.1` | Empty embedded package imports cleanly | Editor and player compilation pass |
 | M2 — Data safety | Complete — `0.1.0-dev.2` | Colors persist per renderer without touching source assets | Data EditMode suite passes |
-| M3 — First visible paint | `0.2.0-alpha.1` | Paint one red-channel stroke and see it | One-stroke undo/redo observed |
+| M3 — First visible paint | Complete — `0.1.0-dev.3` | Paint one red-channel stroke and see it | One-stroke undo/redo observed |
 | M4 — Production storage and prefabs | `0.2.0-alpha.2` | Streams, fallback assets, prefab overrides, and play-mode restoration work | Acceptance tests 1–8 pass except shader build parity |
 | M5 — Complete brush engine | `0.3.0-alpha.1` | All brush modes, channels, masks, and fill scopes work | Deterministic brush suite passes |
 | M6 — Visualization and performance | `0.3.0-alpha.2` | Channel isolation and density overlay remain interactive on 40k vertices | Profile gate passes without mandatory Burst |
@@ -138,10 +138,10 @@ No calendar dates are assigned yet. Progress advances only when the milestone ga
 
 ### Deliverables
 
-- Scene view `EditorTool` that activates from Unity's tool palette.
-- Compact Scene view `Overlay` with only radius, strength, target color, and R channel for this slice.
-- Public `HandleUtility.RaySnap` path plus a collider-free CPU triangle-raycast fallback; no `MeshCollider` or other temporary component is added to the target.
-- Surface-projected brush disc built from the hit normal and drawn as a world-space polyline.
+- Scene view `EditorTool` that activates from the component Inspector and Unity's tool palette.
+- Fixed first-slice settings: radius `1.25`, strength `1.0`, solid red, and the R channel. The complete compact overlay remains part of the complete-brush milestone.
+- Collider-free CPU triangle raycasting; no `MeshCollider` or other temporary component is added to the target. `HandleUtility.RaySnap` is not part of the authoritative path.
+- Surface-projected brush disc built from the hit normal and drawn with public `Handles` APIs.
 - Input capture through a passive default control.
 - Minimal mesh paint cache and uniform vertex grid.
 - Pure red-channel paint operation with configurable falloff.
@@ -151,6 +151,8 @@ No calendar dates are assigned yet. Progress advances only when the milestone ga
 ### Gate
 
 On a mesh without a collider: select the object, activate SimpleBlend, drag one stroke, see red weights, press undo once to restore the exact previous array, and redo once to restore the stroke.
+
+Observed on 2026-08-30 in Unity `6000.4.8f1`: a collider-disabled built-in Plane accepted a red stroke, Ctrl+Z removed it, Ctrl+Y restored it, the target remained selected, and a second renderer sharing the same source mesh remained unchanged. See `docs/checkpoints/checkpoint-c.md`.
 
 ## M4 — Production storage and prefab behavior
 

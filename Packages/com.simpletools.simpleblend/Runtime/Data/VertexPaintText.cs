@@ -57,6 +57,10 @@ namespace SimpleBlend
                     return "The generated fallback mesh no longer matches the signed source mesh.";
                 case VertexPaintValidationFailure.GeneratedAssetWriteFailed:
                     return "Unity could not create the generated fallback mesh asset.";
+                case VertexPaintValidationFailure.UnsupportedPaintTarget:
+                    return "The selected renderer is not supported by the current paint tool.";
+                case VertexPaintValidationFailure.NoTriangleGeometry:
+                    return "The source mesh has no triangle geometry to paint.";
                 default:
                     return "Paint data is invalid for an unknown reason.";
             }

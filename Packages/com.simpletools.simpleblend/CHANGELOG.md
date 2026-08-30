@@ -2,6 +2,24 @@
 
 All notable changes to SimpleBlend will be documented in this file.
 
+## [0.1.0-dev.3] - 2026-08-30
+
+### Added
+
+- Collider-independent, double-sided CPU triangle raycasting for readable and non-readable meshes.
+- A transform-aware mesh paint cache with explicit topology and world-data invalidation.
+- Uniform-grid vertex-radius queries and a deterministic red-channel brush kernel.
+- A Scene view `EditorTool` with projected brush feedback and input capture.
+- Non-destructive red-channel preview rendering that does not replace renderer materials.
+- One-gesture Undo/Redo for authoritative `VertexPaintData` colors.
+- Read-only paint-data Inspector status, initialization, reapply, clear, and tool activation controls.
+- Geometry, brush, lifecycle, shared-mesh isolation, toolbar-construction, and real-stroke EditMode tests.
+
+### Changed
+
+- Triangle-free and unsupported paint targets now produce explicit validation failures.
+- The first-stroke slice uses fixed R-channel settings: radius `1.25`, strength `1.0`, and solid red. The complete brush UI remains a later milestone.
+
 ## [0.1.0-dev.2] - 2026-08-30
 
 ### Added

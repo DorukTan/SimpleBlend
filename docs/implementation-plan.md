@@ -93,6 +93,8 @@ Checkpoint B: inspect serialized YAML, source hashes, generated paths, and failu
 
 Checkpoint C demo: paint one red stroke on a collider-free shared mesh, undo once, redo once, and show that its sibling instance remains unchanged.
 
+Checkpoint C completed on 2026-08-30 for `0.1.0-dev.3`. The live Scene view demo and 29-test EditMode suite passed. The complete settings overlay remains intentionally deferred to `UI-001`; Checkpoint C uses fixed first-slice settings.
+
 ## Batch D — prefab and fallback integration
 
 | ID | Work | Definition of done | Verification |
@@ -210,13 +212,12 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-Checkpoint B is complete. Start Batch C with `HIT-001` and `HIT-002`, then build the cache and first-red-stroke slice through `VIS-001`.
+Checkpoint C is complete. Start Batch D with `PREFAB-001` and `PREFAB-002`, then finish the fallback and lifecycle integration through `LIFE-001`.
 
-Stop at Checkpoint C and report:
+Before expanding brush modes, prove:
 
-- collider-free Scene view hit behavior,
-- projected brush-disc behavior,
-- one-stroke undo/redo evidence,
-- shared-mesh isolation after a real stroke,
-- first-red-channel visual result,
-- any Unity-generated changes outside the package.
+- prefab instance overrides appear and revert cleanly,
+- Prefab Mode painting survives save and updates instances,
+- static, skinned, and GPU Resident Drawer policy paths render from owned fallback meshes,
+- Additional Vertex Streams reconstruct after reload and play-mode transitions,
+- generated assets remain explicitly owned and never overwrite source meshes.

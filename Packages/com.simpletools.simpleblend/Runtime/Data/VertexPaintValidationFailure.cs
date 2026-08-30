@@ -18,6 +18,8 @@ namespace SimpleBlend
         RendererMeshMismatch = 13,
         MissingGeneratedMesh = 14,
         GeneratedMeshMismatch = 15,
-        GeneratedAssetWriteFailed = 16
+        GeneratedAssetWriteFailed = 16,
+        UnsupportedPaintTarget = 17,
+        NoTriangleGeometry = 18
     }
 }

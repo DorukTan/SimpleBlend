@@ -4,7 +4,7 @@ SimpleBlend is an open-source Unity editor toolkit for painting vertex colors on
 
 ## Current status
 
-Version `0.1.0-dev.2` is the durable-data checkpoint. It contains versioned per-renderer color data, deterministic topology validation, transient Additional Vertex Streams, explicit cloned-mesh fallback assets, and EditMode safety tests. Scene view painting and blend shaders are not implemented yet.
+Version `0.1.0-dev.3` is the first-visible-stroke checkpoint. It contains the durable per-renderer data layer, collider-independent Scene view hit testing, a fixed red-channel paint tool, projected brush feedback, a non-destructive preview, and one-stroke Undo/Redo. Full brush controls, prefab workflows, skinned painting, and blend shaders remain later milestones.
 
 ## Compatibility
 
@@ -17,6 +17,12 @@ No compatibility claim is made for an untested Unity or URP version.
 ## Installation
 
 During development, the package is embedded at `Packages/com.simpletools.simpleblend/` in this Unity project. Git URL and registry installation instructions will be added only after a canonical public repository exists.
+
+## First stroke
+
+Add `VertexPaintData` to a GameObject with a `MeshFilter` and `MeshRenderer`, initialize it in the Inspector, then select **Activate SimpleBlend Paint Tool**. Drag over the mesh in the Scene view to paint the red vertex channel. A collider is not required.
+
+This checkpoint intentionally fixes the brush to radius `1.25`, strength `1.0`, and solid red. See `Documentation~/first-stroke.md` for the workflow and current limitations.
 
 ## Development verification
 
