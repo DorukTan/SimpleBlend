@@ -1,6 +1,6 @@
 # SimpleBlend roadmap
 
-Status: M4 production storage and prefab behavior complete; M5 complete brush engine is next.
+Status: M5 brush engine automated gate complete; live overlay ergonomics review is deferred by user instruction, and M6 visualization/performance is next.
 
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
 
@@ -79,7 +79,7 @@ The risky interfaces are Scene view hit testing, serialized array undo, source t
 | M2 — Data safety | Complete — `0.1.0-dev.2` | Colors persist per renderer without touching source assets | Data EditMode suite passes |
 | M3 — First visible paint | Complete — `0.1.0-dev.3` | Paint one red-channel stroke and see it | One-stroke undo/redo observed |
 | M4 — Production storage and prefabs | Complete — `0.2.0-alpha.2` | Streams, fallback assets, prefab overrides, and play-mode restoration work | Acceptance tests 1–6 and 8 pass; shader render parity remains M7 |
-| M5 — Complete brush engine | `0.3.0-alpha.1` | All brush modes, channels, masks, and fill scopes work | Deterministic brush suite passes |
+| M5 — Complete brush engine | Automated gate complete — `0.3.0-alpha.1` | All brush modes, channels, masks, and fill scopes work | 66-test deterministic suite passes; live overlay review deferred |
 | M6 — Visualization and performance | `0.3.0-alpha.2` | Channel isolation and density overlay remain interactive on 40k vertices | Profile gate passes without mandatory Burst |
 | M7 — HLSL blend shaders | `0.4.0-beta.1` | Three- and four-layer height blending renders in URP editor and player | Shader parity/build gates pass |
 | M8 — Shader Graph and terrain matching | `0.4.0-beta.2` | Subgraphs and terrain variant match documented contracts | Visual reference scenes pass |
@@ -192,6 +192,8 @@ Observed on 2026-08-31 in Unity `6000.4.8f1`: prefab-instance paint appeared as 
 ### Gate
 
 Every mode and mask has deterministic EditMode tests for boundary values, empty selections, degenerate triangles, and untouched channels.
+
+Observed headlessly on 2026-08-31 in Unity `6000.4.8f1`: channel matrices, paint/erase/smooth/fill/sample, adjacency, masks, threshold boundaries, transformed normals, flow/accumulation, travel resampling, fill Undo, and overlay construction passed in the 66-test EditMode suite. No desktop interaction was performed at the user's request, so overlay ergonomics and visual feel are not claimed as manually reviewed. See `docs/checkpoints/checkpoint-e.md`.
 
 ## M6 — Visualization and performance
 
@@ -339,4 +341,4 @@ These items are not opportunistically added during v1, even if an implementation
 
 ## Immediate next move
 
-Start M5 with `BRUSH-003`: define the channel abstraction and deterministic operation contract before adding erase, smooth, fill, sample, masks, flow, or overlay controls. Keep all brush math independent of Scene view event frequency and editor UI.
+Start M6 with channel-isolation visualization, then build the repeatable 40k fixture before changing the managed paint loop. Profile first; add no Burst dependency unless measured results fail the documented budget after cache/allocation work.

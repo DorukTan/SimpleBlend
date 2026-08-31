@@ -128,6 +128,8 @@ Checkpoint D completed on 2026-08-31 for `0.2.0-alpha.2`. The 36-test EditMode s
 
 Checkpoint E: every brush feature passes tests before performance optimization.
 
+Checkpoint E's automated gate completed on 2026-08-31 for `0.3.0-alpha.1`: 66/66 EditMode tests passed for every channel, mode, mask, fill scope, boundary, transformed-normal convention, Undo path, and event-density contract. The compact overlay compiled and passed a construction regression test. Live overlay ergonomics were intentionally not exercised because the user requested no desktop control. See `docs/checkpoints/checkpoint-e.md`.
+
 ## Batch F — visualization and profiling
 
 | ID | Work | Definition of done | Verification |
@@ -214,9 +216,9 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-Checkpoint D is complete. Start Batch E with `BRUSH-003`, then build the operation layer in dependency order before exposing it through `UI-001`.
+The M5 automated gate is complete. Start Batch F with `VIS-002`, then create the repeatable 40k fixture before optimizing or considering optional Burst acceleration.
 
-During Batch E, preserve these established boundaries:
+During Batch F, preserve these established boundaries:
 
 - `Color32[]` remains the only authoritative editable state,
 - one drag remains one Undo operation,

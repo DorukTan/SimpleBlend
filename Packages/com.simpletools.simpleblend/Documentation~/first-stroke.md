@@ -1,6 +1,6 @@
-# Paint the first red-channel stroke
+# Paint the first stroke
 
-Version `0.2.0-alpha.2` provides a deliberately narrow brush with production storage and prefab behavior for `MeshRenderer` and `SkinnedMeshRenderer` objects.
+Version `0.3.0-alpha.1` provides the complete brush operation set with production storage and prefab behavior for `MeshRenderer` and `SkinnedMeshRenderer` objects.
 
 ## Set up a target
 
@@ -12,12 +12,14 @@ Version `0.2.0-alpha.2` provides a deliberately narrow brush with production sto
 
 ## Paint
 
+- Use the **SimpleBlend Brush** Scene view overlay to choose a mode, target channel, radius, strength, flow, falloff, accumulation, fill scope, and optional masks.
 - Drag the primary mouse button over the selected mesh to paint.
+- **Fill** and **Sample** act once when the mesh is clicked.
 - Hold Alt to use Unity's normal Scene view camera navigation.
 - Press Ctrl+Z once to undo the complete drag gesture.
 - Press Ctrl+Y to redo it on Windows.
 
-The brush is fixed to the R channel, solid red, radius `1.25`, and strength `1.0` in this checkpoint. The projected wire disc follows the hit point and surface normal. The red preview is temporary editor rendering; it does not replace or edit the renderer's materials.
+The projected wire disc follows the hit point and surface normal. The temporary editor preview still isolates the red channel in this checkpoint; full R/G/B/A/RGB visualization is the next milestone. The preview does not replace or edit the renderer's materials.
 
 ## Safety and current limitations
 
@@ -26,5 +28,5 @@ The brush is fixed to the R channel, solid red, radius `1.25`, and strength `1.0
 - Skinned painting raycasts and paints the current baked pose while preserving the source mesh, bind poses, bone weights, and blend shapes in the generated fallback.
 - Painting a prefab instance creates local data and renderer overrides that can be reverted. Painting and saving in Prefab Mode updates inheriting instances.
 - Static-batched, skinned, and GPU Resident Drawer targets use owned generated clones. Generated assets are retained when data is cleared or reverted; automatic orphan deletion is intentionally deferred.
-- Complete brush settings, other channels and modes, and blend shaders remain later milestones.
+- Channel-isolation visualization, the 40k-vertex performance gate, and blend shaders remain later milestones.
 - Meshes without triangle geometry are rejected with an explicit validation message.

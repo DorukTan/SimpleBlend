@@ -322,12 +322,17 @@ namespace SimpleBlend.Editor.Tests
                 Assert.That(cacheResult.IsValid, Is.True, cacheResult.Message);
                 var session = new VertexPaintStrokeSession();
                 Assert.That(session.Begin(data), Is.True);
-                var command = new RedBrushCommand(
+                var command = new VertexBrushCommand(
                     Average(cache.WorldVertices),
                     100f,
                     1f,
+                    1f,
                     new Color32(byte.MaxValue, 0, 0, byte.MaxValue),
-                    AnimationCurve.Constant(0f, 1f, 1f));
+                    AnimationCurve.Constant(0f, 1f, 1f),
+                    VertexPaintBrushMode.Paint,
+                    VertexPaintChannel.Red,
+                    true,
+                    VertexBrushMask.None);
                 Assert.That(session.Paint(cache, command), Is.EqualTo(data.ColorCount));
                 session.End();
                 Undo.FlushUndoRecordObjects();

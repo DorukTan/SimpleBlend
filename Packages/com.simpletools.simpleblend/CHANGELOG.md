@@ -2,6 +2,22 @@
 
 All notable changes to SimpleBlend will be documented in this file.
 
+## [0.3.0-alpha.1] - 2026-08-31
+
+### Added
+
+- R, G, B, A, and RGB channel targeting with untouched-channel guarantees.
+- Paint, zero-baseline erase, one-ring smooth, whole/submesh fill, and barycentric sample modes.
+- Strength, falloff, flow, accumulation, and deterministic travel-based stroke sampling.
+- World-normal angle, submesh membership, and existing-channel threshold masks.
+- A compact persistent Scene view overlay backed by user-local brush preferences.
+- Deterministic operation, boundary, topology, mask, transform, event-density, overlay-construction, and Undo tests.
+
+### Changed
+
+- The first-slice red brush was replaced by one generic command and kernel shared by every brush mode.
+- Mesh paint snapshots now own reusable adjacency and per-submesh vertex membership.
+
 ## [0.2.0-alpha.2] - 2026-08-31
 
 ### Added

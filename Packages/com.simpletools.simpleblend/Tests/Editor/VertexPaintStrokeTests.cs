@@ -126,6 +126,113 @@ namespace SimpleBlend.Editor.Tests
             }
         }
 
+        [Test]
+        public void Submesh_fill_is_one_undoable_operation_through_the_stroke_session()
+        {
+            var mesh = TestMeshFactory.CreateQuad();
+            var gameObject = CreateRenderer("Fill", mesh, out var data);
+            try
+            {
+                var cache = new MeshPaintCache();
+                Assert.That(cache.Ensure(data).IsValid, Is.True);
+                var before = CopyColors(data);
+                var command = new VertexBrushCommand(
+                    Vector3.zero,
+                    1f,
+                    1f,
+                    1f,
+                    new Color32(0, 255, 0, 0),
+                    AnimationCurve.Constant(0f, 1f, 1f),
+                    VertexPaintBrushMode.Fill,
+                    VertexPaintChannel.Green,
+                    true,
+                    VertexBrushMask.None);
+                var session = new VertexPaintStrokeSession();
+
+                Assert.That(session.Begin(data), Is.True);
+                Assert.That(session.Fill(cache, command, 1), Is.EqualTo(3));
+                session.End();
+                Undo.FlushUndoRecordObjects();
+
+                Assert.That(data.GetColor(0).g, Is.EqualTo(255));
+                Assert.That(data.GetColor(1).g, Is.Zero);
+                Assert.That(data.GetColor(2).g, Is.EqualTo(255));
+                Assert.That(data.GetColor(3).g, Is.EqualTo(255));
+                Undo.PerformUndo();
+                Assert.That(CopyColors(data), Is.EqualTo(before));
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+                Object.DestroyImmediate(mesh);
+            }
+        }
+
+        [Test]
+        public void Stroke_results_are_stable_for_sparse_and_dense_events_on_the_same_path()
+        {
+            var mesh = TestMeshFactory.CreateQuad();
+            var sparseObject = CreateRenderer("Sparse", mesh, out var sparseData);
+            var denseObject = CreateRenderer("Dense", mesh, out var denseData);
+            try
+            {
+                PaintPath(sparseData, new[] { -1f, 1f });
+                PaintPath(denseData, new[] { -1f, -0.5f, 0f, 0.5f, 1f });
+
+                Assert.That(CopyColors(denseData), Is.EqualTo(CopyColors(sparseData)));
+            }
+            finally
+            {
+                Object.DestroyImmediate(sparseObject);
+                Object.DestroyImmediate(denseObject);
+                Object.DestroyImmediate(mesh);
+            }
+        }
+
+        [Test]
+        public void Brush_overlay_constructs_without_loading_editor_styles()
+        {
+            var overlay = new SimpleBlendBrushOverlay();
+
+            var content = overlay.CreatePanelContent();
+
+            Assert.That(content, Is.Not.Null);
+            Assert.That(content.name, Is.EqualTo("SimpleBlend Brush Settings"));
+        }
+
+        [Test]
+        public void Brush_settings_normalize_before_creating_a_command()
+        {
+            var settings = ScriptableObject.CreateInstance<SimpleBlendBrushSettings>();
+            try
+            {
+                settings.Radius = -2f;
+                settings.Strength = 4f;
+                settings.Flow = -1f;
+                settings.NormalDirection = Vector3.zero;
+                settings.NormalAngle = 300f;
+                settings.SubmeshMaskIndex = -4;
+                settings.ThresholdRange = new Vector2(0.9f, 0.2f);
+                settings.Falloff = null;
+
+                var command = settings.CreateCommand(Vector3.one);
+
+                Assert.That(command.Radius, Is.GreaterThan(0f));
+                Assert.That(command.Strength, Is.EqualTo(1f));
+                Assert.That(command.Flow, Is.Zero);
+                Assert.That(command.Falloff, Is.Not.Null);
+                Assert.That(command.Mask.NormalDirection, Is.EqualTo(Vector3.up));
+                Assert.That(command.Mask.NormalAngle, Is.EqualTo(180f));
+                Assert.That(command.Mask.SubmeshIndex, Is.Zero);
+                Assert.That(command.Mask.ThresholdMinimum, Is.EqualTo(0.2f));
+                Assert.That(command.Mask.ThresholdMaximum, Is.EqualTo(0.9f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(settings);
+            }
+        }
+
         private static GameObject CreateRenderer(string name, Mesh mesh, out VertexPaintData data)
         {
             var gameObject = new GameObject(name);
@@ -137,14 +244,45 @@ namespace SimpleBlend.Editor.Tests
             return gameObject;
         }
 
-        private static RedBrushCommand SolidRedCommand(Vector3 center)
+        private static VertexBrushCommand SolidRedCommand(Vector3 center)
         {
-            return new RedBrushCommand(
+            return new VertexBrushCommand(
                 center,
                 3f,
                 1f,
+                1f,
                 new Color32(byte.MaxValue, 0, 0, byte.MaxValue),
-                AnimationCurve.Constant(0f, 1f, 1f));
+                AnimationCurve.Constant(0f, 1f, 1f),
+                VertexPaintBrushMode.Paint,
+                VertexPaintChannel.Red,
+                true,
+                VertexBrushMask.None);
+        }
+
+        private static void PaintPath(VertexPaintData data, float[] xCoordinates)
+        {
+            var cache = new MeshPaintCache();
+            Assert.That(cache.Ensure(data).IsValid, Is.True);
+            var session = new VertexPaintStrokeSession();
+            Assert.That(session.Begin(data), Is.True);
+            for (var index = 0; index < xCoordinates.Length; index++)
+            {
+                var command = new VertexBrushCommand(
+                    new Vector3(xCoordinates[index], 0f, -1f),
+                    1.1f,
+                    1f,
+                    0.25f,
+                    new Color32(255, 0, 0, 0),
+                    AnimationCurve.Constant(0f, 1f, 1f),
+                    VertexPaintBrushMode.Paint,
+                    VertexPaintChannel.Red,
+                    true,
+                    VertexBrushMask.None);
+                session.Paint(cache, command);
+            }
+
+            session.End();
+            cache.Dispose();
         }
 
         private static Color32[] CopyColors(VertexPaintData data)

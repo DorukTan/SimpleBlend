@@ -91,7 +91,7 @@ namespace SimpleBlend.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.HelpBox(
-                "SimpleBlend paints the red channel with a fixed 1.25-unit brush in this milestone. "
+                "Use the SimpleBlend Brush Scene view overlay for channels, modes, flow, fill, and masks. "
                 + "Prefab instances fork shared fallback assets on their first local stroke; Prefab Mode edits the asset intentionally.",
                 MessageType.None);
         }

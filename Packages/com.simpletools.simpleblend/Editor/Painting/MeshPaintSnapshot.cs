@@ -14,6 +14,7 @@ namespace SimpleBlend.Editor
             Vector3[] localNormals,
             int[] triangles,
             int[] triangleSubmeshIds,
+            VertexPaintTopology topology,
             Bounds localBounds)
         {
             SourceMesh = sourceMesh;
@@ -21,6 +22,7 @@ namespace SimpleBlend.Editor
             LocalNormals = localNormals;
             Triangles = triangles;
             TriangleSubmeshIds = triangleSubmeshIds;
+            Topology = topology;
             LocalBounds = localBounds;
         }
 
@@ -33,6 +35,8 @@ namespace SimpleBlend.Editor
         internal int[] Triangles { get; }
 
         internal int[] TriangleSubmeshIds { get; }
+
+        internal VertexPaintTopology Topology { get; }
 
         internal Bounds LocalBounds { get; }
 
@@ -94,13 +98,19 @@ namespace SimpleBlend.Editor
                     }
 
                     var triangleArray = triangles.ToArray();
+                    var triangleSubmeshArray = submeshIds.ToArray();
                     var normals = ReadOrBuildNormals(meshData, vertices, triangleArray);
                     snapshot = new MeshPaintSnapshot(
                         sourceMesh,
                         vertices,
                         normals,
                         triangleArray,
-                        submeshIds.ToArray(),
+                        triangleSubmeshArray,
+                        VertexPaintTopology.Create(
+                            vertices.Length,
+                            triangleArray,
+                            triangleSubmeshArray,
+                            meshData.subMeshCount),
                         sourceMesh.bounds);
                 }
 

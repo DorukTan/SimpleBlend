@@ -162,5 +162,68 @@ namespace SimpleBlend.Editor.Tests
                 Object.DestroyImmediate(mesh);
             }
         }
+
+        [Test]
+        public void Normal_mask_uses_inverse_transpose_world_normals_under_rotation_and_negative_scale()
+        {
+            var mesh = TestMeshFactory.CreateQuad();
+            var gameObject = new GameObject("Normal mask transform");
+            try
+            {
+                gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var renderer = gameObject.AddComponent<MeshRenderer>();
+                var data = gameObject.AddComponent<VertexPaintData>();
+                gameObject.transform.rotation = Quaternion.Euler(25f, 35f, 15f);
+                gameObject.transform.localScale = new Vector3(-2f, 0.5f, 3f);
+                Assert.That(VertexPaintDataAuthoring.Initialize(data, renderer, false).IsValid, Is.True);
+                var cache = new MeshPaintCache();
+                Assert.That(cache.Ensure(data).IsValid, Is.True);
+                var expectedNormal = gameObject.transform.localToWorldMatrix.inverse.transpose
+                    .MultiplyVector(Vector3.up)
+                    .normalized;
+                Assert.That(Vector3.Distance(cache.WorldNormals[0], expectedNormal), Is.LessThan(0.0001f));
+
+                var colors = TestMeshFactory.SolidColors(mesh.vertexCount, new Color32(0, 0, 0, 0));
+                var mask = new VertexBrushMask(
+                    true,
+                    expectedNormal,
+                    1f,
+                    false,
+                    0,
+                    false,
+                    VertexPaintChannel.Red,
+                    0f,
+                    1f,
+                    true);
+                var command = new VertexBrushCommand(
+                    cache.WorldVertices[0],
+                    100f,
+                    1f,
+                    1f,
+                    new Color32(255, 0, 0, 0),
+                    AnimationCurve.Constant(0f, 1f, 1f),
+                    VertexPaintBrushMode.Paint,
+                    VertexPaintChannel.Red,
+                    true,
+                    mask);
+
+                var changed = VertexPaintKernel.Apply(
+                    command,
+                    cache.WorldVertices,
+                    cache.WorldNormals,
+                    cache.Snapshot.Topology.AllVertices,
+                    cache.Snapshot.Topology,
+                    colors);
+
+                Assert.That(changed, Is.EqualTo(mesh.vertexCount));
+                Assert.That(colors, Is.All.Matches<Color32>(color => color.r == byte.MaxValue));
+                cache.Dispose();
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+                Object.DestroyImmediate(mesh);
+            }
+        }
     }
 }

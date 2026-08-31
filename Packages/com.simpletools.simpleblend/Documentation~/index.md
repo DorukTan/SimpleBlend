@@ -1,8 +1,9 @@
 # SimpleBlend documentation
 
-SimpleBlend is currently at its production-storage and prefab checkpoint. The package preserves and validates per-renderer vertex colors, paints a fixed red-channel stroke in the Scene view, records prefab overrides, supports Prefab Mode, and uses owned fallback meshes when Additional Vertex Streams are not suitable. Full brush controls and blend shaders are not implemented yet.
+SimpleBlend includes a deterministic multi-channel brush engine on top of production storage and prefab handling. It supports paint, erase, smooth, fill, sample, flow, accumulation, and composable masks without changing imported source meshes. Channel-isolation visualization, profiling, and blend shaders are not implemented yet.
 
 - [Data safety and storage](data-safety.md)
-- [Paint the first red-channel stroke](first-stroke.md)
+- [Paint the first stroke](first-stroke.md)
+- [Brush controls and exact behavior](brush-controls.md)
 
 For the active development plan, see the repository-level `docs/roadmap.md` and `docs/implementation-plan.md` files.

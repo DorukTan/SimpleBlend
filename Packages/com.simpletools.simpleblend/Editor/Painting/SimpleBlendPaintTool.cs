@@ -11,11 +11,7 @@ namespace SimpleBlend.Editor
         private const int ControlHash = 0x53424C44;
         private static readonly GUIContent ToolIcon = new GUIContent(
             "SB",
-            "SimpleBlend Paint\nPaint the red vertex channel. Radius 1.25, strength 1.0.");
-
-        [SerializeField] private float _radius = 1.25f;
-        [SerializeField] private float _strength = 1f;
-        [SerializeField] private AnimationCurve _falloff = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
+            "SimpleBlend Paint\nPaint, erase, smooth, fill, or sample vertex colors.");
 
         private readonly MeshPaintCache _cache = new MeshPaintCache();
         private readonly VertexColorPreviewRenderer _preview = new VertexColorPreviewRenderer();
@@ -61,6 +57,7 @@ namespace SimpleBlend.Editor
             }
 
             var currentEvent = Event.current;
+            var settings = SimpleBlendBrushSettings.instance;
             var controlId = GUIUtility.GetControlID(ControlHash, FocusType.Passive);
             if (currentEvent.type == EventType.Layout)
             {
@@ -80,7 +77,7 @@ namespace SimpleBlend.Editor
             var hasHit = _cache.TryRaycast(worldRay, out var hit);
             if (currentEvent.type == EventType.Repaint && hasHit)
             {
-                DrawBrushDisc(hit);
+                DrawBrushDisc(hit, settings);
             }
 
             if (currentEvent.type == EventType.MouseMove)
@@ -102,10 +99,21 @@ namespace SimpleBlend.Editor
             switch (currentEvent.GetTypeForControl(controlId))
             {
                 case EventType.MouseDown when currentEvent.button == 0 && hasHit:
-                    GUIUtility.hotControl = controlId;
-                    if (_stroke.Begin(data))
+                    if (settings.Mode == VertexPaintBrushMode.Sample)
                     {
-                        PaintAt(hit);
+                        SampleAt(data, hit, settings);
+                    }
+                    else if (settings.Mode == VertexPaintBrushMode.Fill)
+                    {
+                        FillAt(data, hit, settings);
+                    }
+                    else
+                    {
+                        GUIUtility.hotControl = controlId;
+                        if (_stroke.Begin(data))
+                        {
+                            PaintAt(hit, settings);
+                        }
                     }
 
                     currentEvent.Use();
@@ -113,7 +121,7 @@ namespace SimpleBlend.Editor
                 case EventType.MouseDrag when currentEvent.button == 0 && GUIUtility.hotControl == controlId:
                     if (hasHit)
                     {
-                        PaintAt(hit);
+                        PaintAt(hit, settings);
                     }
 
                     currentEvent.Use();
@@ -147,15 +155,39 @@ namespace SimpleBlend.Editor
                    && data.GetComponent<MeshFilter>() != null;
         }
 
-        private void PaintAt(MeshRaycastHit hit)
+        private void PaintAt(MeshRaycastHit hit, SimpleBlendBrushSettings settings)
         {
-            var command = new RedBrushCommand(
-                hit.Point,
-                _radius,
-                _strength,
-                new Color32(byte.MaxValue, 0, 0, byte.MaxValue),
-                _falloff);
-            _stroke.Paint(_cache, command);
+            _stroke.Paint(_cache, settings.CreateCommand(hit.Point));
+        }
+
+        private void FillAt(
+            VertexPaintData data,
+            MeshRaycastHit hit,
+            SimpleBlendBrushSettings settings)
+        {
+            if (!_stroke.Begin(data))
+            {
+                return;
+            }
+
+            var hitSubmesh = settings.FillScope == VertexPaintFillScope.HitSubmesh
+                ? hit.SubmeshIndex
+                : -1;
+            _stroke.Fill(_cache, settings.CreateCommand(hit.Point), hitSubmesh);
+            FinishStroke();
+        }
+
+        private void SampleAt(
+            VertexPaintData data,
+            MeshRaycastHit hit,
+            SimpleBlendBrushSettings settings)
+        {
+            var sampled = VertexPaintColorSampler.SampleTriangle(
+                data.SerializedColors,
+                _cache.Snapshot.Triangles,
+                hit.TriangleIndex,
+                hit.BarycentricCoordinate);
+            settings.SetSampledColor(sampled);
         }
 
         private void FinishStroke()
@@ -163,18 +195,22 @@ namespace SimpleBlend.Editor
             _stroke.End();
         }
 
-        private void DrawBrushDisc(MeshRaycastHit hit)
+        private void DrawBrushDisc(MeshRaycastHit hit, SimpleBlendBrushSettings settings)
         {
+            var radius = settings.Mode == VertexPaintBrushMode.Fill
+                         || settings.Mode == VertexPaintBrushMode.Sample
+                ? HandleUtility.GetHandleSize(hit.Point) * 0.08f
+                : settings.Radius;
             var previousZTest = Handles.zTest;
             Handles.zTest = CompareFunction.LessEqual;
             using (new Handles.DrawingScope(_stroke.IsActive
                        ? new Color(1f, 0.18f, 0.12f, 1f)
                        : new Color(1f, 0.72f, 0.15f, 1f)))
             {
-                Handles.DrawWireDisc(hit.Point, hit.Normal, _radius, 2f);
+                Handles.DrawWireDisc(hit.Point, hit.Normal, radius, 2f);
                 Handles.DrawLine(
                     hit.Point,
-                    hit.Point + hit.Normal * Mathf.Min(_radius * 0.25f, 0.25f),
+                    hit.Point + hit.Normal * Mathf.Min(radius * 0.25f, 0.25f),
                     2f);
             }
 

@@ -127,7 +127,7 @@ The mode must be visible in the inspector, with the reason and output asset path
 
 These cannot be honestly claimed from headless API probing and remain acceptance-test work after implementation:
 
-- Scene view tool palette presence, overlay behavior, surface-projected brush disc, and input capture.
+- Complete brush-overlay ergonomics and defaults after the headless M5 implementation.
 - Visual parity across edit mode, play mode, and player build.
 - Frame Debugger confirmation for SRP Batcher and GPU Resident Drawer modes.
 - Shader Graph subgraph import and parity with the hand-written HLSL shaders.
@@ -181,3 +181,17 @@ Verified during the `0.2.0-alpha.2` production-storage and prefab slice on 2026-
 - Storage policy is reevaluated at stroke start. Additional-stream to static/GPU clone and clone back to stream transitions retained the serialized colors; superseded generated assets were intentionally left intact.
 - A real play-mode/domain-reload regression test and a live edit/play transition both reconstructed the transient stream without losing colors or producing console errors.
 - The final EditMode suite passed 36/36 tests. A Windows x64 player build succeeded with the Runtime assembly present and the Editor assembly excluded.
+
+## M5 implementation observations
+
+Verified during the `0.3.0-alpha.1` complete-brush slice on 2026-08-31:
+
+- One generic brush command owns channel, mode, radius, strength, flow, color, falloff, accumulation, and masks. Scene view UI only translates persisted settings into this command.
+- RGB operations intentionally preserve alpha. Erase moves selected components toward zero; smooth uses the uniform one-ring average from an immutable source snapshot.
+- Mesh paint snapshots build adjacency and sorted per-submesh vertex sets once. Split/disconnected indices do not become neighbors, and shared vertices appear only once in a submesh fill.
+- Sample mode uses the ray hit's triangle index and barycentric coordinate to interpolate all four `Color32` components without opening an Undo group.
+- Normal masking uses cached inverse-transpose world normals. Rotation, non-uniform scale, and negative scale are covered by an EditMode transform test.
+- Non-accumulating strokes retain stroke-start colors and the strongest weight per vertex. Accumulating strokes build at fixed travel samples spaced by 20% of the stroke-start radius, making collinear paths stable across sparse and dense input events.
+- Existing-value threshold bounds are explicitly inclusive or exclusive. RGB thresholding uses the arithmetic mean of the three color components.
+- The Scene view overlay uses public `Overlay` and `IMGUIContainer` APIs and stores user-local preferences through `ScriptableSingleton`. A headless construction test protects the editor-style lifecycle boundary.
+- The full EditMode suite passed 66/66 tests without C# diagnostics. No live desktop interaction was performed for this slice at the user's request.

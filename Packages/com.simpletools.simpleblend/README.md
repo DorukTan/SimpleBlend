@@ -4,7 +4,7 @@ SimpleBlend is an open-source Unity editor toolkit for painting vertex colors on
 
 ## Current status
 
-Version `0.2.0-alpha.2` completes production storage and prefab integration. It contains durable per-renderer color data, collider-independent Scene view painting, one-stroke Undo/Redo, prefab-instance and Prefab Mode workflows, owned cloned-mesh fallbacks for static, skinned, and GPU Resident Drawer cases, dynamic storage-policy migration, and edit/play lifecycle reconstruction. Full brush controls and blend shaders remain later milestones.
+Version `0.3.0-alpha.1` adds the complete deterministic brush engine to the production storage and prefab foundation. It supports R/G/B/A/RGB channels; paint, erase, smooth, fill, and sample modes; falloff, flow, accumulation, whole/submesh fill, and normal/submesh/value masks through a compact Scene view overlay. Channel-isolation visualization, performance profiling, and blend shaders remain later milestones.
 
 ## Compatibility
 
@@ -20,9 +20,9 @@ During development, the package is embedded at `Packages/com.simpletools.simpleb
 
 ## First stroke
 
-Select a GameObject with a `MeshFilter`/`MeshRenderer` or a `SkinnedMeshRenderer`, then choose **GameObject > SimpleBlend > Enable Vertex Painting** (also available from the Renderer component context menu). The command adds and initializes `VertexPaintData` as one Undo operation and activates the paint tool. Drag over the mesh in the Scene view to paint the red vertex channel. A collider is not required.
+Select a GameObject with a `MeshFilter`/`MeshRenderer` or a `SkinnedMeshRenderer`, then choose **GameObject > SimpleBlend > Enable Vertex Painting** (also available from the Renderer component context menu). The command adds and initializes `VertexPaintData` as one Undo operation and activates the paint tool. Choose a channel and mode in the **SimpleBlend Brush** Scene view overlay, then drag or click the mesh. A collider is not required.
 
-This checkpoint intentionally keeps the brush at radius `1.25`, strength `1.0`, and solid red. See `Documentation~/first-stroke.md` for the workflow and `Documentation~/data-safety.md` for prefab and storage behavior.
+See `Documentation~/first-stroke.md` for setup, `Documentation~/brush-controls.md` for exact brush semantics, and `Documentation~/data-safety.md` for prefab and storage behavior.
 
 ## Development verification
 
