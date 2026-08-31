@@ -1,6 +1,6 @@
 # SimpleBlend documentation
 
-SimpleBlend is currently at its first-visible-stroke checkpoint. The package can preserve and validate per-renderer vertex colors and paint a fixed red-channel stroke in the Scene view. Full brush controls, prefab workflows, and blend shaders are not implemented yet.
+SimpleBlend is currently at its production-storage and prefab checkpoint. The package preserves and validates per-renderer vertex colors, paints a fixed red-channel stroke in the Scene view, records prefab overrides, supports Prefab Mode, and uses owned fallback meshes when Additional Vertex Streams are not suitable. Full brush controls and blend shaders are not implemented yet.
 
 - [Data safety and storage](data-safety.md)
 - [Paint the first red-channel stroke](first-stroke.md)

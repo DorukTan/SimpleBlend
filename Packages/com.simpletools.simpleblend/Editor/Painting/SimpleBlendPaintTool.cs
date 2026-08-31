@@ -46,6 +46,7 @@ namespace SimpleBlend.Editor
             FinishStroke();
             EditorApplication.projectChanged -= OnProjectChanged;
             Selection.selectionChanged -= OnSelectionChanged;
+            _cache.Dispose();
             _preview.Dispose();
             SceneView.RepaintAll();
         }
@@ -137,9 +138,13 @@ namespace SimpleBlend.Editor
                 return false;
             }
 
-            var meshRenderer = data.GetComponent<MeshRenderer>();
-            var meshFilter = data.GetComponent<MeshFilter>();
-            return meshRenderer != null && meshFilter != null;
+            if (data.GetComponent<SkinnedMeshRenderer>() != null)
+            {
+                return data.StorageMode == VertexPaintStorageMode.ClonedMesh;
+            }
+
+            return data.GetComponent<MeshRenderer>() != null
+                   && data.GetComponent<MeshFilter>() != null;
         }
 
         private void PaintAt(MeshRaycastHit hit)
@@ -213,7 +218,7 @@ namespace SimpleBlend.Editor
             }
 
             FinishStroke();
-            _cache.InvalidateTopology();
+            _cache.Dispose();
             _preview.Dispose();
             SceneView.RepaintAll();
         }

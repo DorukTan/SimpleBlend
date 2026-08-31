@@ -109,6 +109,8 @@ Checkpoint C completed on 2026-08-30 for `0.1.0-dev.3`. The live Scene view demo
 
 Checkpoint D: run acceptance tests 1–6 and 8. Do not start full brush modes until prefab and persistence behavior is stable.
 
+Checkpoint D completed on 2026-08-31 for `0.2.0-alpha.2`. The 36-test EditMode suite, prefab instance/revert and Prefab Mode live checks, edit/play lifecycle check, static/skinned fallback checks, GPU policy inspection, and Windows x64 player build passed. See `docs/checkpoints/checkpoint-d.md`.
+
 ## Batch E — complete brush behavior
 
 | ID | Work | Definition of done | Verification |
@@ -212,12 +214,12 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-Checkpoint C is complete. Start Batch D with `PREFAB-001` and `PREFAB-002`, then finish the fallback and lifecycle integration through `LIFE-001`.
+Checkpoint D is complete. Start Batch E with `BRUSH-003`, then build the operation layer in dependency order before exposing it through `UI-001`.
 
-Before expanding brush modes, prove:
+During Batch E, preserve these established boundaries:
 
-- prefab instance overrides appear and revert cleanly,
-- Prefab Mode painting survives save and updates instances,
-- static, skinned, and GPU Resident Drawer policy paths render from owned fallback meshes,
-- Additional Vertex Streams reconstruct after reload and play-mode transitions,
+- `Color32[]` remains the only authoritative editable state,
+- one drag remains one Undo operation,
+- brush commands remain deterministic and independent of editor UI,
+- storage-policy transitions never discard paint,
 - generated assets remain explicitly owned and never overwrite source meshes.

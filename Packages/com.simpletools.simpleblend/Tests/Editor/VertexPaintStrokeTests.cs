@@ -84,7 +84,7 @@ namespace SimpleBlend.Editor.Tests
         }
 
         [Test]
-        public void Paint_tool_supports_initialized_mesh_renderer_but_not_skinned_renderer()
+        public void Paint_tool_supports_initialized_mesh_and_skinned_renderers()
         {
             using (var assets = new TestAssetScope())
             {
@@ -100,7 +100,7 @@ namespace SimpleBlend.Editor.Tests
                     Assert.That(VertexPaintDataAuthoring.Initialize(skinnedData, skinnedRenderer, false).IsValid, Is.True);
 
                     Assert.That(SimpleBlendPaintTool.IsSupportedTarget(ordinaryData), Is.True);
-                    Assert.That(SimpleBlendPaintTool.IsSupportedTarget(skinnedData), Is.False);
+                    Assert.That(SimpleBlendPaintTool.IsSupportedTarget(skinnedData), Is.True);
                     Assert.That(Shader.Find("Hidden/SimpleBlend/Red Channel Preview"), Is.Not.Null);
                 }
                 finally

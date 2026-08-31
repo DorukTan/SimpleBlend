@@ -95,8 +95,12 @@ namespace SimpleBlend
                     return VertexPaintValidationResult.Invalid(VertexPaintValidationFailure.MissingGeneratedMesh);
                 }
 
-                if (data.FallbackMesh.vertexCount != data.SourceSignature.VertexCount
-                    || data.FallbackMesh.subMeshCount != data.SourceSignature.SubMeshCount)
+                var fallbackSignatureResult = MeshSignatureFactory.TryCreate(
+                    data.FallbackMesh,
+                    data.SourceSignature.SourceIdentity,
+                    out var fallbackSignature);
+                if (!fallbackSignatureResult.IsValid
+                    || data.SourceSignature.Compare(fallbackSignature) != VertexPaintValidationFailure.None)
                 {
                     return VertexPaintValidationResult.Invalid(VertexPaintValidationFailure.GeneratedMeshMismatch);
                 }

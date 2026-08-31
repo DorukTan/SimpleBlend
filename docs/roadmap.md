@@ -1,6 +1,6 @@
 # SimpleBlend roadmap
 
-Status: M3 first visible paint complete; M4 production storage and prefab behavior is next.
+Status: M4 production storage and prefab behavior complete; M5 complete brush engine is next.
 
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
 
@@ -78,7 +78,7 @@ The risky interfaces are Scene view hit testing, serialized array undo, source t
 | M1 — Package foundation | Complete — `0.1.0-dev.1` | Empty embedded package imports cleanly | Editor and player compilation pass |
 | M2 — Data safety | Complete — `0.1.0-dev.2` | Colors persist per renderer without touching source assets | Data EditMode suite passes |
 | M3 — First visible paint | Complete — `0.1.0-dev.3` | Paint one red-channel stroke and see it | One-stroke undo/redo observed |
-| M4 — Production storage and prefabs | `0.2.0-alpha.2` | Streams, fallback assets, prefab overrides, and play-mode restoration work | Acceptance tests 1–8 pass except shader build parity |
+| M4 — Production storage and prefabs | Complete — `0.2.0-alpha.2` | Streams, fallback assets, prefab overrides, and play-mode restoration work | Acceptance tests 1–6 and 8 pass; shader render parity remains M7 |
 | M5 — Complete brush engine | `0.3.0-alpha.1` | All brush modes, channels, masks, and fill scopes work | Deterministic brush suite passes |
 | M6 — Visualization and performance | `0.3.0-alpha.2` | Channel isolation and density overlay remain interactive on 40k vertices | Profile gate passes without mandatory Burst |
 | M7 — HLSL blend shaders | `0.4.0-beta.1` | Three- and four-layer height blending renders in URP editor and player | Shader parity/build gates pass |
@@ -173,6 +173,8 @@ Observed on 2026-08-30 in Unity `6000.4.8f1`: a collider-disabled built-in Plane
 - Prefab Mode edit propagates after save.
 - Entering and exiting play mode preserves colors without errors.
 - Static and skinned fallbacks are visible and render correctly.
+
+Observed on 2026-08-31 in Unity `6000.4.8f1`: prefab-instance paint appeared as a local data override and reverted cleanly; painting and saving in Prefab Mode propagated to an untouched instance; edit/play transitions retained visible paint; and owned static and skinned fallbacks painted correctly. GPU Resident Drawer clone policy and its migration warning were inspected with a disposable fixture. The final EditMode suite passed 36/36 tests, and the Windows x64 player build succeeded. See `docs/checkpoints/checkpoint-d.md`.
 
 ## M5 — Complete brush engine
 
@@ -300,9 +302,9 @@ All acceptance tests pass and are recorded with Unity/URP versions, test date, a
 | 1 | Shared FBX remains byte-identical | M2 | Automated hash plus manual imported-FBX pass |
 | 2 | Shared mesh does not bleed | M2 | Automated EditMode test and visual check |
 | 3 | One stroke undo/redo | M3 | Automated state test plus manual gesture check |
-| 4 | Prefab instance override | M4 | Manual editor check |
-| 5 | Prefab Mode persistence | M4 | Manual editor check |
-| 6 | Play-mode persistence | M4 | Automated reload where possible plus manual check |
+| 4 | Prefab instance override | M4 | Passed: automated plus live editor check |
+| 5 | Prefab Mode persistence | M4 | Passed: automated plus live editor check |
+| 6 | Play-mode persistence | M4 | Passed: automated domain reload plus live editor check |
 | 7 | Player render parity | M7 | Build plus reference capture |
 | 8 | Changed topology is rejected | M2 | Automated reimport/signature test |
 | 9 | 40k mesh remains interactive | M6 | Profiler measurement and manual drag |
@@ -337,4 +339,4 @@ These items are not opportunistically added during v1, even if an implementation
 
 ## Immediate next move
 
-Execute M1, then stop for a compile/package-layout review before starting the data model. The workspace is not currently a Git repository, so establish a recoverable baseline first or explicitly accept working without version-control rollback.
+Start M5 with `BRUSH-003`: define the channel abstraction and deterministic operation contract before adding erase, smooth, fill, sample, masks, flow, or overlay controls. Keep all brush math independent of Scene view event frequency and editor UI.

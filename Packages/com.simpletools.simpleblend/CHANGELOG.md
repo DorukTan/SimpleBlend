@@ -2,6 +2,23 @@
 
 All notable changes to SimpleBlend will be documented in this file.
 
+## [0.2.0-alpha.2] - 2026-08-31
+
+### Added
+
+- One-command, Undo-safe vertex-paint setup for mesh and skinned renderers.
+- Prefab-instance override recording, clean reversion, and Prefab Mode propagation.
+- Explicit generated-mesh ownership with copy-on-write isolation for inherited or shared fallbacks.
+- Baked-pose hit testing and painting for `SkinnedMeshRenderer` targets.
+- Inspector visibility for source signatures, storage decisions, generated output paths, and ownership IDs.
+- Domain-reload, play-mode, prefab, skinned, ownership, and storage-migration regression coverage.
+
+### Changed
+
+- Storage policy is reevaluated at stroke start and can migrate between streams and clones without losing authoritative colors.
+- Fallback validation now compares the complete source topology signature.
+- Transient streams are detached before clone-mode application.
+
 ## [0.1.0-dev.3] - 2026-08-30
 
 ### Added

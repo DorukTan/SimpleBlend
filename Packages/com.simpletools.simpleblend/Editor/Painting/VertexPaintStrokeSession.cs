@@ -27,9 +27,39 @@ namespace SimpleBlend.Editor
             Undo.IncrementCurrentGroup();
             _undoGroup = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName(UndoName);
-            Undo.RegisterCompleteObjectUndo(data, UndoName);
+            var meshOwner = VertexPaintDataAuthoring.GetRendererMeshOwner(data);
+            if (meshOwner == null)
+            {
+                Undo.RegisterCompleteObjectUndo(data, UndoName);
+            }
+            else
+            {
+                Undo.RegisterCompleteObjectUndo(new Object[] { data, meshOwner }, UndoName);
+            }
+
+            var storageResult = VertexPaintDataAuthoring.EnsureCurrentStorageForPaint(
+                data,
+                null,
+                out var storageChanged);
+            if (!storageResult.IsValid)
+            {
+                Undo.CollapseUndoOperations(_undoGroup);
+                _undoGroup = -1;
+                return false;
+            }
+
+            var ownershipResult = VertexPaintDataAuthoring.EnsureOwnedFallbackForPaint(
+                data,
+                out var ownershipChanged);
+            if (!ownershipResult.IsValid)
+            {
+                Undo.CollapseUndoOperations(_undoGroup);
+                _undoGroup = -1;
+                return false;
+            }
+
             _data = data;
-            HasChanges = false;
+            HasChanges = storageChanged || ownershipChanged;
             return true;
         }
 
@@ -73,7 +103,7 @@ namespace SimpleBlend.Editor
             if (HasChanges)
             {
                 EditorUtility.SetDirty(_data);
-                PrefabUtility.RecordPrefabInstancePropertyModifications(_data);
+                VertexPaintDataAuthoring.RecordPrefabModifications(_data);
                 if (_data.FallbackMesh != null)
                 {
                     EditorUtility.SetDirty(_data.FallbackMesh);

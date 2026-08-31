@@ -124,7 +124,7 @@ namespace SimpleBlend.Editor.Tests
                     paintedColors,
                     VertexPaintStorageMode.ClonedMesh,
                     VertexPaintStorageReason.StaticBatching);
-                data.SetFallbackMesh(clone, clonePath);
+                data.SetFallbackMesh(clone, clonePath, "test-owner");
                 Assert.That(VertexPaintDataAuthoring.Apply(data).IsValid, Is.True);
                 Assert.That(filter.sharedMesh, Is.EqualTo(clone));
 
@@ -185,6 +185,72 @@ namespace SimpleBlend.Editor.Tests
                     Assert.That(data.FallbackMesh, Is.Not.EqualTo(firstClone));
                     Assert.That(renderer.sharedMesh, Is.EqualTo(data.FallbackMesh));
                     Assert.That(AssetDatabase.Contains(firstClone), Is.True, "Reinitialization must not delete an old generated asset implicitly.");
+                }
+                finally
+                {
+                    Object.DestroyImmediate(gameObject);
+                }
+            }
+        }
+
+        [Test]
+        public void Storage_policy_migrates_without_losing_authoritative_colors_or_deleting_old_assets()
+        {
+            using (var assets = new TestAssetScope())
+            {
+                var source = TestMeshFactory.CreateQuad();
+                AssetDatabase.CreateAsset(source, $"{assets.AssetPath}/MigratingSource.asset");
+                var gameObject = CreateMeshRendererObject("Migrating", source, out var renderer);
+                var data = gameObject.AddComponent<VertexPaintData>();
+
+                try
+                {
+                    Assert.That(VertexPaintDataAuthoring.Initialize(data, renderer, false).IsValid, Is.True);
+                    var painted = TestMeshFactory.SolidColors(
+                        source.vertexCount,
+                        new Color32(21, 22, 23, 24));
+                    data.ReplaceColors(painted);
+                    Assert.That(VertexPaintDataAuthoring.Apply(data).IsValid, Is.True);
+
+                    GameObjectUtility.SetStaticEditorFlags(gameObject, StaticEditorFlags.BatchingStatic);
+                    var toStatic = VertexPaintDataAuthoring.EnsureCurrentStorageForPaint(
+                        data,
+                        false,
+                        out var changedToStatic);
+                    var staticAssetPath = data.FallbackAssetPath;
+
+                    Assert.That(toStatic.IsValid, Is.True, toStatic.Message);
+                    Assert.That(changedToStatic, Is.True);
+                    Assert.That(data.StorageMode, Is.EqualTo(VertexPaintStorageMode.ClonedMesh));
+                    Assert.That(data.StorageReason, Is.EqualTo(VertexPaintStorageReason.StaticBatching));
+                    Assert.That(gameObject.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(data.FallbackMesh));
+                    Assert.That(data.FallbackMesh.colors32, Is.EqualTo(painted));
+
+                    GameObjectUtility.SetStaticEditorFlags(gameObject, 0);
+                    var toStream = VertexPaintDataAuthoring.EnsureCurrentStorageForPaint(
+                        data,
+                        false,
+                        out var changedToStream);
+
+                    Assert.That(toStream.IsValid, Is.True, toStream.Message);
+                    Assert.That(changedToStream, Is.True);
+                    Assert.That(data.StorageMode, Is.EqualTo(VertexPaintStorageMode.AdditionalVertexStream));
+                    Assert.That(data.StorageReason, Is.EqualTo(VertexPaintStorageReason.OrdinaryMeshRenderer));
+                    Assert.That(data.FallbackMesh, Is.Null);
+                    Assert.That(gameObject.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(source));
+                    Assert.That(renderer.additionalVertexStreams.colors32, Is.EqualTo(painted));
+                    Assert.That(AssetDatabase.LoadAssetAtPath<Mesh>(staticAssetPath), Is.Not.Null,
+                        "Changing policy must not silently delete the old generated mesh.");
+
+                    var toGpu = VertexPaintDataAuthoring.EnsureCurrentStorageForPaint(
+                        data,
+                        true,
+                        out var changedToGpu);
+                    Assert.That(toGpu.IsValid, Is.True, toGpu.Message);
+                    Assert.That(changedToGpu, Is.True);
+                    Assert.That(data.StorageMode, Is.EqualTo(VertexPaintStorageMode.ClonedMesh));
+                    Assert.That(data.StorageReason, Is.EqualTo(VertexPaintStorageReason.GpuResidentDrawer));
+                    Assert.That(data.FallbackMesh.colors32, Is.EqualTo(painted));
                 }
                 finally
                 {

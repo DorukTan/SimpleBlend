@@ -128,7 +128,6 @@ The mode must be visible in the inspector, with the reason and output asset path
 These cannot be honestly claimed from headless API probing and remain acceptance-test work after implementation:
 
 - Scene view tool palette presence, overlay behavior, surface-projected brush disc, and input capture.
-- Prefab instance overrides and Prefab Mode persistence.
 - Visual parity across edit mode, play mode, and player build.
 - Frame Debugger confirmation for SRP Batcher and GPU Resident Drawer modes.
 - Shader Graph subgraph import and parity with the hand-written HLSL shaders.
@@ -169,3 +168,16 @@ Verified during the `0.1.0-dev.3` first-visible-stroke slice on 2026-08-30:
 - `EditorGUIUtility.IconContent` is unsafe from an `EditorTool` static initializer in Unity 6000.4; it throws `get_skinIndex` during `ScriptableObject` construction. The palette now uses static text-only `GUIContent` (`SB`), and a construction regression test protects this lifecycle boundary.
 - Unity's Asset Database did not compile a package file changed externally until an explicit refresh. Acceptance checks must compare source and `Library/ScriptAssemblies` timestamps before attributing behavior to a new patch.
 - The final EditMode suite passed 29/29 tests. The fixture that exercises skinned fallback stores all generated meshes inside a disposable `TestAssetScope`, preventing `Assets/SimpleBlendGenerated` leakage.
+
+## M4 implementation observations
+
+Verified during the `0.2.0-alpha.2` production-storage and prefab slice on 2026-08-31:
+
+- `Undo.AddComponent<VertexPaintData>` plus one collapsed group made setup, initialization, renderer assignment, and tool activation a single undoable operation.
+- A painted prefab instance recorded both its authoritative `VertexPaintData` change and any clone-mode renderer assignment. Reverting restored the inherited state without deleting the retained generated asset.
+- In Prefab Mode, `PrefabStage.assetPath` identifies the asset being edited. A fallback owned by that stage remains intentional; inherited fallback references on nested or variant instances are forked before painting.
+- Unity's Overrides popup can list `Mesh Renderer` for an ordinary stream-mode prefab instance because `additionalVertexStreams` is an instance adapter. The authoritative local color override is the separate `Vertex Paint Data (Script)` entry. After prefab-asset propagation, an untouched instance retained only the adapter entry and inherited its colors.
+- `SkinnedMeshRenderer.BakeMesh` supplied the current deformed pose for hit testing and vertex influence. The owned fallback preserved the original bind poses, bone weights, blend shapes, submeshes, bounds, and index format.
+- Storage policy is reevaluated at stroke start. Additional-stream to static/GPU clone and clone back to stream transitions retained the serialized colors; superseded generated assets were intentionally left intact.
+- A real play-mode/domain-reload regression test and a live edit/play transition both reconstructed the transient stream without losing colors or producing console errors.
+- The final EditMode suite passed 36/36 tests. A Windows x64 player build succeeded with the Runtime assembly present and the Editor assembly excluded.

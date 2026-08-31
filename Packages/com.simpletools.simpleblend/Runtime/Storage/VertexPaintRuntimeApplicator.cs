@@ -30,6 +30,7 @@ namespace SimpleBlend
 
             try
             {
+                DetachTransient(data);
                 data.FallbackMesh.SetColors(data.SerializedColors);
 
                 var meshFilter = data.GetComponent<MeshFilter>();

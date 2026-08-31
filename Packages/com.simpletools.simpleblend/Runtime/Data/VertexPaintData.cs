@@ -7,7 +7,7 @@ namespace SimpleBlend
     [DisallowMultipleComponent]
     public sealed class VertexPaintData : MonoBehaviour
     {
-        public const int CurrentSchemaVersion = 1;
+        public const int CurrentSchemaVersion = 2;
 
         [SerializeField] private int _schemaVersion = CurrentSchemaVersion;
         [SerializeField] private Mesh _sourceMesh;
@@ -17,6 +17,7 @@ namespace SimpleBlend
         [SerializeField] private VertexPaintStorageReason _storageReason;
         [SerializeField] private Mesh _fallbackMesh;
         [SerializeField] private string _fallbackAssetPath = string.Empty;
+        [SerializeField] private string _fallbackOwnerId = string.Empty;
         [SerializeField] private VertexPaintValidationFailure _validationFailure;
 
         [NonSerialized] private Mesh _transientStream;
@@ -38,6 +39,8 @@ namespace SimpleBlend
         public Mesh FallbackMesh => _fallbackMesh;
 
         public string FallbackAssetPath => _fallbackAssetPath ?? string.Empty;
+
+        public string FallbackOwnerId => _fallbackOwnerId ?? string.Empty;
 
         public VertexPaintValidationFailure ValidationFailure => _validationFailure;
 
@@ -72,6 +75,7 @@ namespace SimpleBlend
             _storageReason = storageReason;
             _fallbackMesh = null;
             _fallbackAssetPath = string.Empty;
+            _fallbackOwnerId = string.Empty;
             _validationFailure = VertexPaintValidationFailure.None;
         }
 
@@ -80,10 +84,19 @@ namespace SimpleBlend
             _colors = colors == null ? Array.Empty<Color32>() : (Color32[])colors.Clone();
         }
 
-        internal void SetFallbackMesh(Mesh fallbackMesh, string assetPath)
+        internal void SetFallbackMesh(Mesh fallbackMesh, string assetPath, string ownerId)
         {
             _fallbackMesh = fallbackMesh;
             _fallbackAssetPath = assetPath ?? string.Empty;
+            _fallbackOwnerId = ownerId ?? string.Empty;
+        }
+
+        internal void SetStorageDecision(
+            VertexPaintStorageMode storageMode,
+            VertexPaintStorageReason storageReason)
+        {
+            _storageMode = storageMode;
+            _storageReason = storageReason;
         }
 
         internal void SetValidation(VertexPaintValidationResult result)
@@ -101,6 +114,7 @@ namespace SimpleBlend
             _storageReason = VertexPaintStorageReason.None;
             _fallbackMesh = null;
             _fallbackAssetPath = string.Empty;
+            _fallbackOwnerId = string.Empty;
             _validationFailure = VertexPaintValidationFailure.None;
         }
 

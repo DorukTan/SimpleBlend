@@ -122,7 +122,7 @@ namespace SimpleBlend.Editor.Tests
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
                 var restored = prefab.GetComponent<VertexPaintData>();
 
-                Assert.That(yaml, Does.Contain("_schemaVersion: 1"));
+                Assert.That(yaml, Does.Contain("_schemaVersion: 2"));
                 Assert.That(yaml, Does.Contain("_sourceSignature:"));
                 Assert.That(yaml, Does.Contain("_colors:"));
                 Assert.That(restored.SchemaVersion, Is.EqualTo(VertexPaintData.CurrentSchemaVersion));

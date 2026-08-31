@@ -15,6 +15,9 @@ namespace SimpleBlend.Editor
         private Vector3[] _worldNormals = Array.Empty<Vector3>();
         private bool _topologyInvalidated = true;
         private bool _hasTransform;
+        private Mesh _bakedSkinnedMesh;
+        private SkinnedMeshRenderer _skinnedRenderer;
+        private int _skinnedPoseHash;
 
         internal MeshPaintSnapshot Snapshot => _snapshot;
 
@@ -33,6 +36,23 @@ namespace SimpleBlend.Editor
             _topologyInvalidated = true;
         }
 
+        internal void Dispose()
+        {
+            if (_bakedSkinnedMesh != null)
+            {
+                UnityEngine.Object.DestroyImmediate(_bakedSkinnedMesh);
+                _bakedSkinnedMesh = null;
+            }
+
+            _snapshot = null;
+            _sourceMesh = null;
+            _skinnedRenderer = null;
+            _worldVertices = Array.Empty<Vector3>();
+            _worldNormals = Array.Empty<Vector3>();
+            _topologyInvalidated = true;
+            _hasTransform = false;
+        }
+
         internal VertexPaintValidationResult Ensure(VertexPaintData data)
         {
             if (data == null)
@@ -40,10 +60,14 @@ namespace SimpleBlend.Editor
                 return VertexPaintValidationResult.Invalid(VertexPaintValidationFailure.MissingRenderer);
             }
 
+            var skinnedRenderer = data.GetComponent<SkinnedMeshRenderer>();
+            var currentPoseHash = skinnedRenderer == null ? 0 : ComputePoseHash(skinnedRenderer);
             var needsSnapshot = _topologyInvalidated
                                 || _snapshot == null
                                 || _sourceMesh != data.SourceMesh
-                                || _sourceSignature != data.SourceSignature;
+                                || _sourceSignature != data.SourceSignature
+                                || _skinnedRenderer != skinnedRenderer
+                                || (skinnedRenderer != null && _skinnedPoseHash != currentPoseHash);
             if (needsSnapshot)
             {
                 var identity = MeshAssetIdentity.GetStableIdentity(data.SourceMesh);
@@ -53,7 +77,30 @@ namespace SimpleBlend.Editor
                     return validation;
                 }
 
-                var snapshotResult = MeshPaintSnapshot.TryCreate(data.SourceMesh, out var snapshot);
+                var snapshotMesh = data.SourceMesh;
+                if (skinnedRenderer != null)
+                {
+                    if (_bakedSkinnedMesh == null)
+                    {
+                        _bakedSkinnedMesh = new Mesh
+                        {
+                            name = "SimpleBlend Skinned Paint Snapshot",
+                            hideFlags = HideFlags.HideAndDontSave
+                        };
+                    }
+
+                    skinnedRenderer.BakeMesh(_bakedSkinnedMesh, true);
+                    if (_bakedSkinnedMesh.vertexCount != data.ColorCount)
+                    {
+                        return VertexPaintValidationResult.Invalid(
+                            VertexPaintValidationFailure.GeneratedMeshMismatch,
+                            "The current skinned pose no longer maps one-to-one to the signed source vertices.");
+                    }
+
+                    snapshotMesh = _bakedSkinnedMesh;
+                }
+
+                var snapshotResult = MeshPaintSnapshot.TryCreate(snapshotMesh, out var snapshot);
                 if (!snapshotResult.IsValid)
                 {
                     return snapshotResult;
@@ -62,6 +109,8 @@ namespace SimpleBlend.Editor
                 _snapshot = snapshot;
                 _sourceMesh = data.SourceMesh;
                 _sourceSignature = data.SourceSignature;
+                _skinnedRenderer = skinnedRenderer;
+                _skinnedPoseHash = currentPoseHash;
                 _worldVertices = new Vector3[snapshot.LocalVertices.Length];
                 _worldNormals = new Vector3[snapshot.LocalNormals.Length];
                 _topologyInvalidated = false;
@@ -144,6 +193,43 @@ namespace SimpleBlend.Editor
             }
 
             return true;
+        }
+
+        private static int ComputePoseHash(SkinnedMeshRenderer renderer)
+        {
+            unchecked
+            {
+                var mesh = renderer.sharedMesh;
+                if (mesh == null)
+                {
+                    return 0;
+                }
+
+                var hash = mesh.GetEntityId().GetHashCode();
+                for (var shapeIndex = 0; shapeIndex < mesh.blendShapeCount; shapeIndex++)
+                {
+                    hash = (hash * 397) ^ renderer.GetBlendShapeWeight(shapeIndex).GetHashCode();
+                }
+
+                var bones = renderer.bones;
+                for (var boneIndex = 0; boneIndex < bones.Length; boneIndex++)
+                {
+                    var bone = bones[boneIndex];
+                    if (bone == null)
+                    {
+                        hash *= 397;
+                        continue;
+                    }
+
+                    var matrix = bone.localToWorldMatrix;
+                    for (var element = 0; element < 16; element++)
+                    {
+                        hash = (hash * 397) ^ matrix[element].GetHashCode();
+                    }
+                }
+
+                return hash;
+            }
         }
     }
 }
