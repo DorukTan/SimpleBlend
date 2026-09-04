@@ -30,4 +30,4 @@ Clearing or reinitializing paint data never deletes a generated asset automatica
 
 ## Current boundary
 
-Version `0.3.0-alpha.2` supports ordinary, static, skinned, and conservative GPU-resident storage paths plus prefab, play-mode, complete brush-operation, and non-authoritative visualization workflows. Automatic orphan cleanup and blend shaders remain later milestones.
+Version `0.4.0-beta.1` supports ordinary, static, skinned, and conservative GPU-resident storage paths plus prefab, play-mode, complete brush-operation, non-authoritative visualization, and hand-written URP height-blend shader workflows. Automatic orphan cleanup remains a later milestone.

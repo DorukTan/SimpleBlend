@@ -1,6 +1,6 @@
 # Paint the first stroke
 
-Version `0.3.0-alpha.2` provides the complete brush operation set, production storage and prefab behavior, channel-isolated previews, and a vertex-density heatmap for `MeshRenderer` and `SkinnedMeshRenderer` objects.
+Version `0.4.0-beta.1` provides the complete brush operation set, production storage and prefab behavior, channel-isolated previews, a vertex-density heatmap, and three/four-layer URP height blending for `MeshRenderer` and `SkinnedMeshRenderer` objects.
 
 ## Set up a target
 
@@ -19,6 +19,8 @@ Version `0.3.0-alpha.2` provides the complete brush operation set, production st
 - Press Ctrl+Z once to undo the complete drag gesture.
 - Press Ctrl+Y to redo it on Windows.
 
+To render the paint as material layers, assign a material using **SimpleBlend/Layer Blend 3** or **SimpleBlend/Layer Blend 4**. Clear vertices select the base layer; Red, Green, and optionally Blue select the overlay layers. See [Layer Blend shader setup](layer-blend-shaders.md).
+
 The projected wire disc follows the hit point and surface normal. Choose Red, Green, Blue, Alpha, RGB, or Density from **Preview**. The preview does not replace or edit the renderer's materials.
 
 ## Safety and current limitations
@@ -28,5 +30,5 @@ The projected wire disc follows the hit point and surface normal. Choose Red, Gr
 - Skinned painting raycasts and paints the current baked pose while preserving the source mesh, bind poses, bone weights, and blend shapes in the generated fallback.
 - Painting a prefab instance creates local data and renderer overrides that can be reverted. Painting and saving in Prefab Mode updates inheriting instances.
 - Static-batched, skinned, and GPU Resident Drawer targets use owned generated clones. Generated assets are retained when data is cleared or reverted; automatic orphan deletion is intentionally deferred.
-- Blend shaders remain a later milestone. The 40k-vertex managed performance gate is automated; live visual and interaction review remains intentionally separate from that timing evidence.
+- Hand-written blend shader passes and Windows player compilation are automated. Live visual parity, Frame Debugger batching, and lightmapping appearance remain intentionally separate manual evidence.
 - Meshes without triangle geometry are rejected with an explicit validation message.

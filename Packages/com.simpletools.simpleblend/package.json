@@ -1,6 +1,6 @@
 {
   "name": "com.simpletools.simpleblend",
-  "version": "0.3.0-alpha.2",
+  "version": "0.4.0-beta.1",
   "displayName": "SimpleBlend",
   "description": "An editor-first vertex paint and mesh blend toolkit for Unity's Universal Render Pipeline.",
   "unity": "6000.3",

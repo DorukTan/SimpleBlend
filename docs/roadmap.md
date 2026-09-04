@@ -1,6 +1,6 @@
 # SimpleBlend roadmap
 
-Status: M6 visualization/performance automated gate complete; live Scene view legibility and ergonomics review is deferred by user instruction, and M7 HLSL blend shaders are next.
+Status: M7 hand-written shader automated implementation gate complete at `0.4.0-beta.1`; live URP appearance, Frame Debugger, lightmapping, and editor/player image parity remain deferred by user instruction. M8 Shader Graph parity and terrain-contract work are next.
 
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
 
@@ -81,7 +81,7 @@ The risky interfaces are Scene view hit testing, serialized array undo, source t
 | M4 — Production storage and prefabs | Complete — `0.2.0-alpha.2` | Streams, fallback assets, prefab overrides, and play-mode restoration work | Acceptance tests 1–6 and 8 pass; shader render parity remains M7 |
 | M5 — Complete brush engine | Automated gate complete — `0.3.0-alpha.1` | All brush modes, channels, masks, and fill scopes work | 66-test deterministic suite passes; live overlay review deferred |
 | M6 — Visualization and performance | Automated gate complete — `0.3.0-alpha.2` | Channel isolation and density overlay remain interactive on 40k vertices | Managed profile gate passes without mandatory Burst; live visual review deferred |
-| M7 — HLSL blend shaders | `0.4.0-beta.1` | Three- and four-layer height blending renders in URP editor and player | Shader parity/build gates pass |
+| M7 — HLSL blend shaders | Automated implementation gate complete — `0.4.0-beta.1` | Three- and four-layer height blending compiles through complete URP passes in editor tests and a retained Windows player build | Nine focused tests and D3D11 build pass; live visual parity deferred |
 | M8 — Shader Graph and terrain matching | `0.4.0-beta.2` | Subgraphs and terrain variant match documented contracts | Visual reference scenes pass |
 | M9 — Samples, removal safety, release | `0.9.0-rc.1` → `1.0.0` | Importable package with self-teaching samples and complete evidence | All ten acceptance tests pass |
 
@@ -243,6 +243,8 @@ This convention gives useful output on an unpainted mesh and avoids requiring a 
 - Material inspector reports SRP Batcher compatibility.
 - Editor, play mode, and built player produce matching reference captures.
 
+Automated implementation gate completed on 2026-09-04 for `0.4.0-beta.1`: the public three/four-layer shaders, shared normalized height math, six required URP passes, one material-buffer contract, instancing variants, DOTS declarations, and custom Inspector passed nine focused tests; the final package suite passed 82/82 tests in 5.242 seconds. A Windows x64 D3D11 build forcibly retained materials using both public shaders and succeeded. No desktop control was used, so live lighting, Frame Debugger batching, baked Meta output, and reference-capture parity remain unobserved; acceptance test 7 is not marked complete. See `docs/checkpoints/checkpoint-g.md`.
+
 ## M8 — Shader Graph and terrain matching
 
 ### Shader Graph deliverables
@@ -335,10 +337,10 @@ These items are not opportunistically added during v1, even if an implementation
 | Runtime data authority | Locked | Serialized `Color32[]` |
 | Static/GPU/skinned storage | Locked | Explicit cloned-mesh fallback |
 | Burst dependency | Locked | None unless measured performance requires optional acceleration |
-| Shader layer convention | Review before M7 | Base + RGB overlay recommendation |
+| Shader layer convention | Locked in M7 | Layer Blend 3 = base + R + G; Layer Blend 4 = base + R + G + B; alpha free |
 | Terrain matching contract | Spike before M8 | Live public TerrainData path, basemap fallback |
 | Unity 6.3/6.5 support claim | Blocked until tested | Compatibility target only |
 
 ## Immediate next move
 
-Start M7 by locking the channel-to-layer convention, then implement and test shared height-weight math before adding full URP passes. Keep shader weighting independent from material inspectors so HLSL and later Shader Graph variants share one contract.
+Start M8 with Shader Graph weight parity against the locked M7 test vectors, then run the terrain public-API contract spike before choosing live sampling or the basemap fallback. Keep the four deferred M7 visual checks on the acceptance list rather than treating a successful build as screenshot evidence.

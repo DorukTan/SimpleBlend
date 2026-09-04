@@ -159,6 +159,8 @@ Checkpoint F's automated gate completed on 2026-09-04 for `0.3.0-alpha.2`: 73/73
 
 Checkpoint G: no Shader Graph work begins until hand-written shaders pass build parity.
 
+Checkpoint G's automated implementation gate completed on 2026-09-04 for `0.4.0-beta.1`: nine focused shader tests passed, the final package suite passed 82/82 tests in 5.242 seconds, all six shared URP passes compiled without errors, and a Windows x64 D3D11 player build retained and compiled materials using both public shaders. The mapping is locked to base + R/G for Layer Blend 3 and base + R/G/B for Layer Blend 4, with alpha free. Live lighting, Frame Debugger batching, baked Meta output, and editor/play/player image parity remain unobserved under the user's no-desktop-control instruction, so acceptance test 7 remains open. See `docs/checkpoints/checkpoint-g.md`.
+
 ## Batch H — Shader Graph and terrain
 
 | ID | Work | Definition of done | Verification |
@@ -203,7 +205,17 @@ New-Item -ItemType Directory -Force `
 
 Do not add `-quit` to this `-runTests` invocation on the tested Unity 6000.4 editor. The Test Framework exits the batch process after the run; `-quit` can end the initial import before test dispatch.
 
-Player-build and reference-capture entry points will be added only when their implementation exists; the roadmap does not invent method names in advance.
+The repeatable M7 player-build gate is:
+
+```powershell
+& 'C:\Program Files\Unity\Hub\Editor\6000.4.8f1\Editor\Unity.exe' `
+  -batchmode -nographics -quit `
+  -projectPath 'D:\Projects\SimpleBlend' `
+  -executeMethod 'SimpleBlend.Editor.Tests.LayerBlendPlayerBuildFixture.Build' `
+  -logFile 'D:\Projects\SimpleBlend\TestResults\SimpleBlend-M7-PlayerBuild.log'
+```
+
+The fixture temporarily creates retained Resources materials for both public shaders, builds Windows x64, and removes those temporary assets. Reference captures remain an interactive acceptance step.
 
 ## Human review checkpoints
 
@@ -218,12 +230,12 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-The M5 automated gate is complete. Start Batch F with `VIS-002`, then create the repeatable 40k fixture before optimizing or considering optional Burst acceleration.
+The M7 automated implementation gate is complete. Start Batch H with `SG-001`, using the exact M7 height-weight vectors and channel mapping as parity fixtures. Run `TERR-001` before implementing any terrain binder or shader.
 
-During Batch F, preserve these established boundaries:
+During Batch H, preserve these established boundaries:
 
-- `Color32[]` remains the only authoritative editable state,
-- one drag remains one Undo operation,
-- brush commands remain deterministic and independent of editor UI,
-- storage-policy transitions never discard paint,
-- generated assets remain explicitly owned and never overwrite source meshes.
+- HLSL and Shader Graph variants share one channel and mask convention,
+- zero-painted layers cannot win through height alone,
+- terrain integration uses only public APIs and never mutates terrain or imported mesh sources,
+- the M7 deferred visual checks remain visible acceptance work,
+- `Color32[]` remains the only authoritative editable paint state.

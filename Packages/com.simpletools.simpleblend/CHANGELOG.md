@@ -2,6 +2,27 @@
 
 All notable changes to SimpleBlend will be documented in this file.
 
+## [0.4.0-beta.1] - 2026-09-04
+
+### Added
+
+- `SimpleBlend/Layer Blend 3` for a base layer plus Red and Green overlays.
+- `SimpleBlend/Layer Blend 4` for a base layer plus Red, Green, and Blue overlays.
+- Shared height-aware weighting for albedo, tangent-space normals, metallic, ambient occlusion, and smoothness.
+- Forward, deferred GBuffer, ShadowCaster, DepthOnly, DepthNormals, and Meta passes for URP.
+- One shared `UnityPerMaterial` buffer, GPU instancing variants, DOTS declarations, and a channel-aware material inspector.
+- Shader math, mapping, pass-compilation, batching-declaration, and Windows player-build regression coverage.
+
+### Changed
+
+- The base-plus-overlay vertex-channel convention is now a public, documented contract; vertex alpha remains free for custom data.
+- Both public shaders delegate to one hidden pass implementation to prevent pass behavior from drifting between layer counts.
+
+### Verification
+
+- All nine focused shader tests and the complete 82-test package suite passed; a Windows x64 player build compiled forced references to both public shaders for D3D11.
+- Live rendering, Frame Debugger batching, lightmapping output, and editor/player visual parity remain separate manual checks.
+
 ## [0.3.0-alpha.2] - 2026-09-04
 
 ### Added

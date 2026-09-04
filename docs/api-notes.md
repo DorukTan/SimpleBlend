@@ -209,3 +209,15 @@ Verified during the `0.3.0-alpha.2` visualization/performance slice on 2026-09-0
 - Those results reject a Burst dependency for this milestone. Optional acceleration should be reconsidered only if a future representative fixture fails the same measured gate.
 - No live desktop interaction was performed at the user's request, so color-ramp legibility and overlay ergonomics remain unobserved rather than inferred from headless tests.
 - The full EditMode suite passed 73/73 tests in 4.688 seconds without C# diagnostics.
+
+## M7 implementation observations
+
+Verified during the `0.4.0-beta.1` hand-written shader slice on 2026-09-04:
+
+- Unity's null graphics backend does not expose the public `UsePass` composition reliably through a newly created public-shader Material. Asset/source validation therefore checks the public property and `UsePass` contract, while forced compilation targets the hidden shared implementation shader directly.
+- A hidden `UsePass` provider needs texture-free sampling declarations. URP Core already supplies the inline `sampler_LinearRepeat`; redeclaring it causes a sampler redefinition, while generated per-property sampler names are unavailable because the hidden provider has no texture Properties.
+- One hidden shader owns ForwardLit, GBuffer, ShadowCaster, DepthOnly, DepthNormals, and Meta. Both public layer-count shaders delegate to those named passes, eliminating duplicate pass implementations.
+- The complete material schema lives in one `UnityPerMaterial` constant buffer used by every pass. The source gate also verifies instancing pragmas and URP DOTS declarations.
+- Nine focused tests passed after forcing all six shared passes to compile without shader errors.
+- A repeatable execute-method fixture created temporary Resources materials for Layer Blend 3 and Layer Blend 4 so shader stripping could not hide build failures. The Windows x64 D3D11 build processed the retained variants and succeeded, then the fixture removed its temporary assets.
+- No desktop/GUI control was used, so live appearance, Frame Debugger batching, baked Meta output, and editor/player reference-image parity remain unobserved.

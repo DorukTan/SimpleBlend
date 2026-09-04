@@ -4,7 +4,7 @@ SimpleBlend is an open-source Unity editor toolkit for painting vertex colors on
 
 ## Current status
 
-Version `0.3.0-alpha.2` adds independent R/G/B/A/RGB previews, a transform-aware vertex-density heatmap, and a deterministic 40k-vertex performance gate to the complete brush and storage foundation. The managed drag path passes its timing and zero-allocation target, so SimpleBlend has no mandatory Burst dependency. Blend shaders remain a later milestone.
+Version `0.4.0-beta.1` adds hand-written URP height-blend shaders to the complete brush, storage, visualization, and performance foundation. `SimpleBlend/Layer Blend 3` maps clear/unpainted vertices to the base layer and uses Red and Green for two overlays. `SimpleBlend/Layer Blend 4` adds Blue as the third overlay. Alpha remains free for custom data. The shaders share height weighting and complete forward, deferred, shadow, depth, depth-normal, and meta passes.
 
 ## Compatibility
 
@@ -22,7 +22,7 @@ During development, the package is embedded at `Packages/com.simpletools.simpleb
 
 Select a GameObject with a `MeshFilter`/`MeshRenderer` or a `SkinnedMeshRenderer`, then choose **GameObject > SimpleBlend > Enable Vertex Painting** (also available from the Renderer component context menu). The command adds and initializes `VertexPaintData` as one Undo operation and activates the paint tool. Choose a channel, mode, and preview in the **SimpleBlend Brush** Scene view overlay, then drag or click the mesh. A collider is not required.
 
-See `Documentation~/first-stroke.md` for setup, `Documentation~/brush-controls.md` for exact brush semantics, and `Documentation~/data-safety.md` for prefab and storage behavior.
+See `Documentation~/first-stroke.md` for setup, `Documentation~/brush-controls.md` for exact brush semantics, `Documentation~/layer-blend-shaders.md` for material setup and channel mapping, and `Documentation~/data-safety.md` for prefab and storage behavior.
 
 ## Development verification
 
