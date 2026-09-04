@@ -2,6 +2,21 @@
 
 All notable changes to SimpleBlend will be documented in this file.
 
+## [0.3.0-alpha.2] - 2026-09-04
+
+### Added
+
+- Independent Red, Green, Blue, Alpha, and RGB Scene view preview modes.
+- A cold-to-hot vertex-density view derived from world-space one-ring edge spacing.
+- Transform-revision caching for density data and preview UV uploads.
+- A deterministic 40,000-vertex fixture with separate cache, spatial-query, and brush-kernel timing output.
+- Regression coverage for preview isolation, shader controls, sparse/dense classification, transform invalidation, fixture checksum, timing budgets, and recurring managed allocations.
+
+### Changed
+
+- The temporary red-only preview shader was replaced by one multi-mode visualization shader.
+- Burst remains optional and absent because the managed drag path passes the documented local budget with zero recurring allocations.
+
 ## [0.3.0-alpha.1] - 2026-08-31
 
 ### Added

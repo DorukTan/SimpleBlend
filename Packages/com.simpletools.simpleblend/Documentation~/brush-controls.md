@@ -36,6 +36,12 @@ Enabled masks compose as an intersection: a vertex must pass every enabled mask.
 
 Masks restrict destination vertices. Smooth may still read an adjacent vertex outside the mask when calculating the accepted destination's one-ring average.
 
-## Current visualization boundary
+## Preview modes
 
-The paint data and all channels are functional in `0.3.0-alpha.1`, but the temporary editor preview still displays red-channel weight. R/G/B/A/RGB isolation and vertex-density visualization are planned for the next milestone.
+The **Preview** control changes only the Scene view visualization. It never edits `VertexPaintData` or renderer materials.
+
+- **Red**, **Green**, **Blue**, and **Alpha** isolate one authoritative component.
+- **RGB** displays the three color components together while ignoring alpha as color.
+- **Density** displays topology-relative world-space spacing from cold blue (sparse) through green to hot red (dense). Density is normalized per mesh, uses one-ring edge spacing, and is rebuilt when topology or the target transform changes.
+
+Version `0.3.0-alpha.2` keeps preview rendering and density derivation outside the paint authority. Changing preview mode therefore creates no Undo operation and cannot alter a saved stroke.

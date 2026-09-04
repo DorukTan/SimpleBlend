@@ -17,7 +17,7 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(editorAssembly.GetName().Name, Is.EqualTo("SimpleBlend.Editor"));
             Assert.That(package, Is.Not.Null);
             Assert.That(package.name, Is.EqualTo("com.simpletools.simpleblend"));
-            Assert.That(package.version, Is.EqualTo("0.3.0-alpha.1"));
+            Assert.That(package.version, Is.EqualTo("0.3.0-alpha.2"));
         }
     }
 }

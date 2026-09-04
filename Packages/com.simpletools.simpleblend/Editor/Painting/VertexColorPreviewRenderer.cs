@@ -5,12 +5,18 @@ namespace SimpleBlend.Editor
 {
     internal sealed class VertexColorPreviewRenderer
     {
-        private const string PreviewShaderName = "Hidden/SimpleBlend/Red Channel Preview";
+        internal const string PreviewShaderName = "Hidden/SimpleBlend/Vertex Color Preview";
+        private static readonly int PreviewModeId = Shader.PropertyToID("_PreviewMode");
         private MeshPaintSnapshot _snapshot;
         private Mesh _previewMesh;
         private Material _previewMaterial;
+        private Vector2[] _densityUv;
+        private int _densityTransformRevision = -1;
 
-        internal bool Draw(MeshPaintCache cache, VertexPaintData data)
+        internal bool Draw(
+            MeshPaintCache cache,
+            VertexPaintData data,
+            VertexPaintPreviewMode previewMode)
         {
             if (cache?.Snapshot == null || data == null || Event.current.type != EventType.Repaint)
             {
@@ -23,6 +29,8 @@ namespace SimpleBlend.Editor
             }
 
             _previewMesh.SetColors(data.SerializedColors);
+            UploadDensityIfNeeded(cache);
+            _previewMaterial.SetFloat(PreviewModeId, (float)previewMode);
             if (!_previewMaterial.SetPass(0))
             {
                 return false;
@@ -47,6 +55,8 @@ namespace SimpleBlend.Editor
             }
 
             _snapshot = null;
+            _densityUv = null;
+            _densityTransformRevision = -1;
         }
 
         private bool EnsureResources(MeshPaintSnapshot snapshot)
@@ -61,7 +71,7 @@ namespace SimpleBlend.Editor
 
                 _previewMaterial = new Material(shader)
                 {
-                    name = "SimpleBlend Red Channel Preview",
+                    name = "SimpleBlend Vertex Color Preview",
                     hideFlags = HideFlags.HideAndDontSave
                 };
             }
@@ -78,7 +88,7 @@ namespace SimpleBlend.Editor
 
             _previewMesh = new Mesh
             {
-                name = "SimpleBlend Red Channel Preview",
+                name = "SimpleBlend Vertex Color Preview",
                 hideFlags = HideFlags.HideAndDontSave,
                 indexFormat = snapshot.LocalVertices.Length > ushort.MaxValue
                     ? IndexFormat.UInt32
@@ -90,7 +100,26 @@ namespace SimpleBlend.Editor
             };
             _previewMesh.MarkDynamic();
             _snapshot = snapshot;
+            _densityUv = new Vector2[snapshot.LocalVertices.Length];
+            _densityTransformRevision = -1;
             return true;
+        }
+
+        private void UploadDensityIfNeeded(MeshPaintCache cache)
+        {
+            if (_densityTransformRevision == cache.TransformRevision)
+            {
+                return;
+            }
+
+            var density = cache.DensityValues;
+            for (var index = 0; index < _densityUv.Length; index++)
+            {
+                _densityUv[index] = new Vector2(density[index], 0f);
+            }
+
+            _previewMesh.uv2 = _densityUv;
+            _densityTransformRevision = cache.TransformRevision;
         }
     }
 }

@@ -8,6 +8,7 @@ namespace SimpleBlend.Editor
     {
         [SerializeField] private VertexPaintBrushMode _mode = VertexPaintBrushMode.Paint;
         [SerializeField] private VertexPaintChannel _channel = VertexPaintChannel.Red;
+        [SerializeField] private VertexPaintPreviewMode _previewMode = VertexPaintPreviewMode.Red;
         [SerializeField] private VertexPaintFillScope _fillScope = VertexPaintFillScope.WholeMesh;
         [SerializeField] private float _radius = 1.25f;
         [SerializeField] private float _strength = 1f;
@@ -35,6 +36,12 @@ namespace SimpleBlend.Editor
         {
             get => _channel;
             set => _channel = value;
+        }
+
+        internal VertexPaintPreviewMode PreviewMode
+        {
+            get => _previewMode;
+            set => _previewMode = value;
         }
 
         internal VertexPaintFillScope FillScope

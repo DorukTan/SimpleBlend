@@ -13,6 +13,7 @@ namespace SimpleBlend.Editor
         private Matrix4x4 _localToWorld;
         private Vector3[] _worldVertices = Array.Empty<Vector3>();
         private Vector3[] _worldNormals = Array.Empty<Vector3>();
+        private float[] _densityValues = Array.Empty<float>();
         private bool _topologyInvalidated = true;
         private bool _hasTransform;
         private Mesh _bakedSkinnedMesh;
@@ -24,6 +25,8 @@ namespace SimpleBlend.Editor
         internal IReadOnlyList<Vector3> WorldVertices => _worldVertices;
 
         internal IReadOnlyList<Vector3> WorldNormals => _worldNormals;
+
+        internal IReadOnlyList<float> DensityValues => _densityValues;
 
         internal Matrix4x4 LocalToWorld => _localToWorld;
 
@@ -49,6 +52,7 @@ namespace SimpleBlend.Editor
             _skinnedRenderer = null;
             _worldVertices = Array.Empty<Vector3>();
             _worldNormals = Array.Empty<Vector3>();
+            _densityValues = Array.Empty<float>();
             _topologyInvalidated = true;
             _hasTransform = false;
         }
@@ -178,6 +182,7 @@ namespace SimpleBlend.Editor
             var density = Mathf.Max(1f, Mathf.Pow(Mathf.Max(1, _worldVertices.Length), 1f / 3f));
             var cellSize = Mathf.Max(0.0001f, largestExtent / density);
             _grid.Rebuild(_worldVertices, cellSize);
+            _densityValues = VertexDensityCalculator.Calculate(_worldVertices, _snapshot.Topology);
             _hasTransform = true;
             TransformRevision++;
         }

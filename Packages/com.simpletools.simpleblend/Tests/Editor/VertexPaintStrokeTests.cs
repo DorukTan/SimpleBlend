@@ -101,7 +101,7 @@ namespace SimpleBlend.Editor.Tests
 
                     Assert.That(SimpleBlendPaintTool.IsSupportedTarget(ordinaryData), Is.True);
                     Assert.That(SimpleBlendPaintTool.IsSupportedTarget(skinnedData), Is.True);
-                    Assert.That(Shader.Find("Hidden/SimpleBlend/Red Channel Preview"), Is.Not.Null);
+                    Assert.That(Shader.Find(VertexColorPreviewRenderer.PreviewShaderName), Is.Not.Null);
                 }
                 finally
                 {

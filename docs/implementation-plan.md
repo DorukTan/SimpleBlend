@@ -143,6 +143,8 @@ Checkpoint E's automated gate completed on 2026-08-31 for `0.3.0-alpha.1`: 66/66
 
 Checkpoint F: acceptance test 9 passes on the local machine with recorded timings.
 
+Checkpoint F's automated gate completed on 2026-09-04 for `0.3.0-alpha.2`: 73/73 EditMode tests passed, the deterministic 40k fixture checksum passed, one-time cache construction measured 60.353 ms, and the warmed managed drag path measured 0.037 ms median spatial query, 0.142 ms median kernel, 0.179 ms median total, 0.499 ms maximum, zero samples above 16 ms, and zero recurring managed bytes across 250 samples. Burst was not added because the managed path passed comfortably. R/G/B/A/RGB and transform-invalidated density behavior passed deterministic tests; live Scene view legibility remains unobserved under the user's no-desktop-control instruction. See `docs/checkpoints/checkpoint-f.md`.
+
 ## Batch G — HLSL shaders
 
 | ID | Work | Definition of done | Verification |

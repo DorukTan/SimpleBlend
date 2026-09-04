@@ -71,7 +71,7 @@ namespace SimpleBlend.Editor
                 return;
             }
 
-            _preview.Draw(_cache, data);
+            _preview.Draw(_cache, data, settings.PreviewMode);
 
             var worldRay = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
             var hasHit = _cache.TryRaycast(worldRay, out var hit);

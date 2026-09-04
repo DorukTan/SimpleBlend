@@ -1,6 +1,6 @@
 # SimpleBlend documentation
 
-SimpleBlend includes a deterministic multi-channel brush engine on top of production storage and prefab handling. It supports paint, erase, smooth, fill, sample, flow, accumulation, and composable masks without changing imported source meshes. Channel-isolation visualization, profiling, and blend shaders are not implemented yet.
+SimpleBlend includes a deterministic multi-channel brush engine on top of production storage and prefab handling. It supports paint, erase, smooth, fill, sample, flow, accumulation, composable masks, independent channel previews, and topology-relative density visualization without changing imported source meshes. The managed 40k-vertex profiling gate passes without Burst; blend shaders are not implemented yet.
 
 - [Data safety and storage](data-safety.md)
 - [Paint the first stroke](first-stroke.md)

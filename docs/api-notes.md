@@ -195,3 +195,17 @@ Verified during the `0.3.0-alpha.1` complete-brush slice on 2026-08-31:
 - Existing-value threshold bounds are explicitly inclusive or exclusive. RGB thresholding uses the arithmetic mean of the three color components.
 - The Scene view overlay uses public `Overlay` and `IMGUIContainer` APIs and stores user-local preferences through `ScriptableSingleton`. A headless construction test protects the editor-style lifecycle boundary.
 - The full EditMode suite passed 66/66 tests without C# diagnostics. No live desktop interaction was performed for this slice at the user's request.
+
+## M6 implementation observations
+
+Verified during the `0.3.0-alpha.2` visualization/performance slice on 2026-09-04:
+
+- Preview selection is editor-only state. The shader reads authoritative `Color32` values but never writes them or replaces renderer materials.
+- R/G/B/A views isolate one component, RGB displays the color triplet, and density uses a separate UV channel on the hidden preview mesh.
+- Density is the inverse of average positive one-ring world-edge spacing, normalized between robust 10th/90th-percentile bounds. Uniform connected spacing maps to a neutral midpoint; isolated vertices map to sparse.
+- Density is rebuilt only with topology/world-transform cache invalidation. Preview UV data is uploaded only when the transform revision changes, not per repaint or mouse sample.
+- The deterministic 200×200 fixture contains exactly 40,000 vertices and has checksum `374687139120000`.
+- The final versioned run recorded 60.353 ms one-time cache construction, 0.037 ms median query, 0.142 ms median kernel, 0.179 ms median total, 0.499 ms maximum, no samples above 16 ms, and zero managed bytes over 250 warmed samples.
+- Those results reject a Burst dependency for this milestone. Optional acceleration should be reconsidered only if a future representative fixture fails the same measured gate.
+- No live desktop interaction was performed at the user's request, so color-ramp legibility and overlay ergonomics remain unobserved rather than inferred from headless tests.
+- The full EditMode suite passed 73/73 tests in 4.688 seconds without C# diagnostics.

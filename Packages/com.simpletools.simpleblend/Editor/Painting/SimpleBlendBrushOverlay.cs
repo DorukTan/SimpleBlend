@@ -24,6 +24,9 @@ namespace SimpleBlend.Editor
             EditorGUI.BeginChangeCheck();
             settings.Mode = (VertexPaintBrushMode)EditorGUILayout.EnumPopup("Mode", settings.Mode);
             settings.Channel = (VertexPaintChannel)EditorGUILayout.EnumPopup("Channel", settings.Channel);
+            settings.PreviewMode = (VertexPaintPreviewMode)EditorGUILayout.EnumPopup(
+                "Preview",
+                settings.PreviewMode);
 
             if (settings.Mode == VertexPaintBrushMode.Paint
                 || settings.Mode == VertexPaintBrushMode.Fill

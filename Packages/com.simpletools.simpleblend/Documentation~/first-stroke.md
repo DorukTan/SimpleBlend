@@ -1,6 +1,6 @@
 # Paint the first stroke
 
-Version `0.3.0-alpha.1` provides the complete brush operation set with production storage and prefab behavior for `MeshRenderer` and `SkinnedMeshRenderer` objects.
+Version `0.3.0-alpha.2` provides the complete brush operation set, production storage and prefab behavior, channel-isolated previews, and a vertex-density heatmap for `MeshRenderer` and `SkinnedMeshRenderer` objects.
 
 ## Set up a target
 
@@ -12,14 +12,14 @@ Version `0.3.0-alpha.1` provides the complete brush operation set with productio
 
 ## Paint
 
-- Use the **SimpleBlend Brush** Scene view overlay to choose a mode, target channel, radius, strength, flow, falloff, accumulation, fill scope, and optional masks.
+- Use the **SimpleBlend Brush** Scene view overlay to choose a mode, target channel, preview, radius, strength, flow, falloff, accumulation, fill scope, and optional masks.
 - Drag the primary mouse button over the selected mesh to paint.
 - **Fill** and **Sample** act once when the mesh is clicked.
 - Hold Alt to use Unity's normal Scene view camera navigation.
 - Press Ctrl+Z once to undo the complete drag gesture.
 - Press Ctrl+Y to redo it on Windows.
 
-The projected wire disc follows the hit point and surface normal. The temporary editor preview still isolates the red channel in this checkpoint; full R/G/B/A/RGB visualization is the next milestone. The preview does not replace or edit the renderer's materials.
+The projected wire disc follows the hit point and surface normal. Choose Red, Green, Blue, Alpha, RGB, or Density from **Preview**. The preview does not replace or edit the renderer's materials.
 
 ## Safety and current limitations
 
@@ -28,5 +28,5 @@ The projected wire disc follows the hit point and surface normal. The temporary 
 - Skinned painting raycasts and paints the current baked pose while preserving the source mesh, bind poses, bone weights, and blend shapes in the generated fallback.
 - Painting a prefab instance creates local data and renderer overrides that can be reverted. Painting and saving in Prefab Mode updates inheriting instances.
 - Static-batched, skinned, and GPU Resident Drawer targets use owned generated clones. Generated assets are retained when data is cleared or reverted; automatic orphan deletion is intentionally deferred.
-- Channel-isolation visualization, the 40k-vertex performance gate, and blend shaders remain later milestones.
+- Blend shaders remain a later milestone. The 40k-vertex managed performance gate is automated; live visual and interaction review remains intentionally separate from that timing evidence.
 - Meshes without triangle geometry are rejected with an explicit validation message.

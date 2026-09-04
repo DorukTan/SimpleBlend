@@ -4,7 +4,7 @@ SimpleBlend is an open-source Unity editor toolkit for painting vertex colors on
 
 ## Current status
 
-Version `0.3.0-alpha.1` adds the complete deterministic brush engine to the production storage and prefab foundation. It supports R/G/B/A/RGB channels; paint, erase, smooth, fill, and sample modes; falloff, flow, accumulation, whole/submesh fill, and normal/submesh/value masks through a compact Scene view overlay. Channel-isolation visualization, performance profiling, and blend shaders remain later milestones.
+Version `0.3.0-alpha.2` adds independent R/G/B/A/RGB previews, a transform-aware vertex-density heatmap, and a deterministic 40k-vertex performance gate to the complete brush and storage foundation. The managed drag path passes its timing and zero-allocation target, so SimpleBlend has no mandatory Burst dependency. Blend shaders remain a later milestone.
 
 ## Compatibility
 
@@ -20,7 +20,7 @@ During development, the package is embedded at `Packages/com.simpletools.simpleb
 
 ## First stroke
 
-Select a GameObject with a `MeshFilter`/`MeshRenderer` or a `SkinnedMeshRenderer`, then choose **GameObject > SimpleBlend > Enable Vertex Painting** (also available from the Renderer component context menu). The command adds and initializes `VertexPaintData` as one Undo operation and activates the paint tool. Choose a channel and mode in the **SimpleBlend Brush** Scene view overlay, then drag or click the mesh. A collider is not required.
+Select a GameObject with a `MeshFilter`/`MeshRenderer` or a `SkinnedMeshRenderer`, then choose **GameObject > SimpleBlend > Enable Vertex Painting** (also available from the Renderer component context menu). The command adds and initializes `VertexPaintData` as one Undo operation and activates the paint tool. Choose a channel, mode, and preview in the **SimpleBlend Brush** Scene view overlay, then drag or click the mesh. A collider is not required.
 
 See `Documentation~/first-stroke.md` for setup, `Documentation~/brush-controls.md` for exact brush semantics, and `Documentation~/data-safety.md` for prefab and storage behavior.
 

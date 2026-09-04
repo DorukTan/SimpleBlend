@@ -1,6 +1,6 @@
 # SimpleBlend roadmap
 
-Status: M5 brush engine automated gate complete; live overlay ergonomics review is deferred by user instruction, and M6 visualization/performance is next.
+Status: M6 visualization/performance automated gate complete; live Scene view legibility and ergonomics review is deferred by user instruction, and M7 HLSL blend shaders are next.
 
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
 
@@ -80,7 +80,7 @@ The risky interfaces are Scene view hit testing, serialized array undo, source t
 | M3 — First visible paint | Complete — `0.1.0-dev.3` | Paint one red-channel stroke and see it | One-stroke undo/redo observed |
 | M4 — Production storage and prefabs | Complete — `0.2.0-alpha.2` | Streams, fallback assets, prefab overrides, and play-mode restoration work | Acceptance tests 1–6 and 8 pass; shader render parity remains M7 |
 | M5 — Complete brush engine | Automated gate complete — `0.3.0-alpha.1` | All brush modes, channels, masks, and fill scopes work | 66-test deterministic suite passes; live overlay review deferred |
-| M6 — Visualization and performance | `0.3.0-alpha.2` | Channel isolation and density overlay remain interactive on 40k vertices | Profile gate passes without mandatory Burst |
+| M6 — Visualization and performance | Automated gate complete — `0.3.0-alpha.2` | Channel isolation and density overlay remain interactive on 40k vertices | Managed profile gate passes without mandatory Burst; live visual review deferred |
 | M7 — HLSL blend shaders | `0.4.0-beta.1` | Three- and four-layer height blending renders in URP editor and player | Shader parity/build gates pass |
 | M8 — Shader Graph and terrain matching | `0.4.0-beta.2` | Subgraphs and terrain variant match documented contracts | Visual reference scenes pass |
 | M9 — Samples, removal safety, release | `0.9.0-rc.1` → `1.0.0` | Importable package with self-teaching samples and complete evidence | All ten acceptance tests pass |
@@ -341,4 +341,4 @@ These items are not opportunistically added during v1, even if an implementation
 
 ## Immediate next move
 
-Start M6 with channel-isolation visualization, then build the repeatable 40k fixture before changing the managed paint loop. Profile first; add no Burst dependency unless measured results fail the documented budget after cache/allocation work.
+Start M7 by locking the channel-to-layer convention, then implement and test shared height-weight math before adding full URP passes. Keep shader weighting independent from material inspectors so HLSL and later Shader Graph variants share one contract.
