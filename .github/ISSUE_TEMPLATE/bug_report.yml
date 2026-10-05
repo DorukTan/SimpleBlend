@@ -1,0 +1,51 @@
+name: Bug report
+description: Report reproducible package behavior.
+labels: ["Technical"]
+body:
+  - type: input
+    id: package_version
+    attributes:
+      label: SimpleBlend version or commit
+    validations:
+      required: true
+  - type: input
+    id: editor_version
+    attributes:
+      label: Exact Unity Editor version
+    validations:
+      required: true
+  - type: input
+    id: render_pipeline
+    attributes:
+      label: URP and Shader Graph versions
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system and graphics API
+      description: Include renderer type and storage mode when relevant.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include the mesh, prefab, or material setup needed to reproduce the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant logs or captures
+      description: Remove credentials and unrelated personal information before sharing.
