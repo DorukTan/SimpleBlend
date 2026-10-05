@@ -9,14 +9,22 @@ Version `0.4.0-beta.1` adds hand-written URP height-blend shaders to the complet
 ## Compatibility
 
 - Tested development baseline: Unity `6000.4.8f1` with Universal Render Pipeline `17.4.0`.
-- Compatibility targets awaiting validation: Unity `6000.3` LTS and Unity `6000.5`.
+- Compatibility targets awaiting validation: Unity `6000.3` LTS and Unity `6000.6`.
 - Render pipeline: URP only.
 
 No compatibility claim is made for an untested Unity or URP version.
 
 ## Installation
 
-During development, the package is embedded at `Packages/com.simpletools.simpleblend/` in this Unity project. Git URL and registry installation instructions will be added only after a canonical public repository exists.
+In Package Manager, choose **Install package from Git URL** and enter:
+
+```text
+https://github.com/DorukTan/SimpleBlend.git?path=/Packages/com.simpletools.simpleblend#main
+```
+
+The `main` branch contains the development package. Use a published release tag when stable releases become available. To develop the package locally, clone the repository and open its root Unity project; the package is embedded at `Packages/com.simpletools.simpleblend/`.
+
+See the [GitHub roadmap](https://github.com/DorukTan/SimpleBlend/blob/main/docs/github-roadmap.md) for release gates and the issue-to-PR workflow.
 
 ## First stroke
 

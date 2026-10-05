@@ -19,11 +19,11 @@ SimpleBlend 1.0 is a self-contained UPM package that lets a solo developer paint
 
 The release is complete only when all ten acceptance tests from the brief have been observed. Feature presence alone is not the ship gate.
 
-## Planning lens
+## Maintenance risks
 
-- **Entropy** (the natural tendency of systems toward decay, disorder, and complexity without value) is concentrated at Unity serialization, mesh reimport, prefab overrides, generated assets, rendering-path changes, and package removal.
-- **Negentropy** (the deliberate reversal of decay through growth, compounding value, and increasing order) comes from one durable color model, an explicit storage policy, vertical-slice tests, and documentation that records what was actually observed.
-- **Tacit knowledge** (the unwritten knowledge of how things really work, including assumptions and workarounds) must be captured in API notes, storage reasons shown in the Inspector, and the acceptance-test record.
+- Serialization, mesh reimport, prefab overrides, generated assets, rendering changes, and package removal require regression checks.
+- Keep one durable color model, explicit storage modes, and tests for complete user workflows.
+- Record verified API behavior, storage reasons, and acceptance observations so future changes can be reviewed against them.
 
 ## Non-negotiable product rules
 
@@ -339,7 +339,7 @@ These items are not opportunistically added during v1, even if an implementation
 | Burst dependency | Locked | None unless measured performance requires optional acceleration |
 | Shader layer convention | Locked in M7 | Layer Blend 3 = base + R + G; Layer Blend 4 = base + R + G + B; alpha free |
 | Terrain matching contract | Spike before M8 | Live public TerrainData path, basemap fallback |
-| Unity 6.3/6.5 support claim | Blocked until tested | Compatibility target only |
+| Unity 6.3/6.6 support claim | Blocked until tested | Compatibility target only |
 
 ## Immediate next move
 
