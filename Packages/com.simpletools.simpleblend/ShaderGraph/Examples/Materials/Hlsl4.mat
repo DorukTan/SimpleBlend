@@ -1,0 +1,120 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Hlsl4
+  m_Shader: {fileID: 4800000, guid: c8234cb6cfa95ef42bb6f94d3e19cdff, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _Layer0Albedo:
+        m_Texture: {fileID: 2800000, guid: a2728c5099ac324499ae286bc793ce09, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer0Height:
+        m_Texture: {fileID: 2800000, guid: af386537e637b8b4e932e557bc97f324, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer0Mask:
+        m_Texture: {fileID: 2800000, guid: 22a27e26c95cb1b4bb0639c3e3e3c56f, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer0Normal:
+        m_Texture: {fileID: 2800000, guid: 0f0aea2d6a8e9f04280bf1e407ae72ce, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer1Albedo:
+        m_Texture: {fileID: 2800000, guid: 4c30a18e03f1df244844dec61f0bd5f8, type: 2}
+        m_Scale: {x: 1.25, y: 1}
+        m_Offset: {x: 0.1, y: 0}
+    - _Layer1Height:
+        m_Texture: {fileID: 2800000, guid: da3a05550abb7e74984a848e3c7b9e26, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer1Mask:
+        m_Texture: {fileID: 2800000, guid: 22a27e26c95cb1b4bb0639c3e3e3c56f, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer1Normal:
+        m_Texture: {fileID: 2800000, guid: 0f0aea2d6a8e9f04280bf1e407ae72ce, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer2Albedo:
+        m_Texture: {fileID: 2800000, guid: 5aab2d2df07edc94a8a8aae1086224fa, type: 2}
+        m_Scale: {x: 1.5, y: 1}
+        m_Offset: {x: 0.2, y: 0}
+    - _Layer2Height:
+        m_Texture: {fileID: 2800000, guid: 3022561093903e141a69e9f64a55bf31, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer2Mask:
+        m_Texture: {fileID: 2800000, guid: 22a27e26c95cb1b4bb0639c3e3e3c56f, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer2Normal:
+        m_Texture: {fileID: 2800000, guid: 0f0aea2d6a8e9f04280bf1e407ae72ce, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer3Albedo:
+        m_Texture: {fileID: 2800000, guid: 843dc56c2754c5647bc561b9d944db63, type: 2}
+        m_Scale: {x: 1.75, y: 1}
+        m_Offset: {x: 0.3, y: 0}
+    - _Layer3Height:
+        m_Texture: {fileID: 2800000, guid: 298774c420099244eb49f6c629acfaa0, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer3Mask:
+        m_Texture: {fileID: 2800000, guid: 22a27e26c95cb1b4bb0639c3e3e3c56f, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer3Normal:
+        m_Texture: {fileID: 2800000, guid: 0f0aea2d6a8e9f04280bf1e407ae72ce, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _BlendTransition: 0.2
+    - _Cull: 2
+    - _EnvironmentReflections: 1
+    - _Layer0Metallic: 0.4
+    - _Layer0NormalScale: 0.8
+    - _Layer0OcclusionStrength: 0.75
+    - _Layer0Smoothness: 0.6
+    - _Layer1Metallic: 0.4
+    - _Layer1NormalScale: 0.8
+    - _Layer1OcclusionStrength: 0.75
+    - _Layer1Smoothness: 0.6
+    - _Layer2Metallic: 0.4
+    - _Layer2NormalScale: 0.8
+    - _Layer2OcclusionStrength: 0.75
+    - _Layer2Smoothness: 0.6
+    - _Layer3Metallic: 0.4
+    - _Layer3NormalScale: 0.8
+    - _Layer3OcclusionStrength: 0.75
+    - _Layer3Smoothness: 0.6
+    - _LayerCount: 4
+    - _ReceiveShadows: 1
+    - _SpecularHighlights: 1
+    m_Colors:
+    - _Layer0Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Layer1Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Layer2Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Layer3Color: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

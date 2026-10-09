@@ -5,6 +5,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
 #include "Packages/com.simpletools.simpleblend/Shaders/Includes/SimpleBlendHeightBlend.hlsl"
+#include "Packages/com.simpletools.simpleblend/Shaders/Includes/SimpleBlendSurfaceBlend.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
 float4 _Layer0Albedo_ST;
@@ -59,22 +60,6 @@ float2 SimpleBlendLayerUv(float2 uv, float4 transform)
 half SimpleBlendOcclusion(half sampled, half strength)
 {
     return lerp(1.0h, sampled, saturate(strength));
-}
-
-half3 SimpleBlendWeightedNormal(
-    half3 first,
-    half3 second,
-    half3 third,
-    half3 fourth,
-    half4 weights)
-{
-    half3 blended = first * weights.x
-                  + second * weights.y
-                  + third * weights.z
-                  + fourth * weights.w;
-    return dot(blended, blended) > 0.0001h
-        ? normalize(blended)
-        : half3(0.0h, 0.0h, 1.0h);
 }
 
 void InitializeSimpleBlendSurfaceData(
@@ -132,31 +117,55 @@ void InitializeSimpleBlendSurfaceData(
             _Layer3NormalScale)
         : half3(0.0h, 0.0h, 1.0h);
 
-    surfaceData = (SurfaceData)0;
-    surfaceData.albedo = albedo0.rgb * weights.x
-                       + albedo1.rgb * weights.y
-                       + albedo2.rgb * weights.z
-                       + albedo3.rgb * weights.w;
-    surfaceData.alpha = 1.0h;
-    surfaceData.metallic = mask0.r * _Layer0Metallic * weights.x
-                         + mask1.r * _Layer1Metallic * weights.y
-                         + mask2.r * _Layer2Metallic * weights.z
-                         + mask3.r * _Layer3Metallic * weights.w;
-    surfaceData.specular = half3(0.0h, 0.0h, 0.0h);
-    surfaceData.smoothness = mask0.a * _Layer0Smoothness * weights.x
-                           + mask1.a * _Layer1Smoothness * weights.y
-                           + mask2.a * _Layer2Smoothness * weights.z
-                           + mask3.a * _Layer3Smoothness * weights.w;
-    surfaceData.normalTS = SimpleBlendWeightedNormal(
+    half4 packedMask0 = half4(
+        mask0.r * _Layer0Metallic,
+        SimpleBlendOcclusion(mask0.g, _Layer0OcclusionStrength),
+        mask0.b,
+        mask0.a * _Layer0Smoothness);
+    half4 packedMask1 = half4(
+        mask1.r * _Layer1Metallic,
+        SimpleBlendOcclusion(mask1.g, _Layer1OcclusionStrength),
+        mask1.b,
+        mask1.a * _Layer1Smoothness);
+    half4 packedMask2 = half4(
+        mask2.r * _Layer2Metallic,
+        SimpleBlendOcclusion(mask2.g, _Layer2OcclusionStrength),
+        mask2.b,
+        mask2.a * _Layer2Smoothness);
+    half4 packedMask3 = half4(
+        mask3.r * _Layer3Metallic,
+        SimpleBlendOcclusion(mask3.g, _Layer3OcclusionStrength),
+        mask3.b,
+        mask3.a * _Layer3Smoothness);
+    half3 blendedAlbedo;
+    half3 blendedNormal;
+    half4 blendedMask;
+    SimpleBlendSurfaceBlend4(
+        weights,
+        albedo0.rgb,
+        albedo1.rgb,
+        albedo2.rgb,
+        albedo3.rgb,
         normal0,
         normal1,
         normal2,
         normal3,
-        weights);
-    surfaceData.occlusion = SimpleBlendOcclusion(mask0.g, _Layer0OcclusionStrength) * weights.x
-                          + SimpleBlendOcclusion(mask1.g, _Layer1OcclusionStrength) * weights.y
-                          + SimpleBlendOcclusion(mask2.g, _Layer2OcclusionStrength) * weights.z
-                          + SimpleBlendOcclusion(mask3.g, _Layer3OcclusionStrength) * weights.w;
+        packedMask0,
+        packedMask1,
+        packedMask2,
+        packedMask3,
+        blendedAlbedo,
+        blendedNormal,
+        blendedMask);
+
+    surfaceData = (SurfaceData)0;
+    surfaceData.albedo = blendedAlbedo;
+    surfaceData.alpha = 1.0h;
+    surfaceData.metallic = blendedMask.r;
+    surfaceData.specular = half3(0.0h, 0.0h, 0.0h);
+    surfaceData.smoothness = blendedMask.a;
+    surfaceData.normalTS = blendedNormal;
+    surfaceData.occlusion = blendedMask.g;
     surfaceData.emission = half3(0.0h, 0.0h, 0.0h);
     surfaceData.clearCoatMask = 0.0h;
     surfaceData.clearCoatSmoothness = 0.0h;
