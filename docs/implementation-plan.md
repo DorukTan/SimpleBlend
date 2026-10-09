@@ -230,7 +230,7 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-The M7 automated implementation gate is complete. Start Batch H with `SG-001`, using the exact M7 height-weight vectors and channel mapping as parity fixtures. Run `TERR-001` before implementing any terrain binder or shader.
+The M7 automated implementation gate is complete. Shader Graph parity is proposed in PR #14. Terrain contract selection and the public editor binder are implemented, with evidence in `docs/checkpoints/checkpoint-h-terrain-binding.md`. Next implement the terrain-matching shader in issue #3 against the documented v1 material property contract, then collect graph/terrain visual evidence in issue #4. Neither open pull requests nor automated binding checks establish release acceptance.
 
 During Batch H, preserve these established boundaries:
 
