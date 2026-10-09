@@ -2,6 +2,16 @@
 
 All notable changes to SimpleBlend will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Editor-only terrain binding window using public Terrain, TerrainData, and TerrainLayer APIs.
+- Versioned material property validation, complete preflight checks, single-operation Undo, and explicit refresh.
+- Regression coverage for one to four layers, live control textures, saved binding references, read-only destinations, and source asset preservation.
+
+The production terrain-matching shader and visual verification remain separate work.
+
 ## [0.4.0-beta.1] - 2026-09-04
 
 ### Added
