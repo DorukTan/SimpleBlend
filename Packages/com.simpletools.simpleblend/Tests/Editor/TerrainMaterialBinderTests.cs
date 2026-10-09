@@ -113,6 +113,23 @@ namespace SimpleBlend.Editor.Tests
             }
         }
 
+        [TestCase(true, TerrainLayerSmoothnessSource.DiffuseAlphaChannel, 1f)]
+        [TestCase(true, TerrainLayerSmoothnessSource.Constant, 0f)]
+        [TestCase(false, TerrainLayerSmoothnessSource.DiffuseAlphaChannel, 0f)]
+        public void Binding_copies_public_smoothness_source(bool hasDiffuse,
+            TerrainLayerSmoothnessSource source, float expectedFlag)
+        {
+            using (var fixture = new Fixture(1))
+            {
+                fixture.Layers[0].smoothnessSource = source;
+                if (!hasDiffuse)
+                    fixture.Layers[0].diffuseTexture = null;
+                Assert.That(TerrainMaterialBinder.TryBind(fixture.Terrain, fixture.Material, out var message),
+                    Is.True, message);
+                Assert.That(fixture.Material.GetVector("_TerrainLayer0Surface").w, Is.EqualTo(expectedFlag));
+            }
+        }
+
         [TestCase("missing-terrain", "Select a Terrain")]
         [TestCase("missing-data", "no TerrainData")]
         [TestCase("missing-material", "destination material")]
@@ -407,6 +424,7 @@ namespace SimpleBlend.Editor.Tests
                         maskMapTexture = Textures[index * 3 + 2], tileSize = new Vector2(2f + index, 3f + index),
                         tileOffset = new Vector2(0.25f * index, -0.5f * index),
                         normalScale = 0.5f + index * 0.1f, metallic = index * 0.1f, smoothness = 0.25f + index * 0.1f,
+                        smoothnessSource = TerrainLayerSmoothnessSource.Constant,
                         diffuseRemapMin = new Vector4(0.05f, 0.1f, 0.15f, 0.2f),
                         diffuseRemapMax = new Vector4(0.8f, 0.9f, 1f, 0.7f),
                         maskMapRemapMin = new Vector4(0.1f, 0.2f, 0.3f, 0.4f),

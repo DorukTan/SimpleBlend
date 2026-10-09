@@ -10,7 +10,14 @@ All notable changes to SimpleBlend will be documented in this file.
 - Versioned material property validation, complete preflight checks, single-operation Undo, and explicit refresh.
 - Regression coverage for one to four layers, live control textures, saved binding references, read-only destinations, and source asset preservation.
 
-The production terrain-matching shader and visual verification remain separate work.
+Visual verification remains separate work.
+
+### Terrain shader
+
+- Added `SimpleBlend/Terrain Blend` with a world-XZ terrain base and Red, Green, and Blue mesh overlays.
+- Reused established height blending and URP rendering passes, including original-world-position sampling in Meta.
+- Added terrain mask remapping, explicit diffuse-alpha smoothness selection, texel-center control sampling, and projected normal conversion.
+- Added GPU surface probes and a disposable seam/reference player-build fixture. Visual parity remains an unverified acceptance gate.
 
 ## [0.4.0-beta.1] - 2026-09-04
 

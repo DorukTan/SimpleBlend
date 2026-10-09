@@ -3,6 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
 
 namespace SimpleBlend.Editor
 {
@@ -120,7 +121,11 @@ namespace SimpleBlend.Editor
                     return Fail("Terrain Layer " + index + " is missing. Assign it before binding.", out message);
                 var tileSize = layer.tileSize;
                 var tileOffset = layer.tileOffset;
-                var surface = new Vector4(layer.normalScale, layer.metallic, layer.smoothness, 0f);
+                var diffuseAlphaSmoothness = layer.diffuseTexture != null
+                    && GraphicsFormatUtility.HasAlphaChannel(layer.diffuseTexture.graphicsFormat)
+                    && layer.smoothnessSource == TerrainLayerSmoothnessSource.DiffuseAlphaChannel;
+                var surface = new Vector4(layer.normalScale, layer.metallic, layer.smoothness,
+                    diffuseAlphaSmoothness ? 1f : 0f);
                 var tiling = new Vector4(tileSize.x, tileSize.y, tileOffset.x, tileOffset.y);
                 if (!string.IsNullOrEmpty(path)
                     && (!SerializableTexture(layer.diffuseTexture)
