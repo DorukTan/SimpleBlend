@@ -114,7 +114,8 @@ void SimpleBlendForwardFragment(
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     SurfaceData surfaceData;
-    InitializeSimpleBlendSurfaceData(input.uv, input.color, surfaceData);
+    InitializeSimpleBlendSurfaceData(input.uv, input.color, input.positionWS,
+        input.normalWS, input.tangentWS, surfaceData);
     InputData inputData;
     InitializeSimpleBlendInputData(input, surfaceData.normalTS, inputData);
 

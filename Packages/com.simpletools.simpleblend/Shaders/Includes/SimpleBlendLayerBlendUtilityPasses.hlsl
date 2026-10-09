@@ -72,6 +72,7 @@ half4 SimpleBlendShadowFragment(SimpleBlendDepthVaryings input) : SV_Target
 
 struct SimpleBlendNormalVaryings
 {
+    float3 positionWS : TEXCOORD4;
     float2 uv : TEXCOORD0;
     half3 normalWS : TEXCOORD1;
     half4 tangentWS : TEXCOORD2;
@@ -89,6 +90,7 @@ SimpleBlendNormalVaryings SimpleBlendDepthNormalsVertex(SimpleBlendUtilityAttrib
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
     VertexNormalInputs normalInputs = GetVertexNormalInputs(input.normalOS, input.tangentOS);
     output.uv = input.uv;
+    output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
     output.normalWS = normalInputs.normalWS;
     output.tangentWS = half4(
         normalInputs.tangentWS,
@@ -103,7 +105,8 @@ half4 SimpleBlendDepthNormalsFragment(SimpleBlendNormalVaryings input) : SV_Targ
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
     SurfaceData surfaceData;
-    InitializeSimpleBlendSurfaceData(input.uv, input.color, surfaceData);
+    InitializeSimpleBlendSurfaceData(input.uv, input.color, input.positionWS,
+        input.normalWS, input.tangentWS, surfaceData);
     half3 bitangentWS = input.tangentWS.w
                       * cross(input.normalWS, input.tangentWS.xyz);
     half3 normalWS = TransformTangentToWorld(
@@ -121,6 +124,9 @@ half4 SimpleBlendDepthNormalsFragment(SimpleBlendNormalVaryings input) : SV_Targ
 
 struct SimpleBlendMetaVaryings
 {
+    float3 positionWS : TEXCOORD2;
+    half3 normalWS : TEXCOORD3;
+    half4 tangentWS : TEXCOORD4;
     float2 uv : TEXCOORD0;
     half4 color : TEXCOORD1;
     float4 positionCS : SV_POSITION;
@@ -129,6 +135,11 @@ struct SimpleBlendMetaVaryings
 SimpleBlendMetaVaryings SimpleBlendMetaVertex(SimpleBlendUtilityAttributes input)
 {
     SimpleBlendMetaVaryings output = (SimpleBlendMetaVaryings)0;
+    UNITY_SETUP_INSTANCE_ID(input);
+    VertexNormalInputs normalInputs = GetVertexNormalInputs(input.normalOS, input.tangentOS);
+    output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
+    output.normalWS = normalInputs.normalWS;
+    output.tangentWS = half4(normalInputs.tangentWS, input.tangentOS.w * GetOddNegativeScale());
     output.positionCS = UnityMetaVertexPosition(
         input.positionOS.xyz,
         input.uv1,
@@ -141,7 +152,8 @@ SimpleBlendMetaVaryings SimpleBlendMetaVertex(SimpleBlendUtilityAttributes input
 half4 SimpleBlendMetaFragment(SimpleBlendMetaVaryings input) : SV_Target
 {
     SurfaceData surfaceData;
-    InitializeSimpleBlendSurfaceData(input.uv, input.color, surfaceData);
+    InitializeSimpleBlendSurfaceData(input.uv, input.color, input.positionWS,
+        input.normalWS, input.tangentWS, surfaceData);
     BRDFData brdfData;
     InitializeBRDFData(
         surfaceData.albedo,

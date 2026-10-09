@@ -1,6 +1,6 @@
 # Terrain matching contract
 
-Status: editor binder implemented; production terrain shader and visual verification remain separate M8 gates.
+Status: editor binder and production terrain shader implemented in separate M8 pull requests; visual verification remains open.
 
 ## Supported boundary
 
@@ -35,7 +35,7 @@ Binding changes only the destination material. It does not modify the Terrain, T
 ## Unsupported terrain features
 
 - Five or more assigned Terrain Layers.
-- Custom terrain shaders with different blending rules.
+- Custom terrain shaders with different blending rules, terrain height blending, and opacity-as-density modes.
 - Terrain holes, decals, detail meshes, and vegetation.
 - Triplanar projection or stochastic terrain texturing.
 - Automatic runtime rebinding.
@@ -59,12 +59,22 @@ For each index 0–3, `_TerrainLayer{index}` has these suffixes:
 |---|---|---|
 | `Diffuse`, `Normal`, `Mask` | Texture | Public layer textures, or neutral defaults |
 | `TileSizeOffset` | Vector | Tile size XY, tile offset XY |
-| `Surface` | Vector | Normal scale, metallic, smoothness, 0 |
+| `Surface` | Vector | Normal scale, metallic, smoothness, diffuse-alpha smoothness flag |
 | `Flags` | Vector | Diffuse present, normal present, mask present, 0 |
 | `DiffuseRemapMin`, `DiffuseRemapMax` | Vector | Unmodified public diffuse remaps |
 | `MaskRemapMin`, `MaskRemapMax` | Vector | Unmodified public mask remaps |
 
-Missing diffuse and mask maps use white; missing normals use the built-in normal texture. Unused slots have zero flags, unit tile size, zero offset, surface `(1,0,0,0)`, zero remap minima, and unit remap maxima. The future shader must honor presence flags rather than infer map presence from fallback textures.
+Missing diffuse and mask maps use white; missing normals use the built-in normal texture. Unused slots have zero flags, unit tile size, zero offset, surface `(1,0,0,0)`, zero remap minima, and unit remap maxima. The shader honors presence flags rather than inferring map presence from fallback textures. Surface W is 1 only when the public smoothness source selects diffuse alpha and the diffuse texture format has an alpha channel; otherwise it is 0. Rebind older materials to populate this flag.
+
+## Shader sampling semantics
+
+`SimpleBlend/Terrain Blend` uses normalized linear control weights across the assigned layers. The world-space control UV remains the convention above; sampling maps its endpoints to texel centers using `(saturate(uv) * (dimensions - 1) + 0.5) / dimensions`. Outside the terrain footprint, control weights clamp while layer textures repeat.
+
+Diffuse RGB is multiplied by the public remap scale `max.rgb - min.rgb`, consistent with the installed URP Terrain Lit path (its inspector normally sets RGB minima to zero). Mask channels are remapped as `sample * (max - min) + min`. With a mask present, metallic, AO, smoothness, and base height come from the remapped R, G, A, and B channels. Without a mask, metallic and smoothness use public layer constants (or explicit diffuse-alpha smoothness), while AO and height use mask-remap maxima G and B.
+
+Normals use world-XZ projection relative to the mesh geometric normal, then convert into the mesh tangent frame before mixing with mesh-UV overlays. A flat surface uses +world X for U and +world Z for V. The terrain geometric heightfield normal is not copied: a seam requires matching mesh geometry and normals as well as material inputs.
+
+The sampled terrain is one base surface. Its mask-derived height, scaled by Terrain Base Height Influence, participates in SimpleBlend's existing height-weight function against Red, Green, and Blue overlay height textures; zero-painted overlays cannot become active through height alone. Base height influence defaults to zero so the terrain's no-mask height fallback does not suppress normal overlay painting. Enable it deliberately when terrain mask height should compete with overlay height. This does not reproduce URP terrain height blending between terrain layers. Forward, GBuffer, ShadowCaster, DepthOnly, DepthNormals, and Meta use the same input contract; Meta receives original world position before lightmap-space projection.
 
 ## Validation and persistence
 
