@@ -225,7 +225,7 @@ namespace SimpleBlend.Editor.Tests
             return source.Split(new[] { value }, StringSplitOptions.None).Length - 1;
         }
 
-        private static class HeightBlendReference
+        internal static class HeightBlendReference
         {
             internal static Vector4 RawWeights(Color vertexColor, int layerCount)
             {
@@ -247,6 +247,7 @@ namespace SimpleBlend.Editor.Tests
                 if (layerCount == 3)
                 {
                     rawWeights.w = 0f;
+                    heights.w = 0f;
                 }
 
                 rawWeights = Max(rawWeights, 0f);

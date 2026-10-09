@@ -1,6 +1,6 @@
 # SimpleBlend roadmap
 
-Status: M7 hand-written shader automated implementation gate complete at `0.4.0-beta.1`; live URP appearance, Frame Debugger, lightmapping, and editor/player image parity remain deferred by user instruction. M8 Shader Graph parity and terrain-contract work are next.
+Status: M8 in progress. Shader Graph subgraphs and complete three/four-layer Lit reference graphs have import, compilation, and numerical coverage. Terrain integration and live graph/HLSL image comparison remain open.
 
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
 
@@ -275,6 +275,8 @@ The second option is the release fallback if live sampling proves version-fragil
 - HLSL and Shader Graph examples match within an agreed visual tolerance.
 - Terrain seam remains visually continuous from the documented camera distances.
 - All source terrain and mesh assets remain unchanged.
+
+The Shader Graph implementation record is in [checkpoint-h-graph.md](checkpoints/checkpoint-h-graph.md). Its automated checks do not close the separate visual acceptance gate.
 
 ## M9 — Samples, documentation, and release
 

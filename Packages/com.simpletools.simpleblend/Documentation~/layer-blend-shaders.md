@@ -31,6 +31,8 @@ Use linear import settings for data textures such as Mask and Height. Normal tex
 
 ## Height weighting
 
+For reusable graph functions and paired comparison materials, see [Shader Graph integration](shader-graph.md).
+
 The shader computes all participating layer scores together from painted weight plus sampled height. It keeps layers within the transition range of the highest score, multiplies those contributions by their painted weights, then normalizes the final vector. A zero-painted layer cannot win only because its height texture is bright.
 
 The same final normalized weights blend albedo, normals, metallic, ambient occlusion, and smoothness. This avoids the ordering bias of sequential `lerp` chains and keeps every surface channel aligned.

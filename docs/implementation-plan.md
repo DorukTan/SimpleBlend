@@ -230,7 +230,7 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-The M7 automated implementation gate is complete. Start Batch H with `SG-001`, using the exact M7 height-weight vectors and channel mapping as parity fixtures. Run `TERR-001` before implementing any terrain binder or shader.
+The Shader Graph implementation now includes the three subgraphs, complete three/four-layer Lit reference graphs, and paired reference materials. See `docs/checkpoints/checkpoint-h-graph.md` for verification. Continue with the terrain binder in issue #2 and terrain shader in issue #3; graph/terrain visual acceptance remains issue #4. Keep the terrain public-data contract explicit before building the binder.
 
 During Batch H, preserve these established boundaries:
 
