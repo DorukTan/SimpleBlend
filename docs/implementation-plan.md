@@ -230,7 +230,7 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-The M7 automated implementation gate is complete. Shader Graph parity is proposed in PR #14, terrain binding in PR #15 and terrain shading in PR #16. Teaching samples for issue #5 have automated import coverage, with evidence in `docs/checkpoints/checkpoint-i-teaching-samples.md`. Next complete issue #6's installation/usage documentation and obtain owner-run visual/first-use evidence. Integrate only reviewed implementation branches. Neither open pull requests nor automated checks establish release acceptance.
+The M7 automated implementation gate is complete. Shader Graph parity is proposed in PR #14, terrain binding in PR #15 and terrain shading in PR #16. Teaching samples are in PR #19. Issue #6's guide coverage and pinned Git installation checks are prepared, with evidence in `docs/checkpoints/checkpoint-i-user-guide.md`. Next prepare issue #9's version-validation automation while obtaining owner-run visual, first-use and removal evidence. Integrate only reviewed implementation branches. Neither open pull requests nor automated checks establish release acceptance.
 
 During Batch H, preserve these established boundaries:
 
