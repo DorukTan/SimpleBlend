@@ -2,6 +2,8 @@
 
 Status: M7 automated implementation gate complete at `0.4.0-beta.1`. M8 Shader Graph parity is in PR #14; the public terrain binder is in PR #15. The terrain-matching shader (#3) is implemented on top of the binder branch; visual evidence (#4) remains open. Live URP appearance, Frame Debugger, lightmapping, and editor/player image parity remain unverified.
 
+The issue #4 owner-run protocol, fixed tolerances and report template are prepared in `docs/acceptance/`. Preparation is not acceptance; no owner captures have been recorded.
+
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
 
 Package identity:
