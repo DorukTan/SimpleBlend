@@ -7,5 +7,6 @@ SimpleBlend includes a deterministic multi-channel brush engine, production stor
 - [Brush controls and exact behavior](brush-controls.md)
 - [Layer Blend shader setup](layer-blend-shaders.md)
 - [Terrain material binding](terrain-binding.md)
+- [Teaching samples](teaching-samples.md)
 
 For the active development plan, see the repository-level `docs/roadmap.md` and `docs/implementation-plan.md` files.

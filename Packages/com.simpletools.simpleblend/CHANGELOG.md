@@ -4,6 +4,13 @@ All notable changes to SimpleBlend will be documented in this file.
 
 ## [Unreleased]
 
+### Teaching samples
+
+- Registered Rock and Moss, Roof and Snow, and Wall and Grime as independent Package Manager samples.
+- Added procedural meshes, textures, editable per-renderer paint, saved scenes and in-scene channel/brush captions.
+- Included sample instructions, MIT notices, provenance records and Package Manager import regression checks.
+
+
 ### Added
 
 - Editor-only terrain binding window using public Terrain, TerrainData, and TerrainLayer APIs.
