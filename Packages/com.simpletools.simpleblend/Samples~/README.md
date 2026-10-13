@@ -1,3 +1,3 @@
 # SimpleBlend samples
 
-Importable sample content will be added after the painting, storage, and shader milestones have passed their release gates. This directory exists now to reserve the package's sample boundary without shipping an incomplete example.
+Package Manager exposes Rock and Moss, Roof and Snow, and Wall and Grime. Import each lesson independently and open its saved scene. Each folder contains its own procedural mesh, material, textures, paint data, caption and README. See Documentation~/teaching-samples.md for setup and review requirements.

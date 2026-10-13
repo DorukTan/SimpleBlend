@@ -1,0 +1,2196 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!29 &1
+OcclusionCullingSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_OcclusionBakeSettings:
+    smallestOccluder: 5
+    smallestHole: 0.25
+    backfaceThreshold: 100
+  m_SceneGUID: 00000000000000000000000000000000
+  m_OcclusionCullingData: {fileID: 0}
+--- !u!104 &2
+RenderSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 10
+  m_Fog: 0
+  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_FogMode: 3
+  m_FogDensity: 0.01
+  m_LinearFogStart: 0
+  m_LinearFogEnd: 300
+  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
+  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  m_AmbientIntensity: 1
+  m_AmbientMode: 0
+  m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_HaloStrength: 0.5
+  m_FlareStrength: 1
+  m_FlareFadeSpeed: 3
+  m_HaloTexture: {fileID: 0}
+  m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
+  m_DefaultReflectionMode: 0
+  m_DefaultReflectionResolution: 128
+  m_ReflectionBounces: 1
+  m_ReflectionIntensity: 1
+  m_CustomReflection: {fileID: 0}
+  m_Sun: {fileID: 0}
+  m_UseRadianceAmbientProbe: 0
+--- !u!157 &3
+LightmapSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
+  m_GISettings:
+    serializedVersion: 2
+    m_BounceScale: 1
+    m_IndirectOutputScale: 1
+    m_AlbedoBoost: 1
+    m_EnvironmentLightingMode: 0
+    m_EnableBakedLightmaps: 1
+    m_EnableRealtimeLightmaps: 0
+  m_LightmapEditorSettings:
+    serializedVersion: 12
+    m_Resolution: 2
+    m_BakeResolution: 40
+    m_AtlasSize: 1024
+    m_AO: 0
+    m_AOMaxDistance: 1
+    m_CompAOExponent: 1
+    m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
+    m_Padding: 2
+    m_LightmapParameters: {fileID: 0}
+    m_LightmapsBakeMode: 1
+    m_TextureCompression: 1
+    m_ReflectionCompression: 2
+    m_MixedBakeMode: 2
+    m_BakeBackend: 2
+    m_PVRSampling: 1
+    m_PVRDirectSampleCount: 32
+    m_PVRSampleCount: 512
+    m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 256
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 1
+    m_PVRDenoiserTypeDirect: 1
+    m_PVRDenoiserTypeIndirect: 1
+    m_PVRDenoiserTypeAO: 1
+    m_PVRFilterTypeDirect: 0
+    m_PVRFilterTypeIndirect: 0
+    m_PVRFilterTypeAO: 0
+    m_PVREnvironmentMIS: 1
+    m_PVRCulling: 1
+    m_PVRFilteringGaussRadiusDirect: 1
+    m_PVRFilteringGaussRadiusIndirect: 1
+    m_PVRFilteringGaussRadiusAO: 1
+    m_PVRFilteringAtrousPositionSigmaDirect: 0.5
+    m_PVRFilteringAtrousPositionSigmaIndirect: 2
+    m_PVRFilteringAtrousPositionSigmaAO: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
+  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightingSettings: {fileID: 0}
+--- !u!196 &4
+NavMeshSettings:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_BuildSettings:
+    serializedVersion: 3
+    agentTypeID: 0
+    agentRadius: 0.5
+    agentHeight: 2
+    agentSlope: 45
+    agentClimb: 0.4
+    ledgeDropHeight: 0
+    maxJumpAcrossDistance: 0
+    minRegionArea: 2
+    manualCellSize: 0
+    cellSize: 0.16666667
+    manualTileSize: 0
+    tileSize: 256
+    buildHeightMesh: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
+    debug:
+      m_Flags: 0
+  m_NavMeshData: {fileID: 0}
+--- !u!1 &208993755
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 208993759}
+  - component: {fileID: 208993758}
+  - component: {fileID: 208993757}
+  - component: {fileID: 208993756}
+  m_Layer: 0
+  m_Name: "RockMoss \u2014 select to paint"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &208993756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208993755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aba8b5eb0076ea444a197e3db36fb3b3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: SimpleBlend.Runtime::SimpleBlend.VertexPaintData
+  _schemaVersion: 2
+  _sourceMesh: {fileID: 4300000, guid: 47298f3a33a1bd94e8370d0aac7208d3, type: 2}
+  _sourceSignature:
+    _sourceIdentity: 47298f3a33a1bd94e8370d0aac7208d3:4300000
+    _vertexCount: 827
+    _subMeshTopologies: 00000000
+    _subMeshIndexCounts: c0120000
+    _topologyHash: 7975224647268554313
+  _colors:
+  - serializedVersion: 2
+    rgba: 1197
+  - serializedVersion: 2
+    rgba: 1198
+  - serializedVersion: 2
+    rgba: 1198
+  - serializedVersion: 2
+    rgba: 1198
+  - serializedVersion: 2
+    rgba: 1198
+  - serializedVersion: 2
+    rgba: 1197
+  - serializedVersion: 2
+    rgba: 1196
+  - serializedVersion: 2
+    rgba: 1194
+  - serializedVersion: 2
+    rgba: 1193
+  - serializedVersion: 2
+    rgba: 1193
+  - serializedVersion: 2
+    rgba: 937
+  - serializedVersion: 2
+    rgba: 937
+  - serializedVersion: 2
+    rgba: 937
+  - serializedVersion: 2
+    rgba: 936
+  - serializedVersion: 2
+    rgba: 936
+  - serializedVersion: 2
+    rgba: 935
+  - serializedVersion: 2
+    rgba: 933
+  - serializedVersion: 2
+    rgba: 932
+  - serializedVersion: 2
+    rgba: 932
+  - serializedVersion: 2
+    rgba: 932
+  - serializedVersion: 2
+    rgba: 932
+  - serializedVersion: 2
+    rgba: 933
+  - serializedVersion: 2
+    rgba: 935
+  - serializedVersion: 2
+    rgba: 936
+  - serializedVersion: 2
+    rgba: 937
+  - serializedVersion: 2
+    rgba: 937
+  - serializedVersion: 2
+    rgba: 937
+  - serializedVersion: 2
+    rgba: 937
+  - serializedVersion: 2
+    rgba: 1193
+  - serializedVersion: 2
+    rgba: 1194
+  - serializedVersion: 2
+    rgba: 1194
+  - serializedVersion: 2
+    rgba: 1195
+  - serializedVersion: 2
+    rgba: 1197
+  - serializedVersion: 2
+    rgba: 1471
+  - serializedVersion: 2
+    rgba: 1222
+  - serializedVersion: 2
+    rgba: 1227
+  - serializedVersion: 2
+    rgba: 1228
+  - serializedVersion: 2
+    rgba: 1224
+  - serializedVersion: 2
+    rgba: 1216
+  - serializedVersion: 2
+    rgba: 1463
+  - serializedVersion: 2
+    rgba: 1455
+  - serializedVersion: 2
+    rgba: 1449
+  - serializedVersion: 2
+    rgba: 1191
+  - serializedVersion: 2
+    rgba: 1190
+  - serializedVersion: 2
+    rgba: 934
+  - serializedVersion: 2
+    rgba: 676
+  - serializedVersion: 2
+    rgba: 673
+  - serializedVersion: 2
+    rgba: 412
+  - serializedVersion: 2
+    rgba: 406
+  - serializedVersion: 2
+    rgba: 400
+  - serializedVersion: 2
+    rgba: 395
+  - serializedVersion: 2
+    rgba: 392
+  - serializedVersion: 2
+    rgba: 392
+  - serializedVersion: 2
+    rgba: 395
+  - serializedVersion: 2
+    rgba: 400
+  - serializedVersion: 2
+    rgba: 406
+  - serializedVersion: 2
+    rgba: 669
+  - serializedVersion: 2
+    rgba: 675
+  - serializedVersion: 2
+    rgba: 935
+  - serializedVersion: 2
+    rgba: 937
+  - serializedVersion: 2
+    rgba: 1193
+  - serializedVersion: 2
+    rgba: 1193
+  - serializedVersion: 2
+    rgba: 1451
+  - serializedVersion: 2
+    rgba: 1455
+  - serializedVersion: 2
+    rgba: 1462
+  - serializedVersion: 2
+    rgba: 1471
+  - serializedVersion: 2
+    rgba: 1472
+  - serializedVersion: 2
+    rgba: 1225
+  - serializedVersion: 2
+    rgba: 1229
+  - serializedVersion: 2
+    rgba: 1230
+  - serializedVersion: 2
+    rgba: 1227
+  - serializedVersion: 2
+    rgba: 1476
+  - serializedVersion: 2
+    rgba: 1721
+  - serializedVersion: 2
+    rgba: 1710
+  - serializedVersion: 2
+    rgba: 1703
+  - serializedVersion: 2
+    rgba: 1443
+  - serializedVersion: 2
+    rgba: 1186
+  - serializedVersion: 2
+    rgba: 928
+  - serializedVersion: 2
+    rgba: 668
+  - serializedVersion: 2
+    rgba: 407
+  - serializedVersion: 2
+    rgba: 147
+  - serializedVersion: 2
+    rgba: 141
+  - serializedVersion: 2
+    rgba: 135
+  - serializedVersion: 2
+    rgba: 128
+  - serializedVersion: 2
+    rgba: 124
+  - serializedVersion: 2
+    rgba: 123
+  - serializedVersion: 2
+    rgba: 126
+  - serializedVersion: 2
+    rgba: 132
+  - serializedVersion: 2
+    rgba: 140
+  - serializedVersion: 2
+    rgba: 147
+  - serializedVersion: 2
+    rgba: 409
+  - serializedVersion: 2
+    rgba: 672
+  - serializedVersion: 2
+    rgba: 933
+  - serializedVersion: 2
+    rgba: 1191
+  - serializedVersion: 2
+    rgba: 1447
+  - serializedVersion: 2
+    rgba: 1705
+  - serializedVersion: 2
+    rgba: 1710
+  - serializedVersion: 2
+    rgba: 1718
+  - serializedVersion: 2
+    rgba: 1472
+  - serializedVersion: 2
+    rgba: 1457
+  - serializedVersion: 2
+    rgba: 1202
+  - serializedVersion: 2
+    rgba: 1202
+  - serializedVersion: 2
+    rgba: 1203
+  - serializedVersion: 2
+    rgba: 1204
+  - serializedVersion: 2
+    rgba: 1460
+  - serializedVersion: 2
+    rgba: 1713
+  - serializedVersion: 2
+    rgba: 1962
+  - serializedVersion: 2
+    rgba: 1956
+  - serializedVersion: 2
+    rgba: 1696
+  - serializedVersion: 2
+    rgba: 1436
+  - serializedVersion: 2
+    rgba: 919
+  - serializedVersion: 2
+    rgba: 401
+  - serializedVersion: 2
+    rgba: 142
+  - serializedVersion: 2
+    rgba: 144
+  - serializedVersion: 2
+    rgba: 399
+  - serializedVersion: 2
+    rgba: 394
+  - serializedVersion: 2
+    rgba: 643
+  - serializedVersion: 2
+    rgba: 637
+  - serializedVersion: 2
+    rgba: 380
+  - serializedVersion: 2
+    rgba: 383
+  - serializedVersion: 2
+    rgba: 389
+  - serializedVersion: 2
+    rgba: 395
+  - serializedVersion: 2
+    rgba: 141
+  - serializedVersion: 2
+    rgba: 143
+  - serializedVersion: 2
+    rgba: 405
+  - serializedVersion: 2
+    rgba: 926
+  - serializedVersion: 2
+    rgba: 1443
+  - serializedVersion: 2
+    rgba: 1701
+  - serializedVersion: 2
+    rgba: 1957
+  - serializedVersion: 2
+    rgba: 1960
+  - serializedVersion: 2
+    rgba: 1709
+  - serializedVersion: 2
+    rgba: 1457
+  - serializedVersion: 2
+    rgba: 1175
+  - serializedVersion: 2
+    rgba: 914
+  - serializedVersion: 2
+    rgba: 657
+  - serializedVersion: 2
+    rgba: 657
+  - serializedVersion: 2
+    rgba: 916
+  - serializedVersion: 2
+    rgba: 1178
+  - serializedVersion: 2
+    rgba: 1696
+  - serializedVersion: 2
+    rgba: 1954
+  - serializedVersion: 2
+    rgba: 1953
+  - serializedVersion: 2
+    rgba: 1949
+  - serializedVersion: 2
+    rgba: 1430
+  - serializedVersion: 2
+    rgba: 908
+  - serializedVersion: 2
+    rgba: 132
+  - serializedVersion: 2
+    rgba: 134
+  - serializedVersion: 2
+    rgba: 655
+  - serializedVersion: 2
+    rgba: 916
+  - serializedVersion: 2
+    rgba: 1171
+  - serializedVersion: 2
+    rgba: 1166
+  - serializedVersion: 2
+    rgba: 1417
+  - serializedVersion: 2
+    rgba: 1160
+  - serializedVersion: 2
+    rgba: 1162
+  - serializedVersion: 2
+    rgba: 1165
+  - serializedVersion: 2
+    rgba: 910
+  - serializedVersion: 2
+    rgba: 394
+  - serializedVersion: 2
+    rgba: 133
+  - serializedVersion: 2
+    rgba: 392
+  - serializedVersion: 2
+    rgba: 915
+  - serializedVersion: 2
+    rgba: 1437
+  - serializedVersion: 2
+    rgba: 1954
+  - serializedVersion: 2
+    rgba: 1954
+  - serializedVersion: 2
+    rgba: 1952
+  - serializedVersion: 2
+    rgba: 1692
+  - serializedVersion: 2
+    rgba: 1175
+  - serializedVersion: 2
+    rgba: 638
+  - serializedVersion: 2
+    rgba: 377
+  - serializedVersion: 2
+    rgba: 121
+  - serializedVersion: 2
+    rgba: 121
+  - serializedVersion: 2
+    rgba: 379
+  - serializedVersion: 2
+    rgba: 896
+  - serializedVersion: 2
+    rgba: 1418
+  - serializedVersion: 2
+    rgba: 1941
+  - serializedVersion: 2
+    rgba: 2204
+  - serializedVersion: 2
+    rgba: 2202
+  - serializedVersion: 2
+    rgba: 1679
+  - serializedVersion: 2
+    rgba: 896
+  - serializedVersion: 2
+    rgba: 119
+  - serializedVersion: 2
+    rgba: 380
+  - serializedVersion: 2
+    rgba: 905
+  - serializedVersion: 2
+    rgba: 1428
+  - serializedVersion: 2
+    rgba: 1688
+  - serializedVersion: 2
+    rgba: 1944
+  - serializedVersion: 2
+    rgba: 1942
+  - serializedVersion: 2
+    rgba: 1941
+  - serializedVersion: 2
+    rgba: 1941
+  - serializedVersion: 2
+    rgba: 1684
+  - serializedVersion: 2
+    rgba: 1423
+  - serializedVersion: 2
+    rgba: 900
+  - serializedVersion: 2
+    rgba: 121
+  - serializedVersion: 2
+    rgba: 121
+  - serializedVersion: 2
+    rgba: 902
+  - serializedVersion: 2
+    rgba: 1686
+  - serializedVersion: 2
+    rgba: 2205
+  - serializedVersion: 2
+    rgba: 2203
+  - serializedVersion: 2
+    rgba: 1938
+  - serializedVersion: 2
+    rgba: 1415
+  - serializedVersion: 2
+    rgba: 638
+  - serializedVersion: 2
+    rgba: 362
+  - serializedVersion: 2
+    rgba: 104
+  - serializedVersion: 2
+    rgba: 104
+  - serializedVersion: 2
+    rgba: 104
+  - serializedVersion: 2
+    rgba: 105
+  - serializedVersion: 2
+    rgba: 364
+  - serializedVersion: 2
+    rgba: 885
+  - serializedVersion: 2
+    rgba: 1667
+  - serializedVersion: 2
+    rgba: 2194
+  - serializedVersion: 2
+    rgba: 2197
+  - serializedVersion: 2
+    rgba: 1670
+  - serializedVersion: 2
+    rgba: 626
+  - serializedVersion: 2
+    rgba: 104
+  - serializedVersion: 2
+    rgba: 623
+  - serializedVersion: 2
+    rgba: 1406
+  - serializedVersion: 2
+    rgba: 1932
+  - serializedVersion: 2
+    rgba: 2195
+  - serializedVersion: 2
+    rgba: 2197
+  - serializedVersion: 2
+    rgba: 2198
+  - serializedVersion: 2
+    rgba: 2198
+  - serializedVersion: 2
+    rgba: 2197
+  - serializedVersion: 2
+    rgba: 2194
+  - serializedVersion: 2
+    rgba: 1929
+  - serializedVersion: 2
+    rgba: 1146
+  - serializedVersion: 2
+    rgba: 363
+  - serializedVersion: 2
+    rgba: 105
+  - serializedVersion: 2
+    rgba: 1143
+  - serializedVersion: 2
+    rgba: 1932
+  - serializedVersion: 2
+    rgba: 2198
+  - serializedVersion: 2
+    rgba: 2191
+  - serializedVersion: 2
+    rgba: 1407
+  - serializedVersion: 2
+    rgba: 625
+  - serializedVersion: 2
+    rgba: 362
+  - serializedVersion: 2
+    rgba: 93
+  - serializedVersion: 2
+    rgba: 91
+  - serializedVersion: 2
+    rgba: 90
+  - serializedVersion: 2
+    rgba: 89
+  - serializedVersion: 2
+    rgba: 90
+  - serializedVersion: 2
+    rgba: 92
+  - serializedVersion: 2
+    rgba: 354
+  - serializedVersion: 2
+    rgba: 1135
+  - serializedVersion: 2
+    rgba: 2178
+  - serializedVersion: 2
+    rgba: 2442
+  - serializedVersion: 2
+    rgba: 1915
+  - serializedVersion: 2
+    rgba: 612
+  - serializedVersion: 2
+    rgba: 90
+  - serializedVersion: 2
+    rgba: 608
+  - serializedVersion: 2
+    rgba: 1903
+  - serializedVersion: 2
+    rgba: 2430
+  - serializedVersion: 2
+    rgba: 2693
+  - serializedVersion: 2
+    rgba: 2436
+  - serializedVersion: 2
+    rgba: 2178
+  - serializedVersion: 2
+    rgba: 2179
+  - serializedVersion: 2
+    rgba: 2438
+  - serializedVersion: 2
+    rgba: 2694
+  - serializedVersion: 2
+    rgba: 2429
+  - serializedVersion: 2
+    rgba: 1644
+  - serializedVersion: 2
+    rgba: 349
+  - serializedVersion: 2
+    rgba: 90
+  - serializedVersion: 2
+    rgba: 1128
+  - serializedVersion: 2
+    rgba: 2175
+  - serializedVersion: 2
+    rgba: 2441
+  - serializedVersion: 2
+    rgba: 1917
+  - serializedVersion: 2
+    rgba: 875
+  - serializedVersion: 2
+    rgba: 97
+  - serializedVersion: 2
+    rgba: 93
+  - serializedVersion: 2
+    rgba: 339
+  - serializedVersion: 2
+    rgba: 336
+  - serializedVersion: 2
+    rgba: 333
+  - serializedVersion: 2
+    rgba: 332
+  - serializedVersion: 2
+    rgba: 334
+  - serializedVersion: 2
+    rgba: 80
+  - serializedVersion: 2
+    rgba: 83
+  - serializedVersion: 2
+    rgba: 603
+  - serializedVersion: 2
+    rgba: 1902
+  - serializedVersion: 2
+    rgba: 2938
+  - serializedVersion: 2
+    rgba: 2156
+  - serializedVersion: 2
+    rgba: 597
+  - serializedVersion: 2
+    rgba: 76
+  - serializedVersion: 2
+    rgba: 850
+  - serializedVersion: 2
+    rgba: 2144
+  - serializedVersion: 2
+    rgba: 2925
+  - serializedVersion: 2
+    rgba: 2929
+  - serializedVersion: 2
+    rgba: 2156
+  - serializedVersion: 2
+    rgba: 1383
+  - serializedVersion: 2
+    rgba: 1383
+  - serializedVersion: 2
+    rgba: 2157
+  - serializedVersion: 2
+    rgba: 2931
+  - serializedVersion: 2
+    rgba: 2926
+  - serializedVersion: 2
+    rgba: 1886
+  - serializedVersion: 2
+    rgba: 591
+  - serializedVersion: 2
+    rgba: 76
+  - serializedVersion: 2
+    rgba: 1113
+  - serializedVersion: 2
+    rgba: 2671
+  - serializedVersion: 2
+    rgba: 2680
+  - serializedVersion: 2
+    rgba: 1640
+  - serializedVersion: 2
+    rgba: 345
+  - serializedVersion: 2
+    rgba: 84
+  - serializedVersion: 2
+    rgba: 339
+  - serializedVersion: 2
+    rgba: 584
+  - serializedVersion: 2
+    rgba: 837
+  - serializedVersion: 2
+    rgba: 578
+  - serializedVersion: 2
+    rgba: 577
+  - serializedVersion: 2
+    rgba: 578
+  - serializedVersion: 2
+    rgba: 324
+  - serializedVersion: 2
+    rgba: 69
+  - serializedVersion: 2
+    rgba: 330
+  - serializedVersion: 2
+    rgba: 1880
+  - serializedVersion: 2
+    rgba: 3174
+  - serializedVersion: 2
+    rgba: 2650
+  - serializedVersion: 2
+    rgba: 582
+  - serializedVersion: 2
+    rgba: 64
+  - serializedVersion: 2
+    rgba: 1094
+  - serializedVersion: 2
+    rgba: 2642
+  - serializedVersion: 2
+    rgba: 3420
+  - serializedVersion: 2
+    rgba: 2907
+  - serializedVersion: 2
+    rgba: 1619
+  - serializedVersion: 2
+    rgba: 847
+  - serializedVersion: 2
+    rgba: 847
+  - serializedVersion: 2
+    rgba: 1620
+  - serializedVersion: 2
+    rgba: 2909
+  - serializedVersion: 2
+    rgba: 3421
+  - serializedVersion: 2
+    rgba: 2384
+  - serializedVersion: 2
+    rgba: 835
+  - serializedVersion: 2
+    rgba: 63
+  - serializedVersion: 2
+    rgba: 1097
+  - serializedVersion: 2
+    rgba: 2909
+  - serializedVersion: 2
+    rgba: 3171
+  - serializedVersion: 2
+    rgba: 1363
+  - serializedVersion: 2
+    rgba: 72
+  - serializedVersion: 2
+    rgba: 328
+  - serializedVersion: 2
+    rgba: 584
+  - serializedVersion: 2
+    rgba: 1083
+  - serializedVersion: 2
+    rgba: 1338
+  - serializedVersion: 2
+    rgba: 1336
+  - serializedVersion: 2
+    rgba: 1079
+  - serializedVersion: 2
+    rgba: 1080
+  - serializedVersion: 2
+    rgba: 568
+  - serializedVersion: 2
+    rgba: 311
+  - serializedVersion: 2
+    rgba: 312
+  - serializedVersion: 2
+    rgba: 1859
+  - serializedVersion: 2
+    rgba: 3663
+  - serializedVersion: 2
+    rgba: 2887
+  - serializedVersion: 2
+    rgba: 567
+  - serializedVersion: 2
+    rgba: 51
+  - serializedVersion: 2
+    rgba: 1594
+  - serializedVersion: 2
+    rgba: 3140
+  - serializedVersion: 2
+    rgba: 3913
+  - serializedVersion: 2
+    rgba: 2885
+  - serializedVersion: 2
+    rgba: 1342
+  - serializedVersion: 2
+    rgba: 571
+  - serializedVersion: 2
+    rgba: 571
+  - serializedVersion: 2
+    rgba: 1343
+  - serializedVersion: 2
+    rgba: 2887
+  - serializedVersion: 2
+    rgba: 3658
+  - serializedVersion: 2
+    rgba: 2882
+  - serializedVersion: 2
+    rgba: 1079
+  - serializedVersion: 2
+    rgba: 50
+  - serializedVersion: 2
+    rgba: 1338
+  - serializedVersion: 2
+    rgba: 3401
+  - serializedVersion: 2
+    rgba: 3404
+  - serializedVersion: 2
+    rgba: 1343
+  - serializedVersion: 2
+    rgba: 56
+  - serializedVersion: 2
+    rgba: 569
+  - serializedVersion: 2
+    rgba: 1083
+  - serializedVersion: 2
+    rgba: 1580
+  - serializedVersion: 2
+    rgba: 2093
+  - serializedVersion: 2
+    rgba: 2093
+  - serializedVersion: 2
+    rgba: 2093
+  - serializedVersion: 2
+    rgba: 1580
+  - serializedVersion: 2
+    rgba: 1066
+  - serializedVersion: 2
+    rgba: 295
+  - serializedVersion: 2
+    rgba: 296
+  - serializedVersion: 2
+    rgba: 2095
+  - serializedVersion: 2
+    rgba: 4151
+  - serializedVersion: 2
+    rgba: 3123
+  - serializedVersion: 2
+    rgba: 552
+  - serializedVersion: 2
+    rgba: 294
+  - serializedVersion: 2
+    rgba: 2093
+  - serializedVersion: 2
+    rgba: 3892
+  - serializedVersion: 2
+    rgba: 4149
+  - serializedVersion: 2
+    rgba: 2865
+  - serializedVersion: 2
+    rgba: 1580
+  - serializedVersion: 2
+    rgba: 810
+  - serializedVersion: 2
+    rgba: 810
+  - serializedVersion: 2
+    rgba: 1581
+  - serializedVersion: 2
+    rgba: 3122
+  - serializedVersion: 2
+    rgba: 4150
+  - serializedVersion: 2
+    rgba: 3635
+  - serializedVersion: 2
+    rgba: 1579
+  - serializedVersion: 2
+    rgba: 37
+  - serializedVersion: 2
+    rgba: 1322
+  - serializedVersion: 2
+    rgba: 3637
+  - serializedVersion: 2
+    rgba: 3894
+  - serializedVersion: 2
+    rgba: 1581
+  - serializedVersion: 2
+    rgba: 39
+  - serializedVersion: 2
+    rgba: 553
+  - serializedVersion: 2
+    rgba: 1580
+  - serializedVersion: 2
+    rgba: 1819
+  - serializedVersion: 2
+    rgba: 2845
+  - serializedVersion: 2
+    rgba: 3358
+  - serializedVersion: 2
+    rgba: 3102
+  - serializedVersion: 2
+    rgba: 2589
+  - serializedVersion: 2
+    rgba: 1306
+  - serializedVersion: 2
+    rgba: 280
+  - serializedVersion: 2
+    rgba: 536
+  - serializedVersion: 2
+    rgba: 2589
+  - serializedVersion: 2
+    rgba: 4641
+  - serializedVersion: 2
+    rgba: 3358
+  - serializedVersion: 2
+    rgba: 536
+  - serializedVersion: 2
+    rgba: 280
+  - serializedVersion: 2
+    rgba: 2845
+  - serializedVersion: 2
+    rgba: 4385
+  - serializedVersion: 2
+    rgba: 4128
+  - serializedVersion: 2
+    rgba: 3102
+  - serializedVersion: 2
+    rgba: 1819
+  - serializedVersion: 2
+    rgba: 1562
+  - serializedVersion: 2
+    rgba: 1562
+  - serializedVersion: 2
+    rgba: 2076
+  - serializedVersion: 2
+    rgba: 3358
+  - serializedVersion: 2
+    rgba: 4385
+  - serializedVersion: 2
+    rgba: 4128
+  - serializedVersion: 2
+    rgba: 2075
+  - serializedVersion: 2
+    rgba: 23
+  - serializedVersion: 2
+    rgba: 1306
+  - serializedVersion: 2
+    rgba: 4128
+  - serializedVersion: 2
+    rgba: 4128
+  - serializedVersion: 2
+    rgba: 1819
+  - serializedVersion: 2
+    rgba: 23
+  - serializedVersion: 2
+    rgba: 536
+  - serializedVersion: 2
+    rgba: 1819
+  - serializedVersion: 2
+    rgba: 1801
+  - serializedVersion: 2
+    rgba: 3338
+  - serializedVersion: 2
+    rgba: 4106
+  - serializedVersion: 2
+    rgba: 4106
+  - serializedVersion: 2
+    rgba: 3338
+  - serializedVersion: 2
+    rgba: 1545
+  - serializedVersion: 2
+    rgba: 9
+  - serializedVersion: 2
+    rgba: 778
+  - serializedVersion: 2
+    rgba: 3340
+  - serializedVersion: 2
+    rgba: 4877
+  - serializedVersion: 2
+    rgba: 3595
+  - serializedVersion: 2
+    rgba: 777
+  - serializedVersion: 2
+    rgba: 520
+  - serializedVersion: 2
+    rgba: 3337
+  - serializedVersion: 2
+    rgba: 4875
+  - serializedVersion: 2
+    rgba: 4363
+  - serializedVersion: 2
+    rgba: 3339
+  - serializedVersion: 2
+    rgba: 2827
+  - serializedVersion: 2
+    rgba: 2571
+  - serializedVersion: 2
+    rgba: 2571
+  - serializedVersion: 2
+    rgba: 3083
+  - serializedVersion: 2
+    rgba: 3851
+  - serializedVersion: 2
+    rgba: 4875
+  - serializedVersion: 2
+    rgba: 4875
+  - serializedVersion: 2
+    rgba: 2569
+  - serializedVersion: 2
+    rgba: 8
+  - serializedVersion: 2
+    rgba: 1289
+  - serializedVersion: 2
+    rgba: 4364
+  - serializedVersion: 2
+    rgba: 4620
+  - serializedVersion: 2
+    rgba: 2571
+  - serializedVersion: 2
+    rgba: 521
+  - serializedVersion: 2
+    rgba: 265
+  - serializedVersion: 2
+    rgba: 1801
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 1792
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 1792
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 1792
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 2048
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 1792
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 1792
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 3072
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 2048
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 1792
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 1792
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 2048
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 3072
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 2048
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 3072
+  - serializedVersion: 2
+    rgba: 1792
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 2048
+  - serializedVersion: 2
+    rgba: 2048
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 2048
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 3072
+  - serializedVersion: 2
+    rgba: 2048
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 0
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 4864
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 5120
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 4096
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 3328
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 1792
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 1024
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 256
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 512
+  - serializedVersion: 2
+    rgba: 768
+  - serializedVersion: 2
+    rgba: 1280
+  - serializedVersion: 2
+    rgba: 1536
+  - serializedVersion: 2
+    rgba: 2048
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 3584
+  - serializedVersion: 2
+    rgba: 3840
+  - serializedVersion: 2
+    rgba: 4352
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 4608
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 3072
+  - serializedVersion: 2
+    rgba: 3072
+  - serializedVersion: 2
+    rgba: 3072
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2304
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 2560
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 2816
+  - serializedVersion: 2
+    rgba: 940
+  - serializedVersion: 2
+    rgba: 2560
+  _storageMode: 1
+  _storageReason: 1
+  _fallbackMesh: {fileID: 0}
+  _fallbackAssetPath:
+  _fallbackOwnerId:
+  _validationFailure: 0
+--- !u!23 &208993757
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208993755}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: b4934170e9161b846aebd027719e885c, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &208993758
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208993755}
+  m_Mesh: {fileID: 4300000, guid: 47298f3a33a1bd94e8370d0aac7208d3, type: 2}
+--- !u!4 &208993759
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208993755}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &842869351
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 842869353}
+  - component: {fileID: 842869352}
+  m_Layer: 0
+  m_Name: Directional Light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!108 &842869352
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 842869351}
+  m_Enabled: 1
+  serializedVersion: 13
+  m_Type: 1
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 1
+  m_Range: 10
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize2D: {x: 0.5, y: 0.5}
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShapeRadius: 0.025
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
+--- !u!4 &842869353
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 842869351}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.3649717, y: -0.2778159, z: 0.115075134, w: 0.88111955}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &862382307
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 862382310}
+  - component: {fileID: 862382309}
+  - component: {fileID: 862382308}
+  m_Layer: 0
+  m_Name: Channel mapping and brush starting points
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!102 &862382308
+TextMesh:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 862382307}
+  m_Text: 'RockMoss
+
+    Base: rock | Red: moss | Green: damp patches
+
+    Paint
+    Red: radius 0.45m, strength 0.35, flow 1, accumulate on.
+
+    Falloff: EaseInOut;
+    try Erase and Smooth; alpha is unused.
+
+    Starting paint and textures are procedural.
+    See README.'
+  m_OffsetZ: 0
+  m_CharacterSize: 0.045
+  m_LineSpacing: 1
+  m_Anchor: 1
+  m_Alignment: 1
+  m_TabSize: 4
+  m_FontSize: 36
+  m_FontStyle: 0
+  m_RichText: 1
+  m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Color:
+    serializedVersion: 2
+    rgba: 4294967295
+--- !u!23 &862382309
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 862382307}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10100, guid: 0000000000000000e000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!4 &862382310
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 862382307}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.15902501, y: -0.3008923, z: 0.050961953, w: 0.9389238}
+  m_LocalPosition: {x: 0, y: -0.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1161022337
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1161022339}
+  - component: {fileID: 1161022338}
+  m_Layer: 0
+  m_Name: Sample Camera
+  m_TagString: MainCamera
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!20 &1161022338
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1161022337}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.07, g: 0.09, b: 0.12, a: 1}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!4 &1161022339
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1161022337}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.15902501, y: -0.3008923, z: 0.050961953, w: 0.9389238}
+  m_LocalPosition: {x: 5, y: 4, z: -7}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1660057539 &9223372036854775807
+SceneRoots:
+  m_ObjectHideFlags: 0
+  m_Roots:
+  - {fileID: 208993759}
+  - {fileID: 1161022339}
+  - {fileID: 842869353}
+  - {fileID: 862382310}
