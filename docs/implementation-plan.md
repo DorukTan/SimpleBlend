@@ -230,7 +230,7 @@ User judgment is required at these points:
 
 ## Next session starting point
 
-The M7 automated implementation gate is complete. Shader Graph parity is proposed in PR #14 and terrain binding in PR #15. The terrain-matching shader is implemented in a dependent branch for issue #3, with evidence in `docs/checkpoints/checkpoint-h-terrain-shader.md`. Next integrate the reviewed M8 branches and collect graph/terrain visual evidence in issue #4. Neither open pull requests nor automated binding/shader checks establish release acceptance.
+The M7 automated implementation gate is complete. Shader Graph parity is proposed in PR #14, terrain binding in PR #15, and the terrain shader in dependent PR #16. Issue #4's protocol and evidence template are prepared under `docs/acceptance/`, with a Windows capture comparator under `tools/`. Next obtain a reviewed integration and owner-run captures using that protocol. No visual acceptance result has been recorded. Neither open pull requests nor automated binding/shader checks establish release acceptance.
 
 During Batch H, preserve these established boundaries:
 
