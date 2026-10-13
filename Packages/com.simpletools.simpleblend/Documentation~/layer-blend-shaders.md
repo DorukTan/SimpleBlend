@@ -12,7 +12,7 @@ An unpainted vertex color (`0, 0, 0, 0`) selects the base layer. Vertex alpha is
 1. Create a Material and choose **SimpleBlend/Layer Blend 3** or **SimpleBlend/Layer Blend 4**.
 2. Supply Albedo, Normal, Mask, and Height textures for each visible layer.
 3. Use each Albedo texture's tiling and offset to control that layer's complete texture set. Normal, Mask, and Height use the corresponding Albedo UV transform.
-4. Adjust **Height Blend Transition**. Smaller values produce a sharper winning-height boundary; larger values retain a wider mixture.
+4. Adjust **Height Transition**. Smaller values produce a sharper winning-height boundary; larger values retain a wider mixture.
 5. Assign the material to a renderer carrying SimpleBlend vertex colors.
 
 The custom material Inspector labels every layer with its controlling vertex channel. Layer Blend 3 intentionally ignores Blue rather than silently assigning it a different meaning.
