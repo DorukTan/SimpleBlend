@@ -1,5 +1,7 @@
 # SimpleBlend
 
+Content is licensed under the included MIT notice. External Unity dependencies retain their own terms; see [dependency and redistribution boundaries](ThirdPartyNotices.md).
+
 SimpleBlend is an open-source Unity editor toolkit for painting vertex colors on meshes in the Scene view and blending URP material layers from those colors.
 
 ## Current status
