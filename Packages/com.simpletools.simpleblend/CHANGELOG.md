@@ -2,6 +2,52 @@
 
 All notable changes to SimpleBlend will be documented in this file.
 
+## [Unreleased]
+
+### Mesh preparation
+
+- Integrated terrain binding, terrain shading, Shader Graph references and teaching samples in the development checkout.
+- Added sparse-mesh guidance in the paint Inspector and Scene view brush overlay.
+- Added an explicit subdivided renderer-copy action with interpolated paint and preserved UVs, normals, tangents, indexed seams and submeshes.
+- Added static-mesh validation, a triangle safety limit, source-preservation checks and Undo/Redo coverage; saved mesh assets remain after scene Undo.
+
+### Teaching samples
+
+- Registered Rock and Moss, Roof and Snow, and Wall and Grime as independent Package Manager samples.
+- Added procedural meshes, textures, editable per-renderer paint, saved scenes and in-scene channel/brush captions.
+- Included sample instructions, MIT notices, provenance records and Package Manager import regression checks.
+
+
+### Added
+
+- Editor-only terrain binding window using public Terrain, TerrainData, and TerrainLayer APIs.
+- Versioned material property validation, complete preflight checks, single-operation Undo, and explicit refresh.
+- Regression coverage for one to four layers, live control textures, saved binding references, read-only destinations, and source asset preservation.
+
+Visual verification remains separate work.
+
+### Terrain shader
+
+- Added `SimpleBlend/Terrain Blend` with a world-XZ terrain base and Red, Green, and Blue mesh overlays.
+- Reused established height blending and URP rendering passes, including original-world-position sampling in Meta.
+- Added terrain mask remapping, explicit diffuse-alpha smoothness selection, texel-center control sampling, and projected normal conversion.
+- Added GPU surface probes and a disposable seam/reference player-build fixture. Visual parity remains an unverified acceptance gate.
+
+### Added
+
+- Three-layer and four-layer Shader Graph height-weight subgraphs and shared four-way surface composition.
+- Complete URP Lit reference graphs with paired HLSL/graph materials and original procedural textures.
+- Graph import, pass-compilation, material-input, and graphics-device parity checks for the shared height and surface functions.
+
+### Changed
+
+- Hand-written shaders use the same surface-composition include as the graph subgraph.
+- The test reference calculation ignores the unused fourth height in three-layer blending.
+
+### Fixed
+
+- Height-subgraph property nodes reference their material slots correctly during clean imports.
+
 ## [0.4.0-beta.1] - 2026-09-04
 
 ### Added

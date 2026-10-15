@@ -1,48 +1,39 @@
 # SimpleBlend
 
-SimpleBlend is an open-source Unity editor toolkit for painting vertex colors on meshes in the Scene view and blending URP material layers from those colors.
+SimpleBlend is an open-source Unity editor toolkit for painting per-renderer vertex colors and blending URP material layers.
+
+## Start here
+
+- [Install and choose a revision](Documentation~/installation.md)
+- [Check compatibility and observed results](Documentation~/compatibility.md)
+- [Paint the first stroke](Documentation~/first-stroke.md)
+- [Import the teaching samples](Documentation~/teaching-samples.md)
+- [Full documentation](Documentation~/index.md)
 
 ## Current status
 
-Version `0.4.0-beta.1` adds hand-written URP height-blend shaders to the complete brush, storage, visualization, and performance foundation. `SimpleBlend/Layer Blend 3` maps clear/unpainted vertices to the base layer and uses Red and Green for two overlays. `SimpleBlend/Layer Blend 4` adds Blue as the third overlay. Alpha remains free for custom data. The shaders share height weighting and complete forward, deferred, shadow, depth, depth-normal, and meta passes.
+The development manifest version is `0.4.0-beta.1`. The integrated development branch includes terrain binding, terrain shading, Shader Graph references and teaching samples together. Other branches and published revisions can contain different features despite sharing that version. The [installation guide](Documentation~/installation.md) identifies an exact earlier preview commit and what it includes.
 
-## Compatibility
+Layer Blend 3 uses an unpainted base plus Red/Green overlays. Layer Blend 4 adds Blue. Alpha is free. Terrain Blend uses a bound terrain base plus RGB overlays and supports one to four terrain layers with linear terrain blending.
 
-- Tested development baseline: Unity `6000.4.8f1` with Universal Render Pipeline `17.4.0`.
-- Compatibility targets awaiting validation: Unity `6000.3` LTS and Unity `6000.5`.
-- Render pipeline: URP only.
+Only Windows / Unity `6000.4.8f1` / URP `17.4.0` / D3D11 is described as the observed automated baseline. Unity 6.3 LTS and 6.6 await validation. Visual parity, owner walkthroughs and release acceptance remain open; this is not a 1.0 support claim.
 
-No compatibility claim is made for an untested Unity or URP version.
+## Workflow and safety
 
-## Installation
+Select a supported renderer and use **GameObject > SimpleBlend > Enable Vertex Painting**. The Renderer context command is **Enable SimpleBlend Vertex Painting**. Choose channels, modes, previews and masks in the **SimpleBlend Brush** Scene view overlay. No collider is required.
 
-During development, the package is embedded at `Packages/com.simpletools.simpleblend/` in this Unity project. Git URL and registry installation instructions will be added only after a canonical public repository exists.
+Default cubes only have corner vertices. For localized face strokes, initialize painting and use **Create Subdivided Paintable Copy** in the Inspector. This saves a new static mesh and renderer copy without editing the original. See [first stroke](Documentation~/first-stroke.md) for limits and Undo behavior.
 
-## First stroke
+Imported source meshes remain unchanged; serialized per-renderer `Color32[]` data is authoritative. Ordinary renderers use transient streams; skinned/static/GPU-resident cases use owned generated clones. Read [storage and ownership](Documentation~/data-safety.md) before editing prefabs or source topology.
 
-Select a GameObject with a `MeshFilter`/`MeshRenderer` or a `SkinnedMeshRenderer`, then choose **GameObject > SimpleBlend > Enable Vertex Painting** (also available from the Renderer component context menu). The command adds and initializes `VertexPaintData` as one Undo operation and activates the paint tool. Choose a channel, mode, and preview in the **SimpleBlend Brush** Scene view overlay, then drag or click the mesh. A collider is not required.
+[Removal guidance](Documentation~/removal.md) distinguishes clearing data, retaining generated assets, unrelated materials and shaders that disappear with the package. There is no current one-click standalone bake/export workflow.
 
-See `Documentation~/first-stroke.md` for setup, `Documentation~/brush-controls.md` for exact brush semantics, `Documentation~/layer-blend-shaders.md` for material setup and channel mapping, and `Documentation~/data-safety.md` for prefab and storage behavior.
+## Development checks
 
-## Development verification
+Package tests need Unity Test Framework and `com.simpletools.simpleblend` in the development project's `testables` list. GPU checks need a graphics device: use hidden batch mode with D3D11, not `-nographics`, for the complete suite. Use `-runTests -testPlatform EditMode -testFilter SimpleBlend.Editor.Tests` with explicit project/result/log paths. Omit `-quit` for test dispatch on the observed editor.
 
-Run the package EditMode tests from PowerShell with the installed development baseline:
-
-```powershell
-New-Item -ItemType Directory -Force `
-  -Path 'D:\Projects\SimpleBlend\TestResults', 'D:\Projects\SimpleBlend\Logs' | Out-Null
-
-& 'C:\Program Files\Unity\Hub\Editor\6000.4.8f1\Editor\Unity.exe' `
-  -batchmode -nographics `
-  -projectPath 'D:\Projects\SimpleBlend' `
-  -runTests -testPlatform EditMode `
-  -testFilter 'SimpleBlend.Editor.Tests' `
-  -testResults 'D:\Projects\SimpleBlend\TestResults\SimpleBlend-EditMode.xml' `
-  -logFile 'D:\Projects\SimpleBlend\Logs\SimpleBlend-EditMode.log'
-```
-
-The Unity Test Framework exits the process when the run completes. Do not add `-quit`; on the tested editor it can stop the initial import before test dispatch.
+Automated sample import checks are not owner first-use or visual evidence. Repository checkpoints record their exact scope.
 
 ## License
 
-SimpleBlend is available under the MIT License. See `LICENSE`.
+Project content is distributed under the included [MIT license](LICENSE). External Unity dependencies retain their own terms; the release redistribution audit is separate from package usage verification.

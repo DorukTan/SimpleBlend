@@ -6,6 +6,8 @@
 
 The signature records the stable asset identity when Unity provides one, vertex count, submesh topology and index counts, and a deterministic hash of the indexed topology. SimpleBlend refuses to apply colors when the source identity, vertex count, submesh layout, or topology changes.
 
+This is not a full geometry/artistic-correspondence hash. Review paint after changing positions or reordering vertex content without changing the indexed topology. Back up before source edits; there is no automatic paint remapping onto a changed topology.
+
 Validation failures remain serialized as explicit reason codes with teaching messages. A rejected source detaches transient output rather than applying colors by best-effort vertex index.
 
 ## Storage modes
@@ -27,6 +29,8 @@ SimpleBlend reevaluates the storage policy at stroke start and on request from t
 - Stream-mode output is rebuilt after enable, domain reload, and play-mode transitions. Clone-mode output remains assigned and is revalidated.
 
 Clearing or reinitializing paint data never deletes a generated asset automatically. This avoids destroying an asset that another prefab or scene may reference; orphan cleanup will be an explicit workflow later.
+
+Use **Clear Paint Data** before removing a component when you want its source assignment restored. Disabling/deleting only detaches the owned transient stream; clone mode can keep its generated mesh assignment. See [package removal](removal.md) for the material and shader consequences.
 
 ## Current boundary
 

@@ -46,7 +46,7 @@ namespace SimpleBlend.Editor
             materialEditor.RenderQueueField();
         }
 
-        private static void DrawLayer(
+        internal static void DrawLayer(
             MaterialEditor materialEditor,
             MaterialProperty[] properties,
             int layerIndex)

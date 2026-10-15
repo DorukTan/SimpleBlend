@@ -5,12 +5,36 @@
   "description": "An editor-first vertex paint and mesh blend toolkit for Unity's Universal Render Pipeline.",
   "unity": "6000.3",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DorukTan/SimpleBlend.git",
+    "directory": "Packages/com.simpletools.simpleblend"
+  },
+  "documentationUrl": "https://github.com/DorukTan/SimpleBlend/tree/main/Packages/com.simpletools.simpleblend/Documentation~",
+  "changelogUrl": "https://github.com/DorukTan/SimpleBlend/blob/main/Packages/com.simpletools.simpleblend/CHANGELOG.md",
   "author": {
     "name": "SimpleTools"
   },
   "dependencies": {
     "com.unity.render-pipelines.universal": "17.3.0"
   },
+  "samples": [
+    {
+      "displayName": "Rock and Moss",
+      "description": "Paint Red moss and Green damp patches on a procedural rock.",
+      "path": "Samples~/RockMoss"
+    },
+    {
+      "displayName": "Roof and Snow",
+      "description": "Paint Red snow and Green wet patches on a pitched roof.",
+      "path": "Samples~/RoofSnow"
+    },
+    {
+      "displayName": "Wall and Grime",
+      "description": "Paint Red grime and Green moss on a dense wall.",
+      "path": "Samples~/WallGrime"
+    }
+  ],
   "keywords": [
     "editor",
     "mesh",

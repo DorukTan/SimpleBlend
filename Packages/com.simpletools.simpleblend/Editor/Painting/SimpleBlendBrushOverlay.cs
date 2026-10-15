@@ -21,6 +21,13 @@ namespace SimpleBlend.Editor
         private static void DrawSettings()
         {
             var settings = SimpleBlendBrushSettings.instance;
+            var selected = Selection.activeGameObject == null ? null : Selection.activeGameObject.GetComponent<VertexPaintData>();
+            if (selected != null && selected.SourceMesh != null && selected.SourceMesh.vertexCount <= 64)
+            {
+                EditorGUILayout.HelpBox(
+                    "Sparse mesh: strokes only affect existing vertices. For face-center detail, use Create Subdivided Paintable Copy in the Inspector.",
+                    MessageType.Warning);
+            }
             EditorGUI.BeginChangeCheck();
             settings.Mode = (VertexPaintBrushMode)EditorGUILayout.EnumPopup("Mode", settings.Mode);
             settings.Channel = (VertexPaintChannel)EditorGUILayout.EnumPopup("Channel", settings.Channel);
