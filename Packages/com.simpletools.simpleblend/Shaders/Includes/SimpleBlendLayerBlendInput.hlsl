@@ -1,6 +1,10 @@
 #ifndef SIMPLEBLEND_LAYER_BLEND_INPUT_INCLUDED
 #define SIMPLEBLEND_LAYER_BLEND_INPUT_INCLUDED
 
+#if defined(SIMPLEBLEND_TERRAIN)
+#include "Packages/com.simpletools.simpleblend/Shaders/Includes/SimpleBlendTerrainInput.hlsl"
+#else
+
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
@@ -162,4 +166,11 @@ void InitializeSimpleBlendSurfaceData(
     surfaceData.clearCoatSmoothness = 0.0h;
 }
 
+void InitializeSimpleBlendSurfaceData(float2 uv, half4 vertexColor, float3 positionWS,
+    half3 normalWS, half4 tangentWS, out SurfaceData surfaceData)
+{
+    InitializeSimpleBlendSurfaceData(uv, vertexColor, surfaceData);
+}
+
+#endif // SIMPLEBLEND_TERRAIN
 #endif

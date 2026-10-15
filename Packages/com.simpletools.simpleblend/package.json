@@ -18,6 +18,23 @@
   "dependencies": {
     "com.unity.render-pipelines.universal": "17.3.0"
   },
+  "samples": [
+    {
+      "displayName": "Rock and Moss",
+      "description": "Paint Red moss and Green damp patches on a procedural rock.",
+      "path": "Samples~/RockMoss"
+    },
+    {
+      "displayName": "Roof and Snow",
+      "description": "Paint Red snow and Green wet patches on a pitched roof.",
+      "path": "Samples~/RoofSnow"
+    },
+    {
+      "displayName": "Wall and Grime",
+      "description": "Paint Red grime and Green moss on a dense wall.",
+      "path": "Samples~/WallGrime"
+    }
+  ],
   "keywords": [
     "editor",
     "mesh",

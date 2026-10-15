@@ -1,8 +1,10 @@
 # SimpleBlend roadmap
 
-Status: M7 hand-written shader automated implementation gate complete at `0.4.0-beta.1`; live URP appearance, Frame Debugger, lightmapping, and editor/player image parity remain deferred by user instruction. M8 Shader Graph parity and terrain-contract work are next.
+Status: M7 automated implementation gate complete at `0.4.0-beta.1`. M8 Shader Graph parity is in PR #14; the public terrain binder is in PR #15. The terrain-matching shader (#3) is implemented on top of the binder branch; visual evidence (#4) remains open. Live URP appearance, Frame Debugger, lightmapping, and editor/player image parity remain unverified.
 
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
+
+M9 teaching sample implementation is prepared for issue #5: three self-contained procedural examples with Package Manager import coverage. First-use/appearance review and release acceptance remain open; sample presence is not a 1.0 approval.
 
 Package identity:
 
