@@ -12,6 +12,14 @@ For an owned first lesson, create a Unity Plane and assign a new Layer Blend 3 m
 4. If the component was added manually, select **Initialize Vertex Painting** in its Inspector.
 5. Select **Activate SimpleBlend Paint Tool** if setup did not already activate it. The tool appears in the Scene view palette with an `SB` badge.
 
+## Painting a cube or another sparse mesh
+
+Vertex painting colors existing vertices, not texture pixels. A default cube has corner vertices but no face-interior vertices, so small strokes on the face center cannot produce localized detail. The Inspector and brush overlay flag meshes with 64 or fewer vertices as a simple sparse-mesh heuristic; this is not a spacing measurement. Larger meshes can still have sparse areas. Use **Density** preview to inspect spacing.
+
+After initializing paint, use **Create Subdivided Paintable Copy** in the Inspector. Start with three subdivision levels for a default cube and save a new `.asset` under Assets. This creates a renderer-only copy at the same position with interpolated RGBA paint, UVs, normals and tangents. Move or hide one object to avoid overlapping surfaces, then paint the new copy. The original mesh, original paint and original object remain unchanged. Subsequent strokes remain per-renderer paint data; the saved source copy contains the colors interpolated at creation time.
+
+Subdivision splits triangles without smoothing the shape. It supports readable static triangle meshes without skinning or blend shapes, preserves submesh boundaries and indexed seams, and rejects results above 200,000 triangles. It does not copy children, colliders or other scripts. Undo removes the new object; the saved mesh asset remains for recovery and can be removed manually when no longer referenced. Cancelling the save dialog creates nothing. Existing assets are never overwritten.
+
 ## Paint
 
 - Use the **SimpleBlend Brush** Scene view overlay to choose a mode, target channel, preview, radius, strength, flow, falloff, accumulation, fill scope, and optional masks.

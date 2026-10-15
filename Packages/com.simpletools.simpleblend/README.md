@@ -12,7 +12,7 @@ SimpleBlend is an open-source Unity editor toolkit for painting per-renderer ver
 
 ## Current status
 
-The development manifest version is `0.4.0-beta.1`. This documentation accompanies the proposed terrain/sample implementation; separate Graph work and the default branch can contain different features despite sharing that version. The [installation guide](Documentation~/installation.md) identifies an exact preview commit and what it includes.
+The development manifest version is `0.4.0-beta.1`. The integrated development branch includes terrain binding, terrain shading, Shader Graph references and teaching samples together. Other branches and published revisions can contain different features despite sharing that version. The [installation guide](Documentation~/installation.md) identifies an exact earlier preview commit and what it includes.
 
 Layer Blend 3 uses an unpainted base plus Red/Green overlays. Layer Blend 4 adds Blue. Alpha is free. Terrain Blend uses a bound terrain base plus RGB overlays and supports one to four terrain layers with linear terrain blending.
 
@@ -21,6 +21,8 @@ Only Windows / Unity `6000.4.8f1` / URP `17.4.0` / D3D11 is described as the obs
 ## Workflow and safety
 
 Select a supported renderer and use **GameObject > SimpleBlend > Enable Vertex Painting**. The Renderer context command is **Enable SimpleBlend Vertex Painting**. Choose channels, modes, previews and masks in the **SimpleBlend Brush** Scene view overlay. No collider is required.
+
+Default cubes only have corner vertices. For localized face strokes, initialize painting and use **Create Subdivided Paintable Copy** in the Inspector. This saves a new static mesh and renderer copy without editing the original. See [first stroke](Documentation~/first-stroke.md) for limits and Undo behavior.
 
 Imported source meshes remain unchanged; serialized per-renderer `Color32[]` data is authoritative. Ordinary renderers use transient streams; skinned/static/GPU-resident cases use owned generated clones. Read [storage and ownership](Documentation~/data-safety.md) before editing prefabs or source topology.
 

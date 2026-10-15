@@ -4,6 +4,13 @@ All notable changes to SimpleBlend will be documented in this file.
 
 ## [Unreleased]
 
+### Mesh preparation
+
+- Integrated terrain binding, terrain shading, Shader Graph references and teaching samples in the development checkout.
+- Added sparse-mesh guidance in the paint Inspector and Scene view brush overlay.
+- Added an explicit subdivided renderer-copy action with interpolated paint and preserved UVs, normals, tangents, indexed seams and submeshes.
+- Added static-mesh validation, a triangle safety limit, source-preservation checks and Undo/Redo coverage; saved mesh assets remain after scene Undo.
+
 ### Teaching samples
 
 - Registered Rock and Moss, Roof and Snow, and Wall and Grime as independent Package Manager samples.

@@ -7,6 +7,8 @@ Start with the Console, VertexPaintData's validation message, **Storage Mode**, 
 | Setup menu unavailable | Selected object has MeshFilter/MeshRenderer or SkinnedMeshRenderer | Select a supported renderer; a collider alone is not a target |
 | Component has no source | It was added manually and not initialized | Use Initialize Vertex Painting or the GameObject setup command |
 | No brush effect | Active tool, selected target, mode/channel, color, strength/flow and masks | Activate SimpleBlend Paint Tool; test an unmasked Paint stroke in an owned scene |
+| Cube only paints at corners | No vertices inside default cube faces | Initialize painting, then use Create Subdivided Paintable Copy; move or hide one overlapping object and paint the new copy |
+| Subdivision unavailable | Readable static triangle mesh, no skinning or blend shapes, scene instance or Prefab Mode | Use a supported mesh copy; do not alter imported source topology to reuse old paint indices |
 | Paint has no material-layer effect | Renderer material, URP asset, channel convention, normals/tangents | Assign a shipped blend material; Layer Blend 3 ignores Blue and both shaders ignore Alpha |
 | Pink material | Shader exists at the installed revision; active pipeline is URP; compilation is clean | Fix dependency/pipeline errors or choose a present shader; after uninstall, replace removed SimpleBlend shaders |
 | Invalid topology/source signature | Source identity, vertex count, submeshes or indexed topology changed | Restore the matching source from backup or intentionally start new paint; do not force old indices onto new topology |

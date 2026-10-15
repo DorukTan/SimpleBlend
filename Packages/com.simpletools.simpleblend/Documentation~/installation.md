@@ -4,6 +4,8 @@ Use a URP project and back it up before adding a preview package. SimpleBlend do
 
 ## Choose a revision
 
+The local `codex/paintable-project-integration` branch combines the terrain, sample and Shader Graph implementations and adds sparse-mesh preparation. Opening that checkout uses its embedded package; it does not merge the open pull requests into the remote default branch. The pinned URL below is an earlier terrain/sample snapshot and does not include subdivision or graph references.
+
 The repository is [DorukTan/SimpleBlend](https://github.com/DorukTan/SimpleBlend). The package is inside `Packages/com.simpletools.simpleblend`, not at the repository root.
 
 At this documentation checkpoint, `main` contains the M7 implementation. Terrain and teaching samples are proposed in PRs #15/#16/#19; Shader Graph assets are in separate PR #14. All currently share the development manifest version `0.4.0-beta.1`, so version alone does not identify available preview features.

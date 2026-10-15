@@ -9,6 +9,7 @@ namespace SimpleBlend.Editor
     {
         private string _lastOperationMessage = string.Empty;
         private MessageType _lastOperationMessageType = MessageType.Info;
+        private int _subdivisionLevels = 3;
 
         public override void OnInspectorGUI()
         {
@@ -70,6 +71,7 @@ namespace SimpleBlend.Editor
             }
             else
             {
+                DrawMeshPreparation(data);
                 using (new EditorGUI.DisabledScope(!SimpleBlendPaintTool.IsSupportedTarget(data)))
                 {
                     if (GUILayout.Button("Activate SimpleBlend Paint Tool"))
@@ -101,6 +103,55 @@ namespace SimpleBlend.Editor
             var renderer = data.GetComponent<Renderer>();
             var result = VertexPaintSetupUtility.Enable(renderer, null, out _);
             Report(result);
+        }
+
+        private void DrawMeshPreparation(VertexPaintData data)
+        {
+            if (data.SourceMesh.vertexCount <= 64)
+            {
+                EditorGUILayout.HelpBox(
+                    "This mesh has very few vertices. Painting changes existing vertices, not pixels: "
+                    + "a default cube paints at its corners because its faces have no interior vertices. "
+                    + "Use Density preview to inspect spacing or create a subdivided copy for smaller strokes.",
+                    MessageType.Warning);
+            }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Paintable Mesh Copy", EditorStyles.boldLabel);
+                _subdivisionLevels = EditorGUILayout.IntSlider("Subdivision Levels", _subdivisionLevels, 1, 4);
+                EditorGUILayout.HelpBox(
+                    "Creates a renderer-only copy at the same position, with interpolated paint, UVs and normals. "
+                    + "The original stays unchanged. Move or hide one copy to avoid overlapping surfaces. "
+                    + "Colliders, children and other scripts are not copied. Undo removes the new object; the saved mesh asset remains.",
+                    MessageType.None);
+                var reason = data.GetComponent<SkinnedMeshRenderer>() != null
+                    ? "Skinned renderers are not supported by subdivision."
+                    : PaintMeshSubdivision.UnsupportedReason(data.SourceMesh);
+                if (EditorUtility.IsPersistent(data)) reason = "Open Prefab Mode or select a scene instance to create a copy.";
+                if (!string.IsNullOrEmpty(reason)) EditorGUILayout.HelpBox(reason, MessageType.Info);
+                using (new EditorGUI.DisabledScope(!string.IsNullOrEmpty(reason)))
+                {
+                    if (GUILayout.Button("Create Subdivided Paintable Copy"))
+                    {
+                        var path = EditorUtility.SaveFilePanelInProject(
+                            "Save Subdivided Mesh", "SubdividedPaintMesh", "asset", "Choose a new mesh asset. Existing assets are never overwritten.");
+                        if (string.IsNullOrEmpty(path)) return;
+                        try
+                        {
+                            var copy = PaintMeshSubdivision.CreatePaintableCopy(data, _subdivisionLevels, path);
+                            Selection.activeGameObject = copy;
+                            ToolManager.SetActiveTool(typeof(SimpleBlendPaintTool));
+                        }
+                        catch (System.Exception exception)
+                        {
+                            _lastOperationMessage = exception.Message;
+                            _lastOperationMessageType = MessageType.Error;
+                        }
+                        GUIUtility.ExitGUI();
+                    }
+                }
+            }
         }
 
         private void Clear(VertexPaintData data)
