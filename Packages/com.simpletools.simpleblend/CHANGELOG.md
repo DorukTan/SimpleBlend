@@ -26,6 +26,21 @@ Visual verification remains separate work.
 - Added terrain mask remapping, explicit diffuse-alpha smoothness selection, texel-center control sampling, and projected normal conversion.
 - Added GPU surface probes and a disposable seam/reference player-build fixture. Visual parity remains an unverified acceptance gate.
 
+### Added
+
+- Three-layer and four-layer Shader Graph height-weight subgraphs and shared four-way surface composition.
+- Complete URP Lit reference graphs with paired HLSL/graph materials and original procedural textures.
+- Graph import, pass-compilation, material-input, and graphics-device parity checks for the shared height and surface functions.
+
+### Changed
+
+- Hand-written shaders use the same surface-composition include as the graph subgraph.
+- The test reference calculation ignores the unused fourth height in three-layer blending.
+
+### Fixed
+
+- Height-subgraph property nodes reference their material slots correctly during clean imports.
+
 ## [0.4.0-beta.1] - 2026-09-04
 
 ### Added

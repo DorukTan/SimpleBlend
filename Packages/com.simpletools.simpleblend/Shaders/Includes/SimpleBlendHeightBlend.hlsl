@@ -39,4 +39,46 @@ half4 SimpleBlendHeightWeights4(half4 rawWeights, half4 heights, half transition
     return contributions / total;
 }
 
+void SimpleBlendHeightWeights3_half(
+    half3 RawWeights,
+    half3 Heights,
+    half Transition,
+    out half3 Weights)
+{
+    Weights = SimpleBlendHeightWeights3(RawWeights, Heights, Transition);
+}
+
+void SimpleBlendHeightWeights3_float(
+    float3 RawWeights,
+    float3 Heights,
+    float Transition,
+    out float3 Weights)
+{
+    Weights = SimpleBlendHeightWeights3(
+        (half3)RawWeights,
+        (half3)Heights,
+        (half)Transition);
+}
+
+void SimpleBlendHeightWeights4_half(
+    half4 RawWeights,
+    half4 Heights,
+    half Transition,
+    out half4 Weights)
+{
+    Weights = SimpleBlendHeightWeights4(RawWeights, Heights, Transition);
+}
+
+void SimpleBlendHeightWeights4_float(
+    float4 RawWeights,
+    float4 Heights,
+    float Transition,
+    out float4 Weights)
+{
+    Weights = SimpleBlendHeightWeights4(
+        (half4)RawWeights,
+        (half4)Heights,
+        (half)Transition);
+}
+
 #endif

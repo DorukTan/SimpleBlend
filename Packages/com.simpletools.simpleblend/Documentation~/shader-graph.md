@@ -1,6 +1,6 @@
 # Shader Graph integration
 
-Availability: the graph implementation is proposed in [PR #14](https://github.com/DorukTan/SimpleBlend/pull/14). It is not included in the terrain/sample preview commit used by this guide. Use this page only when your reviewed package actually contains the graph assets; do not assume a missing subgraph can be fixed by reimporting an unrelated revision.
+This integrated development checkout includes the graph assets alongside terrain binding and teaching samples. Published revisions may contain a different feature set; check the files included with the installed revision.
 
 Three subgraphs under `ShaderGraph/Subgraphs` share the project's height/surface functions:
 

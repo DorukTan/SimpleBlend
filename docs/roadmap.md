@@ -278,6 +278,8 @@ The second option is the release fallback if live sampling proves version-fragil
 - Terrain seam remains visually continuous from the documented camera distances.
 - All source terrain and mesh assets remain unchanged.
 
+The Shader Graph implementation record is in [checkpoint-h-graph.md](checkpoints/checkpoint-h-graph.md). Its automated checks do not close the separate visual acceptance gate.
+
 ## M9 — Samples, documentation, and release
 
 ### Deliverables
