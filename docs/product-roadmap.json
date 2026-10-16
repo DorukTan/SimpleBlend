@@ -1,0 +1,1319 @@
+{
+  "schemaVersion": 1,
+  "researchDate": "2026-10-16",
+  "baseline": "Publicly advertised RealBlend 1.3.2 plus linked manual; independently implemented SimpleBlend scope",
+  "milestones": [
+    {
+      "id": "M10",
+      "githubNumber": 11,
+      "title": "M10 — Artist workflow and editor experience",
+      "problem": "Make setup, authoring modes and recovery understandable without exposing storage internals as the primary interface.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "A first-time user completes the wall/material/paint/save lesson in five minutes without verbal assistance; keyboard access and task walkthroughs are recorded."
+    },
+    {
+      "id": "M11",
+      "githubNumber": 12,
+      "title": "M11 — Advanced brushes and procedural painting",
+      "problem": "Complete expressive painting, reliable target selection and repeatable surface treatments.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "Stamp, procedural and submesh fixtures have deterministic results; preview never changes saved paint; one gesture is one Undo."
+    },
+    {
+      "id": "M12",
+      "githubNumber": 13,
+      "title": "M12 — Texture preparation and material libraries",
+      "problem": "Provide safe mask packing, texture-set discovery and reusable array libraries.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "Known-value packing tests, ambiguity checks, immutable source hashes and stable slice IDs pass; material creation is usable end to end."
+    },
+    {
+      "id": "M13",
+      "githubNumber": 14,
+      "title": "M13 — Complete shader and pipeline coverage",
+      "problem": "Deliver advertised rendering workflows across URP, HDRP and Built-in without changing legacy paint interpretation.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "Three/five-layer URP/HDRP, Built-in three-layer, arrays, wetness, variation, cutout and mapping workflows have player/render evidence on an explicit capability matrix."
+    },
+    {
+      "id": "M14",
+      "githubNumber": 15,
+      "title": "M14 — Editable geometry and recovery foundation",
+      "problem": "Extend the color-only authoring contract to geometry edits without sacrificing source, prefab or Undo safety.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "Positions, attributes and topology survive reopen, prefab, reload and Undo/Redo; incompatible legacy data is never silently remapped."
+    },
+    {
+      "id": "M15",
+      "githubNumber": 16,
+      "title": "M15 — Sculpting and topology authoring",
+      "problem": "Add practical sculpting, element edits and local topology operations.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "All tools work on owned geometry, respect seams/submeshes and masks, provide bounded previews and pass gesture/persistence fixtures."
+    },
+    {
+      "id": "M16",
+      "githubNumber": 17,
+      "title": "M16 — Procedural paint-ready mesh creation",
+      "problem": "Create useful environment geometry with predictable density, UVs and pivots.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "Every generator produces editable, paintable saved meshes with valid bounds, winding, UVs and material sections; large previews remain bounded."
+    },
+    {
+      "id": "M17",
+      "githubNumber": 18,
+      "title": "M17 — Boolean and solid-wall openings",
+      "problem": "Support volume cuts and production door/window reveals safely.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "Supported cutters produce validated openings and material sections; failed multi-target cuts change nothing; cancellation and Undo are reliable."
+    },
+    {
+      "id": "M18",
+      "githubNumber": 19,
+      "title": "M18 — Transfer, ProBuilder and standalone output",
+      "problem": "Complete revision transfer, topology-owner integration and dependency-free finalized geometry.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "Paint transfer previews, ProBuilder synchronization and bake/removal consumer tests pass without modifying originals."
+    },
+    {
+      "id": "M19",
+      "githubNumber": 20,
+      "title": "M19 — Capabilities beyond baseline parity",
+      "problem": "Add reusable edit layers, batch/LOD workflows, texture-mask painting and depth-aware rendering.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "Each addition has a documented user task, reversible data contract, bounded cost and an end-to-end sample; experimental effects are not advertised as supported until verified."
+    },
+    {
+      "id": "M20",
+      "githubNumber": 21,
+      "title": "M20 — Product acceptance and expanded release gates",
+      "problem": "Prove usability, performance, compatibility and complete feature coverage before release qualification.",
+      "solution": "Deliver the focused issue PRs assigned to this milestone, then record automated and owner-observed acceptance evidence.",
+      "success": "All required feature-ledger rows and improvement gates have evidence; outstanding blockers prevent RC/1.0 regardless of unit-test count."
+    }
+  ],
+  "issues": [
+    {
+      "id": "ux-contract",
+      "githubNumber": 24,
+      "milestone": "M10",
+      "title": "Define the authoring workflow and approve editor interaction prototypes",
+      "requirements": [
+        {
+          "id": "UX-01",
+          "description": "Task-based setup and authoring workflow",
+          "source": "improvement",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Design",
+        "Testing"
+      ],
+      "problem": "The current Inspector/overlay exposes technical settings without a coherent first-use journey.",
+      "solution": "Produce original wireframes and a task/state specification for target setup, layer selection, paint, sculpt, create, materials and output. Preserve Scene-view EditorTool integration; approve layouts before implementation.",
+      "success": [
+        "Document empty, unsupported, mixed-selection, editing, preview, dirty and error states.",
+        "Separate common controls from advanced options; show clear active mode/target and explain every disabled action.",
+        "Owner reviews clickable or native prototypes at narrow/wide panel widths and both editor themes.",
+        "Define five-minute first-use script and baseline task timings; do not copy another product's branding or layout."
+      ],
+      "verification": "Record prototype review and revisions, not screenshot-only approval.",
+      "depends": []
+    },
+    {
+      "id": "workspace",
+      "githubNumber": 25,
+      "milestone": "M10",
+      "title": "Implement a unified workspace and guided target/material setup",
+      "requirements": [
+        {
+          "id": "UX-02",
+          "description": "Unified workspace, contextual fixes and layer thumbnails",
+          "source": "manual",
+          "current": "Partial"
+        },
+        {
+          "id": "PA-01",
+          "description": "Layer-based and direct RGBA workflows with reusable palettes",
+          "source": "manual",
+          "current": "Partial"
+        }
+      ],
+      "labels": [
+        "Design",
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Users must manually connect component, tool, mesh and material state.",
+      "solution": "Implement the approved workspace and a compact Scene-view tool surface backed by the existing brush settings. Provide explicit prepare-copy and material-creation actions, named layers, thumbnails and direct RGBA mode.",
+      "success": [
+        "No silent material, importer, mesh or pipeline mutation during selection.",
+        "Fix actions describe what will change, support cancellation and preserve originals.",
+        "Palette/profile assets persist and can be shared without storing per-user preferences in the package.",
+        "First-stroke flow works on a generated wall and an imported multi-material mesh."
+      ],
+      "verification": "Editor-state tests plus owner walkthrough using fresh settings.",
+      "depends": [
+        "ux-contract"
+      ]
+    },
+    {
+      "id": "interaction",
+      "githubNumber": 26,
+      "milestone": "M10",
+      "title": "Add coherent shortcuts, selection lock and trustworthy live feedback",
+      "requirements": [
+        {
+          "id": "PA-02",
+          "description": "Size, strength, sensitivity, capped/continuous strokes and shortcuts",
+          "source": "manual",
+          "current": "Partial"
+        },
+        {
+          "id": "PA-03",
+          "description": "Channel/result previews, selection lock and multi-material feedback",
+          "source": "manual",
+          "current": "Partial"
+        }
+      ],
+      "labels": [
+        "Design",
+        "Technical",
+        "Testing",
+        "accessibility"
+      ],
+      "problem": "Mouse-heavy controls and unclear tool ownership slow painting and make mode errors hard to diagnose.",
+      "solution": "Implement configurable Shortcut Manager commands, modifier erase, radius/strength gestures, selection locking and contextual tooltips. Preserve capped/continuous semantics and distinguish vertex alpha from brush strength.",
+      "success": [
+        "One gesture produces one Undo; erase respects strength and target channels.",
+        "Paint/sculpt shortcuts coexist with navigation and text fields; closing/deactivating the tool releases input.",
+        "Keyboard focus, readable theme contrast and non-color-only channel labels are verified.",
+        "Preview is isolated, identifies the affected material/submesh and never dirties source materials."
+      ],
+      "verification": "Input/state regression tests and recorded shortcut/focus/theme checks.",
+      "depends": [
+        "workspace"
+      ]
+    },
+    {
+      "id": "stamps",
+      "githubNumber": 27,
+      "milestone": "M11",
+      "title": "Add textured stamps and reusable brush presets",
+      "requirements": [
+        {
+          "id": "PA-04",
+          "description": "Alpha stamps with rotation and inversion",
+          "source": "portfolio",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "The brush cannot stamp authored coverage patterns.",
+      "solution": "Add coverage textures, rotation, inversion and saved presets with explicit texture-readability handling; retain flow, falloff, channel masks and per-stroke caps.",
+      "success": [
+        "A known red-channel stamp produces expected coverage at rotated orientations.",
+        "Preview matches applied coverage on transformed meshes and seams.",
+        "Cancelling readability repair changes no importer; any approved change is disclosed.",
+        "Presets survive reload and do not retain stale scene-object references."
+      ],
+      "verification": "Deterministic stamp fixtures and an original wear/stain demonstration.",
+      "depends": [
+        "interaction"
+      ]
+    },
+    {
+      "id": "procedural",
+      "githubNumber": 28,
+      "milestone": "M11",
+      "title": "Add deterministic procedural dirt, grime and edge masks",
+      "requirements": [
+        {
+          "id": "PA-05",
+          "description": "Seeded full-surface and border/UV-edge procedural painting",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Large-area weathering currently requires repeated manual strokes.",
+      "solution": "Add seeded noise and border-distance operations with coverage, width, softness and strength controls, isolated preview, randomize, apply and cancel.",
+      "success": [
+        "Mesh borders and UV seams are separate selectable edge sources.",
+        "Preview/cancel changes no authoritative colors, files or Undo history.",
+        "Apply is one reversible operation with unchanged unselected channels/submeshes.",
+        "Identical inputs and seed yield identical output across reloads."
+      ],
+      "verification": "Known topology/UV fixtures, deterministic checksums and saved-scene acceptance.",
+      "depends": [
+        "workspace"
+      ]
+    },
+    {
+      "id": "targets",
+      "githubNumber": 29,
+      "milestone": "M11",
+      "title": "Make brush targeting surface-aware and submesh-aware",
+      "requirements": [
+        {
+          "id": "PA-06",
+          "description": "Automatic visible-submesh targeting and explicit submesh lock",
+          "source": "manual",
+          "current": "Partial"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "A radius-only operation can affect nearby hidden surfaces or the wrong material section.",
+      "solution": "Provide visible-hit submesh routing, front/back and connected-surface controls, explicit through-paint mode and material-aware palette updates. Preserve existing normal/value masks.",
+      "success": [
+        "Thin-wall, overlapping-shell and double-sided fixtures do not paint behind the visible hit by default.",
+        "Automatic mode follows the hit material; locked mode cannot leak into another section.",
+        "Mirrored/nonuniform transforms and skinned-pose targets have documented behavior.",
+        "No MeshCollider is required for painting; selection preview uses the same rules as apply."
+      ],
+      "verification": "Geometry-targeting tests plus thin-wall and multi-material visual checks.",
+      "depends": [
+        "interaction"
+      ]
+    },
+    {
+      "id": "packing",
+      "githubNumber": 30,
+      "milestone": "M12",
+      "title": "Implement exact manual mask packing and import profiles",
+      "requirements": [
+        {
+          "id": "MA-01",
+          "description": "Manual mask packing, defaults, roughness conversion and HDRP profile",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Users must prepare packed PBR data externally.",
+      "solution": "Add a manual packer with explicit channel sources, fallback values, output sizing and profiles for SimpleBlend metallic/AO/height/smoothness and HDRP Lit metallic/AO/detail/smoothness.",
+      "success": [
+        "Known pixel values remain correct in linear data space; roughness inversion is opt-in and explicit.",
+        "Resolution, resize filtering, compression and missing-input defaults are inspectable.",
+        "Source texture bytes and importer settings remain unchanged after success, cancellation and failure.",
+        "Output paths are validated; overwriting generated outputs requires explicit confirmation."
+      ],
+      "verification": "Pixel-level GPU/CPU packing fixtures, color-space checks and importer/source hashes.",
+      "depends": []
+    },
+    {
+      "id": "folder-packing",
+      "githubNumber": 31,
+      "milestone": "M12",
+      "title": "Add texture-set discovery and safe batch material preparation",
+      "requirements": [
+        {
+          "id": "MA-02",
+          "description": "Folder discovery, suffix matching, batch preparation and optional source cleanup",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Preparing many materials manually is slow and ambiguous filenames can corrupt grouping.",
+      "solution": "Discover texture sets using configurable suffix rules with per-folder identity, preview ambiguous candidates and support already-packed maps. Offer an optional reviewed cleanup operation only after successful output verification.",
+      "success": [
+        "Same base names in different folders never combine accidentally.",
+        "Smoothness/gloss precedence over roughness is explicit; ambiguous generic masks require confirmation.",
+        "Optional source cleanup defaults off, uses recoverable Trash/Recycle Bin and provides a manifest; unavailable recovery disables cleanup.",
+        "Albedo, normal, emission, skipped inputs and failed-set sources are never cleanup targets; deletion is not presented as Unity Undo."
+      ],
+      "verification": "Ambiguous-folder fixtures, dry-run manifest checks and injected output failures.",
+      "depends": [
+        "packing"
+      ]
+    },
+    {
+      "id": "libraries",
+      "githubNumber": 32,
+      "milestone": "M12",
+      "title": "Build stable texture-array libraries and material conversion",
+      "requirements": [
+        {
+          "id": "MA-03",
+          "description": "Reusable array libraries and non-destructive standard-to-array conversion",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Materials cannot share a stable reusable texture library.",
+      "solution": "Add versioned array-library assets with stable slice identities, ordered material-set selection, memory estimates and conversion from supported existing SimpleBlend layer materials.",
+      "success": [
+        "Rebuild/add/remove never silently reassigns an existing material to different textures.",
+        "Array dimensions/formats/mips and normal/data decoding are validated.",
+        "Conversion creates new materials/libraries and preserves source materials/textures; unsupported properties produce a report.",
+        "Shared libraries, safe missing-input fallbacks, interrupted writes and rollback have tests.",
+        "Single and batch conversion preserve supported material flags and produce per-material fallback/unsupported-property reports."
+      ],
+      "verification": "Library identity tests and before/after renderer comparisons in clean consumers.",
+      "depends": [
+        "folder-packing"
+      ]
+    },
+    {
+      "id": "urp-five",
+      "githubNumber": 33,
+      "milestone": "M13",
+      "title": "Add five-layer URP blending without breaking existing channel profiles",
+      "requirements": [
+        {
+          "id": "SH-01",
+          "description": "Base plus four overlays in URP",
+          "source": "store",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Current URP shaders support at most base plus three overlays.",
+      "solution": "Add a separately identified five-layer profile using all RGBA weights and bounded/shared samplers. Retain existing three/four-layer material contracts unchanged.",
+      "success": [
+        "Five distinct layers are independently paintable; zero weights and normalization have numerical fixtures.",
+        "Legacy alpha-free materials are never reinterpreted automatically.",
+        "Forward/deferred/depth/shadow/normal/Meta passes and player stripping are verified.",
+        "Publish measured sampler/variant limits and exact supported graphics APIs; resolve the older-manual/newer-listing discrepancy with SimpleBlend evidence."
+      ],
+      "verification": "GPU math probes, five-layer reference captures and retained-variant player builds.",
+      "depends": [
+        "packing"
+      ]
+    },
+    {
+      "id": "hdrp",
+      "githubNumber": 34,
+      "milestone": "M13",
+      "title": "Deliver optional HDRP three-layer and five-layer shaders",
+      "requirements": [
+        {
+          "id": "SH-02",
+          "description": "HDRP three/five-layer material workflows",
+          "source": "store",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "The package is currently URP-only.",
+      "solution": "Provide isolated HDRP shader/integration assets with no forced HDRP installation in URP/Built-in projects. Share pipeline-independent blend math and explicit material profiles.",
+      "success": [
+        "HDRP can be absent without import or compilation failures.",
+        "Three/five-layer materials render correctly in supported forward/deferred/shadow/depth and baked-lighting configurations.",
+        "Unsupported combinations fail with a capability explanation rather than pink shaders presented as support.",
+        "Migration produces new material assets and does not change project pipeline settings.",
+        "Separate core/editor and pipeline integrations so the existing URP dependency does not force URP into HDRP or Built-in consumers; preserve current install migration."
+      ],
+      "verification": "Clean with/without-HDRP imports, player builds and pipeline-specific render captures.",
+      "depends": [
+        "urp-five"
+      ]
+    },
+    {
+      "id": "builtin",
+      "githubNumber": 35,
+      "milestone": "M13",
+      "title": "Deliver a Built-in three-layer fallback and capability guidance",
+      "requirements": [
+        {
+          "id": "SH-03",
+          "description": "Built-in three-layer blending with variation",
+          "source": "store",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing",
+        "Documentation"
+      ],
+      "problem": "Full baseline parity requires a Built-in workflow as well as SRP support.",
+      "solution": "Add a basic Built-in three-layer material variant with variation and explicit limitations; isolate pipeline dependencies.",
+      "success": [
+        "Paint/create/sculpt tools import without SRP packages.",
+        "Three material layers and supported variation controls have render evidence.",
+        "Users see the capability difference before choosing unavailable shaders.",
+        "A clean Built-in consumer imports, paints, saves and builds without changing pipeline settings.",
+        "Expose stable contrast/blend controls with a validated default instead of requiring unexplained trial-and-error tuning."
+      ],
+      "verification": "Built-in consumer tests and scene/player screenshots.",
+      "depends": [
+        "packing"
+      ]
+    },
+    {
+      "id": "variation",
+      "githubNumber": 36,
+      "milestone": "M13",
+      "title": "Add variation and painted wetness with explicit semantic profiles",
+      "requirements": [
+        {
+          "id": "SH-04",
+          "description": "Material variation, painted wetness and optional wetness mask",
+          "source": "portfolio",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Raw overlay weights alone cannot express wet surfaces or reusable A/B variation.",
+      "solution": "Add a versioned three-layer profile with separate semantic controls for variation and wetness, including mask-limited wetness. Define its channel mapping explicitly and keep existing paint profiles intact.",
+      "success": [
+        "Dry/wet and A/B extremes plus intermediate values have GPU fixtures.",
+        "No-mask behavior is stable and documented; mask red coverage limits wetness predictably.",
+        "Five-layer profiles cannot silently reuse occupied channels for wetness/variation.",
+        "Palette labels and shader/material inspectors agree on profile semantics."
+      ],
+      "verification": "Reference materials and dry/damp/puddle-like samples under controlled lighting.",
+      "depends": [
+        "workspace",
+        "urp-five"
+      ]
+    },
+    {
+      "id": "mapping",
+      "githubNumber": 37,
+      "milestone": "M13",
+      "title": "Add UV/triplanar, bounded parallax and painted cutout variants",
+      "requirements": [
+        {
+          "id": "SH-05",
+          "description": "UV/triplanar mapping and parallax occlusion",
+          "source": "manual",
+          "current": "Missing"
+        },
+        {
+          "id": "SH-06",
+          "description": "Painted overlay alpha cutout",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "The material toolkit lacks important surface mapping and reveal effects.",
+      "solution": "Add UV/triplanar selection, bounded POM using packed height and an explicit cutout overlay variant. Scope silhouettes and depth/shadow correctness separately from ordinary UV parallax.",
+      "success": [
+        "POM has step/quality limits, grazing-angle handling and a zero-height bypass.",
+        "Triplanar normals remain correct under transforms and consistent across supported passes.",
+        "Cutout uses the intended overlay's texture alpha and threshold; shadow/depth/Meta behavior is tested.",
+        "Publish per-pipeline/API capabilities and measured quality/performance tradeoffs."
+      ],
+      "verification": "UV-less, grazing-view, cutout-shadow and bake fixtures with fixed-camera references.",
+      "depends": [
+        "variation",
+        "hdrp"
+      ]
+    },
+    {
+      "id": "array-shaders",
+      "githubNumber": 38,
+      "milestone": "M13",
+      "title": "Connect array-backed materials and reusable Shader Graph integration",
+      "requirements": [
+        {
+          "id": "SH-07",
+          "description": "Array-backed URP/HDRP materials",
+          "source": "manual",
+          "current": "Partial"
+        },
+        {
+          "id": "SH-08",
+          "description": "Configurable custom-shader mappings and reusable graph functions",
+          "source": "manual",
+          "current": "Partial"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "A texture library has no value without correctly wired shaders and artist-visible mappings.",
+      "solution": "Implement array-backed three-layer URP/HDRP materials with stable slice selection, wetness/variation/mapping integration and documented reusable graph functions. Add explicit custom property/channel profiles.",
+      "success": [
+        "Array and separate-texture materials match for the same inputs within recorded render tolerance.",
+        "Materials sharing arrays can select different slices without rebuilding or changing library identities.",
+        "Custom mappings validate missing/wrong-type properties and never guess destructive conversions.",
+        "Player builds retain required graph variants; absent optional pipelines do not break core import."
+      ],
+      "verification": "Cross-path GPU/reference tests, custom-shader sample and consumer builds.",
+      "depends": [
+        "libraries",
+        "hdrp",
+        "variation",
+        "mapping"
+      ]
+    },
+    {
+      "id": "geometry-state",
+      "githubNumber": 39,
+      "milestone": "M14",
+      "title": "Introduce owned editable geometry state and complete persistence",
+      "requirements": [
+        {
+          "id": "GE-01",
+          "description": "Saved geometry, attributes, topology and material-section state",
+          "source": "manual",
+          "current": "Partial"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "The current color-authority component and copy subdivision are not a full geometry editor.",
+      "solution": "Design and implement an owned editable-mesh data contract for positions, all supported UVs, normals/tangents, colors and submesh buffers, separate from immutable imported sources.",
+      "success": [
+        "Schema migration preserves existing VertexPaintData scenes/prefabs or rejects safely with recovery instructions.",
+        "Independent instances, prefab overrides, Prefab Mode, reload and Play Mode preserve geometry and paint.",
+        "Source FBX/builtin meshes remain byte-/data-identical; mesh ownership is visible.",
+        "One geometry gesture is one Undo; cached paint/raycast data invalidates after geometry edits."
+      ],
+      "verification": "Serialization/migration/prefab/lifecycle/source-hash fixtures.",
+      "depends": []
+    },
+    {
+      "id": "geometry-recovery",
+      "githubNumber": 40,
+      "milestone": "M14",
+      "title": "Add checkpoints, pose/topology revert and explicit paint reprojection",
+      "requirements": [
+        {
+          "id": "GE-02",
+          "description": "Pose/topology restoration with paint-preserving recovery",
+          "source": "portfolio",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Geometry edits need a reliable way back without silently attaching colors to unrelated indices.",
+      "solution": "Provide original/working checkpoints, pose revert, topology revert and previewable color reprojection with confidence/rejection reporting.",
+      "success": [
+        "Topology restoration reinstates source submeshes/UVs and does not edit the imported source.",
+        "Unmatched or ambiguous regions are visible before apply; users can cancel without mutation.",
+        "Do not claim pose revert can reconstruct topology; use separate restore operations.",
+        "Restored data survives reopen and Undo/Redo; retained recovery assets are explained."
+      ],
+      "verification": "Deform/refine/remove/revert chains and intentionally ambiguous projection fixtures.",
+      "depends": [
+        "geometry-state"
+      ]
+    },
+    {
+      "id": "sculpt",
+      "githubNumber": 41,
+      "milestone": "M15",
+      "title": "Implement pull, push, smooth, nudge and axis flatten brushes",
+      "requirements": [
+        {
+          "id": "SC-01",
+          "description": "Sculpt brush family with strength and pose revert",
+          "source": "publisher-update",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Artists cannot shape environment meshes within the current tool.",
+      "solution": "Add surface-direction pull/push, relaxation smooth, hit-plane nudge, local-axis flatten and pose revert using owned geometry, shared brush UX and explicit boundary behavior.",
+      "success": [
+        "Strength/falloff/spacing and modifier behavior are consistent across tools.",
+        "Welded seam groups move coherently without joining unrelated coincident shells.",
+        "Nonuniform/mirrored transforms, boundaries and masked sections have regression fixtures.",
+        "Each stroke is undoable, previewable and saved without altering imported or shared source meshes."
+      ],
+      "verification": "Known displacement/smoothing fixtures and user sculpt-session observations.",
+      "depends": [
+        "geometry-state",
+        "interaction",
+        "targets"
+      ]
+    },
+    {
+      "id": "refine",
+      "githubNumber": 42,
+      "milestone": "M15",
+      "title": "Add local refinement with safe attribute and boundary handling",
+      "requirements": [
+        {
+          "id": "SC-02",
+          "description": "Localized triangle refinement",
+          "source": "portfolio",
+          "current": "Partial"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Whole-mesh subdivision is not local detail authoring.",
+      "solution": "Refine selected brush regions with owned geometry, seam-aware attribute interpolation and conforming boundary handling. Retain whole-mesh copy as a distinct preparation action.",
+      "success": [
+        "Local refine introduces no unintended cracks or hanging edges on supported manifold inputs.",
+        "UV dimensions, paint, normals/tangents and submesh assignments remain valid.",
+        "Count/memory estimates, budgets and cancellation are available before expensive work.",
+        "Unsupported or degenerate inputs fail before committing geometry."
+      ],
+      "verification": "Boundary adjacency, seam, material, budget and rollback tests.",
+      "depends": [
+        "geometry-state"
+      ]
+    },
+    {
+      "id": "remove",
+      "githubNumber": 43,
+      "milestone": "M15",
+      "title": "Add circle/square face removal and controlled rim adjustment",
+      "requirements": [
+        {
+          "id": "SC-03",
+          "description": "Front-facing removal brushes and existing-rim rounding",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Users cannot cut surface openings interactively.",
+      "solution": "Implement circle and touched-face square removal with front-facing targeting, optional existing-boundary rounding and a clear distinction from volume booleans.",
+      "success": [
+        "Faces partially touched by square selection are handled consistently.",
+        "Double-sided surfaces do not accidentally lose back faces.",
+        "Rim rounding moves only eligible boundary vertices and never claims to add missing geometry.",
+        "One stroke is one Undo; attributes/submeshes persist and original assets remain unchanged."
+      ],
+      "verification": "Door/window, curved rim and double-sided mesh fixtures.",
+      "depends": [
+        "geometry-state",
+        "targets"
+      ]
+    },
+    {
+      "id": "elements",
+      "githubNumber": 44,
+      "milestone": "M15",
+      "title": "Add vertex, edge and face selection with transform handles",
+      "requirements": [
+        {
+          "id": "SC-04",
+          "description": "Element move, rotate and scale",
+          "source": "store",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Brush deformation cannot replace precise local element edits.",
+      "solution": "Provide explicit vertex/edge/face modes with add/subtract selection and native move/rotate/scale handles; expose pivot/orientation choices and seam grouping.",
+      "success": [
+        "Coincident seam vertices move coherently under an explicit weld-group policy.",
+        "Selection respects occlusion/through-selection settings and material sections.",
+        "Handle gestures support cancel and one-step Undo without stealing navigation.",
+        "Topology changes invalidate selections safely; no stale-index writes occur."
+      ],
+      "verification": "Transform/pivot/selection fixtures plus mixed-scale scene walkthrough.",
+      "depends": [
+        "geometry-state",
+        "interaction"
+      ]
+    },
+    {
+      "id": "repair",
+      "githubNumber": 45,
+      "milestone": "M15",
+      "title": "Add normals, tangents, UV repair and mesh diagnostics",
+      "requirements": [
+        {
+          "id": "SC-05",
+          "description": "Normals/tangents recalculation, secondary UV repair and statistics",
+          "source": "manual",
+          "current": "Partial"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing",
+        "Documentation"
+      ],
+      "problem": "Geometry changes can invalidate shading and lightmap UVs without an actionable diagnostic.",
+      "solution": "Add mesh statistics, invalid/degenerate topology checks, explicit normal/tangent recalculation and generated-copy secondary-UV repair. Preserve primary UVs by default.",
+      "success": [
+        "Hard edges and UV seams follow an explicit normal/weld policy.",
+        "Lightmap UV generation never overwrites source/importer data or primary UV channels.",
+        "Users see vertex/triangle/material counts and budget warnings before expensive actions.",
+        "A repaired scene bakes and renders with recorded evidence; unsupported geometry receives a useful report."
+      ],
+      "verification": "Attribute invariants, degenerate fixtures and baked-lighting consumer checks.",
+      "depends": [
+        "geometry-state",
+        "refine"
+      ]
+    },
+    {
+      "id": "floor-wall",
+      "githubNumber": 46,
+      "milestone": "M16",
+      "title": "Create density-controlled floors and surface/solid/profile walls",
+      "requirements": [
+        {
+          "id": "CR-01",
+          "description": "Floor and surface/solid/custom-profile wall generators",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Users need ready-to-paint environment geometry rather than manual sparse primitives.",
+      "solution": "Generate floors and wall variants with physical size, thickness/profile, verts-per-meter, pivot, UV scale/rotation and material controls.",
+      "success": [
+        "Size/density/triangle estimates match generated geometry.",
+        "Solid walls are closed with correctly wound end/reveal faces and useful material sections.",
+        "Profile walls validate self-intersections and invalid dimensions before generation.",
+        "Generated assets are unique, save/reopen correctly and can be painted/sculpted immediately."
+      ],
+      "verification": "Analytical bounds/topology/UV/pivot fixtures and wall-first lesson.",
+      "depends": [
+        "geometry-state",
+        "workspace"
+      ]
+    },
+    {
+      "id": "curves-boxes",
+      "githubNumber": 47,
+      "milestone": "M16",
+      "title": "Create curved walls and inward/outward beveled boxes",
+      "requirements": [
+        {
+          "id": "CR-02",
+          "description": "Curved walls and configurable boxes",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Environment blockout needs curved boundaries and room-like volumes.",
+      "solution": "Add arc curvature/completeness/pivot controls and box generation with inside/outside orientation, optional caps and bounded bevel segments.",
+      "success": [
+        "Curvature/completeness and pivots match requested dimensions.",
+        "Inward/outward winding and normal direction are correct.",
+        "Bevels/caps preserve manifold structure where requested and avoid duplicate degenerate faces.",
+        "UV scale and material sections remain stable as density changes."
+      ],
+      "verification": "Geometry invariants and painted room/curved-wall samples.",
+      "depends": [
+        "floor-wall"
+      ]
+    },
+    {
+      "id": "splines",
+      "githubNumber": 48,
+      "milestone": "M16",
+      "title": "Generate spline tunnels and profile-based structures",
+      "requirements": [
+        {
+          "id": "CR-03",
+          "description": "Spline-based structures with profiles, caps and separate floors",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Procedural creation cannot follow paths.",
+      "solution": "Add an optional Unity Splines adapter with bounded sampling, orientation frames, profile presets, caps and optional separate floor output.",
+      "success": [
+        "Splines package is optional and license-reviewed; core package imports when absent.",
+        "Open/closed paths and tight bends have explicit validity checks and seam handling.",
+        "Preview and generated output agree; materials, density and UV distance are predictable.",
+        "Changes produce owned outputs with undoable replacement, not mutation of shared imported assets."
+      ],
+      "verification": "Straight/curved/closed/twisted-path fixtures and clean no-Splines import.",
+      "depends": [
+        "curves-boxes"
+      ]
+    },
+    {
+      "id": "creation-preview",
+      "githubNumber": 49,
+      "milestone": "M16",
+      "title": "Add responsive creation previews, placement and snapping",
+      "requirements": [
+        {
+          "id": "CR-04",
+          "description": "Bounded smart preview, placement layers and increment snapping",
+          "source": "publisher-update",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Design",
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Large procedural previews can stall the editor or accidentally create assets.",
+      "solution": "Add coarse-to-fine previews, explicit generation, raycast-layer placement, grid/increment snapping and triangle/memory estimates.",
+      "success": [
+        "Dragging parameters does not create permanent assets or Undo spam.",
+        "Cancel/deactivate releases preview resources and input.",
+        "Preview budgets prevent unbounded geometry growth and show when preview resolution differs from final output.",
+        "Placement/pivot/snapping operate consistently on transformed scene surfaces."
+      ],
+      "verification": "Repeated preview/cancel allocation tests and timed large-generator interaction.",
+      "depends": [
+        "floor-wall",
+        "interaction"
+      ]
+    },
+    {
+      "id": "booleans",
+      "githubNumber": 50,
+      "milestone": "M17",
+      "title": "Implement validated single and atomic multi-target boolean subtraction",
+      "requirements": [
+        {
+          "id": "CU-01",
+          "description": "Closed-cutter boolean subtraction, open/interior options and batch Undo",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Surface deletion cannot create precise volumetric openings.",
+      "solution": "Implement an independently authored or permissively licensed subtraction kernel with input validation, tolerance/resource budgets, optional open cut/interior material and cut-vertex color. Provide selected-cutter assignment, reviewed intersecting-target discovery and reversible hide-cutter-after-success controls.",
+      "success": [
+        "Readable closed-volume operands with actual overlap have deterministic validated results.",
+        "Input validation and complete output preflight precede an atomic multi-target commit.",
+        "Any target failure/cancellation leaves every target, cutter visibility and source asset unchanged.",
+        "Successful batches use one Undo; interiors, submeshes, attributes and collider refresh are correct."
+      ],
+      "verification": "Manifold/intersection/degenerate/coplanar/negative-scale fixtures, resource-limit and injected failure tests.",
+      "depends": [
+        "geometry-state",
+        "repair",
+        "elements"
+      ]
+    },
+    {
+      "id": "wall-openings",
+      "githubNumber": 51,
+      "milestone": "M17",
+      "title": "Cut solid-wall doors/windows with materialized reveal faces",
+      "requirements": [
+        {
+          "id": "CU-02",
+          "description": "Grid-aligned through-wall openings and interior submeshes",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Deleting front faces from a thick wall leaves back faces and missing reveals.",
+      "solution": "Use generated solid-wall metadata to remove aligned front/back cells and build door/window reveals with optional separate interior material; retain normal surface-remove behavior elsewhere.",
+      "success": [
+        "Only eligible generated solid walls expose the grid-aware thickness operation.",
+        "Opening dimensions, winding, UVs and interior material indices are correct.",
+        "Surface walls and arbitrary meshes are not misidentified as solid generators.",
+        "Repeated openings, edges/corners and Undo/Redo preserve valid saved geometry."
+      ],
+      "verification": "Closed-wall topology checks and lit door/window sample.",
+      "depends": [
+        "floor-wall",
+        "remove"
+      ]
+    },
+    {
+      "id": "transfer",
+      "githubNumber": 52,
+      "milestone": "M18",
+      "title": "Transfer paint to revised meshes with match and projection previews",
+      "requirements": [
+        {
+          "id": "TR-01",
+          "description": "Static mesh revision transfer with position/projection modes",
+          "source": "store",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Source revisions currently invalidate paint without a recovery workflow.",
+      "solution": "Add previewed position matching and optional nearest-surface/barycentric projection, distance/normal filters and unmatched diagnostics; create a separate painted destination copy.",
+      "success": [
+        "Original and revised source meshes/data remain unchanged.",
+        "Split seams, transforms, multiple submeshes and partial overlap have explicit handling.",
+        "Ambiguous/unmatched regions can be rejected or assigned a deliberate fallback.",
+        "Transfer is cancelable and undoable; result survives prefab/save/reload."
+      ],
+      "verification": "Known correspondence/error bounds and adversarial thin-shell fixtures.",
+      "depends": [
+        "geometry-recovery",
+        "targets"
+      ]
+    },
+    {
+      "id": "bake",
+      "githubNumber": 53,
+      "milestone": "M18",
+      "title": "Bake standalone painted/sculpted meshes and remove storage safely",
+      "requirements": [
+        {
+          "id": "OU-01",
+          "description": "Permanent mesh bake, lightmap UVs and optional component removal",
+          "source": "portfolio",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing",
+        "Documentation"
+      ],
+      "problem": "Painted or sculpted objects cannot yet be finalized independently of authoring storage.",
+      "solution": "Bake owned geometry and RGBA to a uniquely named mesh, update renderer/collider references deliberately and offer optional authoring-component removal after verified success.",
+      "success": [
+        "Source imported and working data remain recoverable; no unrelated collider is replaced silently.",
+        "UVs, skinning where supported, submeshes, materials and lightmap UVs follow documented capability rules.",
+        "Baked meshes render without authoring components; shader dependencies are reported separately.",
+        "Failed writes/removal roll back scene references; clean-project/package-removal checks pass."
+      ],
+      "verification": "Bake/reopen/prefab/player/removal tests in disposable consumers.",
+      "depends": [
+        "geometry-state",
+        "repair"
+      ]
+    },
+    {
+      "id": "probuilder",
+      "githubNumber": 54,
+      "milestone": "M18",
+      "title": "Add optional ProBuilder paint synchronization and ownership guards",
+      "requirements": [
+        {
+          "id": "TR-02",
+          "description": "ProBuilder inbound/outbound paint sync and topology-owner protection",
+          "source": "manual",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Competing mesh owners can overwrite paint or compiled topology.",
+      "solution": "Add an optional ProBuilder adapter with explicit send/sync actions and stroke-completion synchronization; block incompatible storage-side topology edits/baking until ownership is finalized.",
+      "success": [
+        "Core imports without ProBuilder and the adapter uses public version-checked APIs.",
+        "Recompile/refresh/reopen preserves colors and face-material assignments.",
+        "Paint sync never replaces ProBuilder topology; external topology edits invalidate or explicitly reconcile mappings.",
+        "Guard messages explain how to finalize ownership without destroying source data."
+      ],
+      "verification": "ProBuilder edit/paint/refresh/prefab/Undo fixtures and missing-package compile check.",
+      "depends": [
+        "geometry-state",
+        "transfer"
+      ]
+    },
+    {
+      "id": "layers",
+      "githubNumber": 55,
+      "milestone": "M19",
+      "title": "Add reusable non-destructive paint layers and mask recipes",
+      "requirements": [
+        {
+          "id": "PLUS-01",
+          "description": "Named editable paint layers and reusable procedural recipes",
+          "source": "improvement",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Design",
+        "Technical",
+        "Testing"
+      ],
+      "problem": "Destructive color accumulation makes iteration and reuse expensive.",
+      "solution": "Add independently editable paint-operation layers/recipes with names, visibility, opacity, reorder and explicit flatten/bake. Keep evaluated Color32 data as a compatible renderer output.",
+      "success": [
+        "Layer evaluation is deterministic and versioned; masks/profile semantics remain explicit.",
+        "Flatten preserves appearance and retains an optional editable source.",
+        "Topology changes invalidate or reproject layers only through a previewed action.",
+        "Reopen/prefab/Undo and recipe reuse do not leak scene-specific references."
+      ],
+      "verification": "Layer recomposition vectors and before/after flatten render comparisons.",
+      "depends": [
+        "procedural",
+        "geometry-recovery",
+        "workspace"
+      ]
+    },
+    {
+      "id": "batch-lod",
+      "githubNumber": 56,
+      "milestone": "M19",
+      "title": "Add atomic multi-object painting and LOD color propagation",
+      "requirements": [
+        {
+          "id": "PLUS-02",
+          "description": "Controlled multi-object strokes and previewed LOD paint propagation",
+          "source": "improvement",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Repeating the same authoring task across kit pieces and LODs is error-prone.",
+      "solution": "Add explicitly selected multi-target painting/recipes and LOD propagation using validated correspondence, with per-target capability/mismatch reports.",
+      "success": [
+        "Shared source meshes remain isolated; mixed unsupported selections are reported before commit.",
+        "A multi-target gesture is one Undo and cannot partially apply after preflight failure.",
+        "LOD transfer reports coverage/error and never assumes equal vertex order.",
+        "Bounds, transforms, prefabs and mixed material profiles have recorded acceptance."
+      ],
+      "verification": "Mixed-selection atomicity, shared-mesh isolation and LOD reference fixtures.",
+      "depends": [
+        "targets",
+        "transfer",
+        "layers"
+      ]
+    },
+    {
+      "id": "texture-masks",
+      "githubNumber": 57,
+      "milestone": "M19",
+      "title": "Add UV texture-mask painting for sparse meshes",
+      "requirements": [
+        {
+          "id": "PLUS-03",
+          "description": "Texture-mask painting independent of vertex density",
+          "source": "improvement",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Design",
+        "Testing"
+      ],
+      "problem": "Adding geometry is not always an acceptable answer to small-detail painting.",
+      "solution": "Add an explicitly separate texture-mask workflow with UV diagnostics, chosen resolution/channel layout, source-copy creation and clear distinction from vertex painting.",
+      "success": [
+        "A low-poly cube can receive localized face detail without subdivision on a supported UV layout.",
+        "Overlapping/missing UVs, seams, color space and resolution/memory cost are surfaced before authoring.",
+        "Source textures are never overwritten implicitly; strokes, saving, reload and export are reversible/recoverable.",
+        "Vertex-only/custom-shader workflows remain available without forced texture allocation."
+      ],
+      "verification": "UV seam/overlap fixtures, stroke Undo tests and sparse-cube comparison scene.",
+      "depends": [
+        "workspace",
+        "packing",
+        "targets"
+      ]
+    },
+    {
+      "id": "depth-aware",
+      "githubNumber": 58,
+      "milestone": "M19",
+      "title": "Prototype and qualify depth-aware blend rendering",
+      "requirements": [
+        {
+          "id": "PLUS-04",
+          "description": "Depth-aware material blending with bounded quality modes",
+          "source": "publisher-wip",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing"
+      ],
+      "problem": "The current blend toolkit cannot offer depth-aware transitions; publisher demonstrations are not proof of a shipping baseline.",
+      "solution": "Prototype an original depth-aware approach, compare it against height-only/POM, then implement a bounded supported mode with optional high-detail-to-lower-LOD transfer.",
+      "success": [
+        "Document whether the chosen approach changes UVs, depth, silhouettes or geometry; do not conflate them.",
+        "Measure visual benefit, shader cost and artifacts at grazing angles and intersecting surfaces.",
+        "Unsupported APIs/pipelines have an explicit fallback; experimental work is not advertised as supported.",
+        "Qualify fixed-camera editor/player/shadow/depth results before checking off this improvement."
+      ],
+      "verification": "Prototype decision record, GPU timing and depth/shadow/reference captures.",
+      "depends": [
+        "mapping",
+        "batch-lod"
+      ]
+    },
+    {
+      "id": "usability",
+      "githubNumber": 59,
+      "milestone": "M20",
+      "title": "Run first-use, accessibility and production-task acceptance",
+      "requirements": [
+        {
+          "id": "QA-01",
+          "description": "Observed usability and accessible authoring acceptance",
+          "source": "improvement",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Design",
+        "Testing",
+        "accessibility"
+      ],
+      "problem": "Unit tests cannot tell whether artists can understand or efficiently use the package.",
+      "solution": "Run scripted fresh-user and experienced-user tasks against the approved workflow; record time, errors, assistance and blockers, then resolve findings in focused PRs.",
+      "success": [
+        "At least three first-time participants attempt create/material/paint/save/bake tasks; report sample size without claiming statistical certainty.",
+        "At least two of three complete the first-stroke lesson in five minutes without verbal help; every critical safety mistake blocks release.",
+        "Keyboard, focus, themes, display scaling and shortcut discoverability are inspected.",
+        "Record baseline versus final task timings; all blocking UX findings are resolved and retested."
+      ],
+      "verification": "Evidence report with consented anonymized observations and reproducible task scripts.",
+      "depends": [
+        "workspace",
+        "interaction",
+        "creation-preview",
+        "bake"
+      ]
+    },
+    {
+      "id": "qualification",
+      "githubNumber": 60,
+      "milestone": "M20",
+      "title": "Qualify rendering, performance and platform/dependency combinations",
+      "requirements": [
+        {
+          "id": "QA-02",
+          "description": "Expanded compatibility, performance and clean consumer evidence",
+          "source": "improvement",
+          "current": "Partial"
+        }
+      ],
+      "labels": [
+        "Technical",
+        "Testing",
+        "Release"
+      ],
+      "problem": "Current observations cover one Windows/URP baseline, not the expanded product.",
+      "solution": "Define exact Unity/pipeline/API/OS combinations and run clean imports, player builds, rendering, memory and interactive profiling with optional dependencies present/absent.",
+      "success": [
+        "Retain 40k-vertex interactive coverage and add bounded 100k geometry/large-array/boolean fixtures.",
+        "Publish hardware, scene, sampling method, p50/p95 and memory; set reviewed budgets before optimizing and fail regressions against them.",
+        "Test supported Built-in/URP/HDRP variants and optional ProBuilder/Splines independence; never infer support from compilation alone.",
+        "Windows/macOS/Linux are validation targets; unsupported/unobserved cells remain visible and cannot be marketed as tested."
+      ],
+      "verification": "CI plus owner profiler/graphics evidence; carry forward #9/#10 rather than duplicate results.",
+      "depends": [
+        "array-shaders",
+        "builtin",
+        "booleans",
+        "splines",
+        "probuilder",
+        "texture-masks",
+        "depth-aware"
+      ]
+    },
+    {
+      "id": "parity-gate",
+      "githubNumber": 61,
+      "milestone": "M20",
+      "title": "Close the evidence-backed feature ledger before RC and 1.0",
+      "requirements": [
+        {
+          "id": "QA-03",
+          "description": "Complete advertised-feature coverage and beyond-baseline release gate",
+          "source": "improvement",
+          "current": "Missing"
+        }
+      ],
+      "labels": [
+        "Testing",
+        "Release",
+        "Documentation"
+      ],
+      "problem": "A feature count or closed milestone can conceal missing advertised behavior.",
+      "solution": "Maintain the dated public-source ledger, resolve contradictions, map every row to its implementation PR/tests/manual evidence and block release until all required rows plus selected improvement gates pass.",
+      "success": [
+        "No parity row is closed solely because a file, UI control or automated test exists.",
+        "Store/manual discrepancies and inaccessible/demo-only claims remain explicit, with chosen SimpleBlend behavior and evidence.",
+        "All M10-M19 issues and M20 usability/qualification acceptance pass before #11; exceptions require an explicit user-approved scope change.",
+        "Update #8 redistribution inventory, #9 support matrix and #10 acceptance record for the expanded package; no blanket superiority claim without measurements."
+      ],
+      "verification": "Auditable ledger review and release dependency check against every required issue.",
+      "depends": [
+        "usability",
+        "qualification",
+        "layers",
+        "batch-lod",
+        "texture-masks",
+        "depth-aware"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # SimpleBlend roadmap
 
+> Scope revision, 2026-10-16: this document records the original vertex-painting implementation sequence. The expanded product scope, milestones M10-M20 and release dependencies are authoritative in [github-roadmap.md](github-roadmap.md), [the public-feature ledger](realblend-research.md) and [product-roadmap.json](product-roadmap.json). Earlier completion statements refer to technical foundations, not finished product acceptance. The earlier URP-only, no-sculpting and no-texture-painting release limits are superseded where the expanded scope explicitly promotes them.
+
 Status: M7 automated implementation gate complete at `0.4.0-beta.1`. M8 Shader Graph parity is in PR #14; the public terrain binder is in PR #15. The terrain-matching shader (#3) is implemented on top of the binder branch; visual evidence (#4) remains open. Live URP appearance, Frame Debugger, lightmapping, and editor/player image parity remain unverified.
 
 Verified development baseline: Unity `6000.4.8f1`, URP `17.4.0`, Shader Graph `17.4.0`.
@@ -318,7 +320,7 @@ All acceptance tests pass and are recorded with Unity/URP versions, test date, a
 | 9 | 40k mesh remains interactive | M6 | Profiler measurement and manual drag |
 | 10 | Package removal is safe | M9 | Disposable-project removal test |
 
-## Explicitly deferred beyond 1.0
+## Original deferrals (superseded where promoted by M10-M20)
 
 - HDRP shaders.
 - Runtime painting API.
