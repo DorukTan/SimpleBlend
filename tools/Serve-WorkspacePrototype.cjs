@@ -9,6 +9,9 @@ const files = {
   '/workspace.css': ['workspace.css', 'text/css; charset=utf-8'],
   '/workspace.js': ['workspace.js', 'text/javascript; charset=utf-8']
 };
+for (const name of ['Blend', 'Paint', 'Sculpt', 'Create', 'Materials', 'Output', 'Terrain']) {
+  files['/icons/' + name + '.svg'] = ['icons/' + name + '.svg', 'image/svg+xml'];
+}
 const server = http.createServer((request, response) => {
   const entry = files[new URL(request.url, 'http://127.0.0.1').pathname];
   if (!entry || !['GET', 'HEAD'].includes(request.method)) {
@@ -23,5 +26,7 @@ const server = http.createServer((request, response) => {
     response.end(request.method === 'HEAD' ? undefined : data);
   });
 });
-server.listen(0, '127.0.0.1', () => console.log(`Workspace prototype: http://127.0.0.1:${server.address().port}`));
+const port = process.argv[2] === undefined ? 0 : Number(process.argv[2]);
+if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Use a port between 0 and 65535.');
+server.listen(port, '127.0.0.1', () => console.log(`Workspace prototype: http://127.0.0.1:${server.address().port}`));
 server.on('error', error => { console.error(error.message); process.exitCode = 1; });

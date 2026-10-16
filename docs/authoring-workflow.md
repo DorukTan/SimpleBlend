@@ -6,6 +6,8 @@ Issue: [#24](https://github.com/DorukTan/SimpleBlend/issues/24). Status: propose
 
 The owner selected a Unity-native workbench on 2026-10-16: restrained styling, familiar controls and compact task-based panels, supporting editor light/dark themes. The shipping surface is a Unity editor extension, not a web application. The browser prototype is an isolated review aid; it reads/writes no Unity assets and adds no package dependency.
 
+The subsequent SimpleTransform screenshot clarifies this direction: Unity-like custom editors, not 100% stock Unity UI. Follow [the SimpleTools visual language](simpletools-design-language.md) for custom icons, blue task tabs, grouped controls and plain-language surface selection. This supersedes an overly literal stock-control interpretation; it does not remove the native EditorTool/input and source-safety requirements.
+
 Audience: environment artists and small teams preparing meshes, blending materials and finalizing reusable assets without repeatedly changing applications. Primary lesson: create or prepare a wall, assign a contrasting material, paint, undo, save and reopen. Success is completing the intended task safely, not discovering every feature.
 
 Existing source evidence: `VertexPaintDataInspector.cs`, `SimpleBlendBrushOverlay.cs` and `TerrainBindingWindow.cs`. Setup, painting and terrain binding currently live in separate surfaces. Storage diagnostics precede the main paint action; layer meaning is not conveyed by thumbnails or names; brush settings expose advanced masks alongside common controls. This is a code-based assessment, not a captured visual audit.
@@ -84,7 +86,8 @@ Record completion, task time, wrong turns, assistance, source-change mistakes an
 
 - Confirmed: Unity-native visual direction; light/dark themes; compact task-based panels.
 - Prepared for review: state contract and task flows.
-- Browser checks: 51 interaction/overflow assertions passed, with 320/440-point dock captures in light/dark plus a small-browser capture. This verifies the prototype, not native Unity layout or rendering. The mechanical design pass found insufficient primary-button contrast, which was corrected; native compact typography is deliberate rather than adopting a web display-heading scale.
+- Browser checks: 55 interaction/overflow assertions passed, with 320/440-point dock captures in light/dark plus a small-browser capture. This verifies the prototype, not native Unity layout or rendering. The mechanical design pass found insufficient primary-button contrast, which was corrected; native compact typography is deliberate rather than adopting a web display-heading scale.
+- SimpleTools reference follow-up: custom blue icon-and-label tabs, grouped brush controls and compact surface chips now follow the owner's SimpleTransform screenshot. The existing native Inspector puts painting/setup first with mesh and data foldouts. Seven original icons were added; 189 isolated Unity tests passed, including importer/texture/toolbar/window checks. Native visual review is not yet recorded.
 - Review revisions: labeled unmodeled section/channel previews explicitly; added illustrative per-channel stroke colors; added keyboard focus handoffs; exposed both coarse-vertex and subdivided-copy choices. These are prototype corrections, not implemented Unity features.
 - Read-only verdict pass: the reviewer scored those three findings resolved and cleared the browser review aid within that scope. The reviewer inspected source, test definitions and five captures, but did not rerun the tests. This is neither whole-product certification nor owner screen approval.
 - Pending: actual prototype layout/interaction approval at both dock widths and themes, corrections, and baseline timings.

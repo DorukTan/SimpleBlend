@@ -10,33 +10,29 @@ namespace SimpleBlend.Editor
         private string _lastOperationMessage = string.Empty;
         private MessageType _lastOperationMessageType = MessageType.Info;
         private int _subdivisionLevels = 3;
+        private bool _showMeshDetail;
+        private bool _showDataDetails;
 
         public override void OnInspectorGUI()
         {
             var data = (VertexPaintData)target;
             serializedObject.UpdateIfRequiredOrScript();
 
-            EditorGUILayout.LabelField("SimpleBlend Vertex Paint", EditorStyles.boldLabel);
-            using (new EditorGUI.DisabledScope(true))
+            using (new EditorGUILayout.HorizontalScope())
             {
-                EditorGUILayout.ObjectField("Source Mesh", data.SourceMesh, typeof(Mesh), false);
-                EditorGUILayout.IntField("Vertex Colors", data.ColorCount);
-                EditorGUILayout.IntField("Signed Vertices", data.SourceSignature.VertexCount);
-                EditorGUILayout.IntField("Signed Submeshes", data.SourceSignature.SubMeshCount);
-                EditorGUILayout.LongField("Topology Hash", data.SourceSignature.TopologyHash);
-                EditorGUILayout.EnumPopup("Storage Mode", data.StorageMode);
-                EditorGUILayout.TextField("Storage Reason", data.StorageDescription);
-                if (!string.IsNullOrEmpty(data.FallbackAssetPath))
-                {
-                    EditorGUILayout.TextField("Generated Asset", data.FallbackAssetPath);
-                    EditorGUILayout.TextField("Ownership ID", ShortOwnerId(data.FallbackOwnerId));
-                }
+                GUILayout.Label(SimpleBlendEditorIcons.Load("Blend"), GUILayout.Width(22), GUILayout.Height(22));
+                EditorGUILayout.LabelField("Simple Blend", EditorStyles.boldLabel);
             }
 
             var validationType = data.ValidationFailure == VertexPaintValidationFailure.None
                 ? MessageType.Info
                 : MessageType.Error;
-            EditorGUILayout.HelpBox(data.ValidationMessage, validationType);
+            var message = data.ValidationFailure != VertexPaintValidationFailure.None
+                ? data.ValidationMessage
+                : data.SourceMesh == null
+                    ? "Set up painting for this object. Your original mesh stays unchanged."
+                    : "Ready to paint. Your original mesh stays unchanged.";
+            EditorGUILayout.HelpBox(message, validationType);
 
             if (!string.IsNullOrEmpty(_lastOperationMessage))
             {
@@ -71,7 +67,6 @@ namespace SimpleBlend.Editor
             }
             else
             {
-                DrawMeshPreparation(data);
                 using (new EditorGUI.DisabledScope(!SimpleBlendPaintTool.IsSupportedTarget(data)))
                 {
                     if (GUILayout.Button("Activate SimpleBlend Paint Tool"))
@@ -80,22 +75,53 @@ namespace SimpleBlend.Editor
                     }
                 }
 
-                if (GUILayout.Button("Reapply Paint Data"))
+                EditorGUILayout.HelpBox(
+                    "Choose your brush and painting channel in the SimpleBlend Brush panel in the Scene view.",
+                    MessageType.None);
+                if (data.SourceMesh.vertexCount <= 64)
                 {
-                    Report(VertexPaintDataAuthoring.Apply(data));
+                    EditorGUILayout.HelpBox(
+                        "This mesh has few vertices, so small strokes may only affect its corners. "
+                        + "Open Mesh detail to make a more detailed copy, or keep painting with the existing vertices.",
+                        MessageType.Warning);
                 }
 
-                if (GUILayout.Button("Clear Paint Data"))
-                {
-                    Clear(data);
-                }
+                _showMeshDetail = EditorGUILayout.Foldout(_showMeshDetail, "Mesh detail", true);
+                if (_showMeshDetail) DrawMeshPreparation(data);
             }
 
             EditorGUILayout.Space();
+            _showDataDetails = EditorGUILayout.Foldout(_showDataDetails, "Source and saved-data details", true);
+            if (_showDataDetails) DrawDataDetails(data);
+        }
+
+        private void DrawDataDetails(VertexPaintData data)
+        {
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.ObjectField("Source Mesh", data.SourceMesh, typeof(Mesh), false);
+                EditorGUILayout.IntField("Vertex Colors", data.ColorCount);
+                EditorGUILayout.IntField("Signed Vertices", data.SourceSignature.VertexCount);
+                EditorGUILayout.IntField("Signed Submeshes", data.SourceSignature.SubMeshCount);
+                EditorGUILayout.LongField("Topology Hash", data.SourceSignature.TopologyHash);
+                EditorGUILayout.EnumPopup("Storage Mode", data.StorageMode);
+                EditorGUILayout.TextField("Storage Reason", data.StorageDescription);
+                if (!string.IsNullOrEmpty(data.FallbackAssetPath))
+                {
+                    EditorGUILayout.TextField("Generated Asset", data.FallbackAssetPath);
+                    EditorGUILayout.TextField("Ownership ID", ShortOwnerId(data.FallbackOwnerId));
+                }
+            }
+
+            if (data.SourceMesh != null)
+            {
+                if (GUILayout.Button("Reapply Paint Data")) Report(VertexPaintDataAuthoring.Apply(data));
+                if (GUILayout.Button("Clear Paint Data")) Clear(data);
+            }
+
             EditorGUILayout.HelpBox(
-                "Use the SimpleBlend Brush Scene view overlay for channels, modes, flow, fill, and masks. "
-                + "Prefab instances fork shared fallback assets on their first local stroke; Prefab Mode edits the asset intentionally.",
-                MessageType.None);
+                "Prefab instances keep their own paint overrides. Editing in Prefab Mode changes the prefab itself. "
+                + "Generated mesh assets are retained when paint is cleared or reverted.", MessageType.None);
         }
 
         private void Initialize(VertexPaintData data)
@@ -107,15 +133,6 @@ namespace SimpleBlend.Editor
 
         private void DrawMeshPreparation(VertexPaintData data)
         {
-            if (data.SourceMesh.vertexCount <= 64)
-            {
-                EditorGUILayout.HelpBox(
-                    "This mesh has very few vertices. Painting changes existing vertices, not pixels: "
-                    + "a default cube paints at its corners because its faces have no interior vertices. "
-                    + "Use Density preview to inspect spacing or create a subdivided copy for smaller strokes.",
-                    MessageType.Warning);
-            }
-
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Paintable Mesh Copy", EditorStyles.boldLabel);
