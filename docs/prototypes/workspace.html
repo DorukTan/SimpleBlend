@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SimpleBlend — workflow review</title>
+  <link rel="stylesheet" href="workspace.css">
+  <script src="workspace.js" defer></script>
+</head>
+<body>
+  <header class="review-bar">
+    <div><strong>SimpleBlend</strong><span>Interaction prototype · no Unity assets are changed</span></div>
+    <div class="review-controls">
+      <label>Theme <select id="theme"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+      <label>Dock <select id="dock"><option value="440">Wide · 440</option><option value="320">Narrow · 320</option></select></label>
+      <label>Test state <select id="scenario">
+        <option value="empty">No selection</option><option value="setup">Needs setup</option>
+        <option value="sparse">Sparse cube</option><option value="ready">Ready wall</option>
+        <option value="mixed">Mixed selection</option><option value="unsupported">Unsupported target</option>
+        <option value="stale">Changed topology</option><option value="error">Write failure</option>
+      </select></label>
+    </div>
+  </header>
+  <main class="workspace">
+    <section class="scene" aria-label="Illustrative scene preview">
+      <div class="scene-bar"><strong>Scene</strong><span>Front projection · demonstration mesh</span><button id="frame">Frame target</button></div>
+      <div class="viewport">
+        <canvas id="surface" width="1000" height="720" tabindex="0" aria-label="Paint demonstration surface. Activate painting, then drag here; keyboard users can apply a sample stroke with the button below."></canvas>
+        <div class="scene-caption"><strong id="scene-title">Select a mesh to begin</strong><span id="scene-caption">Choose Lesson Wall below or inspect the test states above.</span></div>
+        <div class="tool-strip" aria-label="Scene paint controls">
+          <span id="tool-status">Tool inactive</span>
+          <button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button>
+          <button id="sample-stroke" disabled>Sample stroke</button>
+        </div>
+      </div>
+      <footer class="scene-footer"><span id="gesture-hint">Select a target before activating a tool.</span><span>Illustrative geometry and materials</span></footer>
+    </section>
+    <aside class="workbench" aria-label="SimpleBlend workbench">
+      <header class="workbench-header"><h1>SimpleBlend</h1><span id="save-state">No target</span></header>
+      <div class="target-block">
+        <label for="target">Target</label>
+        <select id="target"><option value="empty">None selected</option><option value="wall">Lesson Wall</option><option value="cube">Cube</option><option value="long">Environment / Modular_Wall_Exterior_Weathered_Section_01</option></select>
+        <p id="target-meta">Mesh and material readiness will appear here.</p>
+      </div>
+      <nav class="tasks" aria-label="Authoring task">
+        <button data-task="paint" aria-pressed="true">Paint</button><button data-task="sculpt" aria-pressed="false">Sculpt</button>
+        <button data-task="create" aria-pressed="false">Create</button><button data-task="materials" aria-pressed="false">Materials</button><button data-task="output" aria-pressed="false">Output</button>
+      </nav>
+      <div class="panel-scroll">
+        <section id="notice" class="notice" aria-live="polite"></section>
+        <section id="setup-panel">
+          <h2>Prepare your target</h2>
+          <p>Paint belongs to this renderer. The original mesh stays unchanged.</p>
+          <button id="prepare" class="primary">Prepare paint data</button>
+          <button id="keep-coarse" hidden>Keep existing vertices · coarse painting</button>
+          <button id="select-wall">Select Lesson Wall</button>
+        </section>
+        <section id="paint-panel" hidden>
+          <div class="section-heading"><h2>Surface layers</h2><button id="open-materials">Material setup</button></div>
+          <label class="field">Workflow<select id="workflow"><option value="layers">Material layers</option><option value="rgba">Direct RGBA</option></select></label>
+          <label class="field">Material section<select id="submesh" disabled title="Layout proposal only; submesh targeting is not modeled by this canvas."><option>All sections · proposal</option></select></label>
+          <p class="planned">Section targeting is a layout proposal; this canvas models coverage only.</p>
+          <div id="layer-list" class="layer-list" aria-label="Surface layer"></div>
+          <div id="rgba-fields" hidden><label class="field">Channel<select id="channel"><option>Red</option><option>Green</option><option>Blue</option><option>Alpha</option><option>RGB</option></select></label><p>Channel values are data, not the visible material tint. Alpha is not brush opacity. Demo strokes use illustrative channel colors, not encoded RGBA values.</p></div>
+          <p id="profile-note">Legacy 3-layer profile · Base + Red/Green. Alpha remains free.</p>
+          <h2>Brush</h2>
+          <label class="field">Operation<select id="operation"><option value="paint">Paint</option><option value="erase">Erase</option></select></label>
+          <label class="field">Radius <span class="slider"><input id="radius" type="range" min="0.1" max="2" step="0.05" value="0.5"><output for="radius" id="radius-value">0.50 m</output></span></label>
+          <label class="field">Strength <span class="slider"><input id="strength" type="range" min="0" max="1" step="0.05" value="0.35"><output for="strength" id="strength-value">0.35</output></span></label>
+          <label class="field">Preview<select id="preview"><option value="material">Material sketch</option><option value="channel" disabled>Active channel · layout only</option><option value="density">Illustrative vertex spacing</option></select></label>
+          <button id="activate" class="primary">Activate painting</button>
+          <details><summary>Advanced brush settings</summary><p>Proposed grouping: falloff, flow, buildup mode, normal/value masks, and submesh targeting. The live values remain owned by the shared Unity brush model.</p><label class="check"><input id="lock" type="checkbox">Lock target selection while painting</label></details>
+          <details><summary>Procedural treatment · planned</summary><p>Preview/apply/cancel interaction only. Procedural painting is tracked in #28 and is not implemented in Unity yet.</p><button id="preview-grime">Preview grime</button></details>
+        </section>
+        <section id="future-panel" hidden><h2 id="future-title"></h2><p id="future-copy"></p><p class="planned">Planned workflow · not implemented in the Unity package</p><button id="plan-action">Review operation</button><div id="plan-details" hidden></div></section>
+        <section id="materials-panel" hidden>
+          <h2>Material setup</h2><p>Create a contrasting lesson material without changing the source material.</p>
+          <div class="material-preview"><span class="swatch stone"></span><span class="swatch moss"></span><span class="swatch grime"></span></div>
+          <p>Stone base · Moss (Red) · Grime (Green)</p><button id="make-material" class="primary">Create and assign lesson material</button>
+          <p>Prototype action only. Shipping setup belongs to #25; texture packing and array libraries follow in M12.</p>
+          <details><summary>Terrain binding</summary><p>Choose a compatible terrain material and source terrain, validate their capability, then bind or refresh explicitly. The existing terrain window remains available until the native workbench integrates it.</p></details>
+        </section>
+        <section id="preview-panel" hidden><h2>Preview not applied</h2><p>Saved paint has not changed. Apply creates one Undo entry.</p><div class="actions"><button id="apply-preview" class="primary">Apply preview</button><button id="cancel-preview">Cancel preview</button></div></section>
+        <section id="recovery-panel" hidden><h2 id="recovery-title"></h2><p id="recovery-copy"></p><button id="recover" class="primary">Review recovery</button><div id="recovery-details" hidden><p>Inspect source correspondence and unmatched vertices before creating a separate result. Retained paint must not be forced onto changed indices.</p><button id="cancel-recovery">Keep current data</button></div></section>
+        <details class="diagnostics"><summary>Source and saved-data details</summary><p>Original mesh: unchanged.<br>Paint authority: serialized per-renderer data.<br>Generated assets: retained after scene Undo.<br>Actual Unity scene/prefab saving stays native.</p></details>
+      </div>
+      <footer class="workbench-footer"><span id="status" role="status">Choose a target to inspect the proposed workflow.</span><button id="save" disabled>Save demo state</button></footer>
+    </aside>
+  </main>
+  <dialog id="reset-dialog" aria-labelledby="reset-title"><h2 id="reset-title">Reset this demonstration?</h2><p>There is unsaved demo paint. No Unity files are involved.</p><div class="actions"><button id="keep-demo">Keep editing</button><button id="reset-demo">Discard demo changes</button></div></dialog>
+  <dialog id="output-dialog" aria-labelledby="output-title"><h2 id="output-title">Review baked output</h2><p>This is a proposed operation, not an asset export.</p><ul><li>Create a new uniquely named mesh asset.</li><li>Preserve source and material assignments.</li><li>Remove authoring data only after a successful bake.</li><li>Report shaders still required by the material.</li></ul><div class="actions"><button id="cancel-output">Cancel</button><button id="confirm-output" class="primary">Confirm demo bake</button></div></dialog>
+</body>
+</html>
