@@ -13,7 +13,18 @@ namespace SimpleBlend.Editor
         [MenuItem("Window/SimpleBlend/Terrain Binding")]
         private static void Open()
         {
-            GetWindow<TerrainBindingWindow>("SimpleBlend Terrain");
+            var window = GetWindow<TerrainBindingWindow>();
+            window.UpdateTitle();
+        }
+
+        private void OnEnable()
+        {
+            UpdateTitle();
+        }
+
+        private void UpdateTitle()
+        {
+            titleContent = SimpleBlendEditorIcons.Content("Terrain", "SimpleBlend Terrain", "Match a surface to a Unity terrain.");
         }
 
         private void OnGUI()

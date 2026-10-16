@@ -8,7 +8,7 @@ For an owned first lesson, create a Unity Plane and assign a new Layer Blend 3 m
 
 1. Select a GameObject with a `MeshFilter`/`MeshRenderer` or a `SkinnedMeshRenderer`.
 2. Choose **GameObject > SimpleBlend > Enable Vertex Painting**, or use **Enable SimpleBlend Vertex Painting** from the Renderer component context menu.
-3. Confirm that the Inspector reports valid paint data and shows the signed vertex/submesh counts, topology hash, storage mode and reason, and any generated output path/ownership ID.
+3. Confirm that the Inspector reports ready paint data. Open **Source and saved-data details** when you need vertex/submesh counts, the topology hash, storage mode/reason or generated output path/ownership ID.
 4. If the component was added manually, select **Initialize Vertex Painting** in its Inspector.
 5. Select **Activate SimpleBlend Paint Tool** if setup did not already activate it. The tool appears in the Scene view palette with an `SB` badge.
 
@@ -16,7 +16,7 @@ For an owned first lesson, create a Unity Plane and assign a new Layer Blend 3 m
 
 Vertex painting colors existing vertices, not texture pixels. A default cube has corner vertices but no face-interior vertices, so small strokes on the face center cannot produce localized detail. The Inspector and brush overlay flag meshes with 64 or fewer vertices as a simple sparse-mesh heuristic; this is not a spacing measurement. Larger meshes can still have sparse areas. Use **Density** preview to inspect spacing.
 
-After initializing paint, use **Create Subdivided Paintable Copy** in the Inspector. Start with three subdivision levels for a default cube and save a new `.asset` under Assets. This creates a renderer-only copy at the same position with interpolated RGBA paint, UVs, normals and tangents. Move or hide one object to avoid overlapping surfaces, then paint the new copy. The original mesh, original paint and original object remain unchanged. Subsequent strokes remain per-renderer paint data; the saved source copy contains the colors interpolated at creation time.
+After initializing paint, open **Mesh detail** and use **Create Subdivided Paintable Copy** in the Inspector. Start with three subdivision levels for a default cube and save a new `.asset` under Assets. This creates a renderer-only copy at the same position with interpolated RGBA paint, UVs, normals and tangents. Move or hide one object to avoid overlapping surfaces, then paint the new copy. The original mesh, original paint and original object remain unchanged. Subsequent strokes remain per-renderer paint data; the saved source copy contains the colors interpolated at creation time.
 
 Subdivision splits triangles without smoothing the shape. It supports readable static triangle meshes without skinning or blend shapes, preserves submesh boundaries and indexed seams, and rejects results above 200,000 triangles. It does not copy children, colliders or other scripts. Undo removes the new object; the saved mesh asset remains for recovery and can be removed manually when no longer referenced. Cancelling the save dialog creates nothing. Existing assets are never overwritten.
 

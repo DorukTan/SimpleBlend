@@ -2,13 +2,15 @@
 
 Open `workspace.html` in a browser. There are no external resources or build dependencies. This is a browser-only interaction prototype for issue #24, not the shipping Unity UI. It cannot read, modify, save or export Unity assets. The demonstration canvas is a front projection, not a renderer or brush-engine accuracy fixture.
 
-For a local browser preview, run `node tools/Serve-WorkspacePrototype.cjs` from the repository root and open the printed loopback URL. The server exposes only the three prototype files, not the project directory. Stop it with Ctrl+C when the review is finished.
+For a local browser preview, run `node tools/Serve-WorkspacePrototype.cjs` from the repository root and open the printed loopback URL. The server exposes only the three prototype files and seven named icons, not the project directory. Stop it with Ctrl+C when the review is finished. An optional port argument can preserve an existing review URL.
+
+The revised styling follows the owner's SimpleTransform reference: Unity-like custom panels, blue icon-and-label tabs and compact surface chips. Common painting controls use ordinary task language. Channel mapping and implementation diagnostics remain in More paint options / Source and saved-data details. See `../simpletools-design-language.md` for the native implementation handoff.
 
 ## Try the first lesson
 
-1. Select Lesson Wall, then Prepare paint data.
-2. Open Material setup and create/assign the lesson material.
-3. Choose Moss, adjust radius/strength and activate painting.
+1. Select Lesson Wall, then Set up painting.
+2. Open Change surfaces and choose Use these surfaces.
+3. Choose Moss, adjust Brush size/Strength and start painting.
 4. Drag across the canvas or use Sample stroke with the keyboard. Undo and Redo each operate on a complete gesture.
 5. Save demo state marks this browser session clean; it does not save a file. In Unity the corresponding operation is native scene/prefab saving, followed by reopening to verify persistence.
 
@@ -18,7 +20,7 @@ Raw channel choices change illustrative stroke hues only, not actual encoded RGB
 
 Use Test state to inspect empty, setup, sparse, ready, mixed, unsupported, topology mismatch and write-failure flows. Resetting dirty demonstration paint requires confirmation. This is a demo reset safeguard, not a proposed modal on every native Unity selection change.
 
-Advanced brush settings contains selection lock. Procedural treatment demonstrates preview/apply/cancel only; the applied illustrative treatment matches its preview, but is not the planned noise algorithm. Create/Sculpt/Output describe future operations rather than pretending their engines exist. Baked-output confirmation exports nothing.
+More paint options contains selection lock. Weathering demonstrates preview/apply/cancel only; the applied illustrative treatment matches its preview, but is not the planned noise algorithm. Create/Shape/Save describe future operations rather than pretending their engines exist. Baked-output confirmation exports nothing.
 
 ## Owner review checklist
 

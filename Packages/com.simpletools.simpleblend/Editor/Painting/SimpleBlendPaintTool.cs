@@ -17,7 +17,19 @@ namespace SimpleBlend.Editor
         private readonly VertexColorPreviewRenderer _preview = new VertexColorPreviewRenderer();
         private readonly VertexPaintStrokeSession _stroke = new VertexPaintStrokeSession();
 
-        public override GUIContent toolbarIcon => ToolIcon;
+        public override GUIContent toolbarIcon
+        {
+            get
+            {
+                if (ToolIcon.image == null)
+                {
+                    ToolIcon.image = SimpleBlendEditorIcons.Load("Paint");
+                }
+
+                ToolIcon.text = ToolIcon.image == null ? "SB" : string.Empty;
+                return ToolIcon;
+            }
+        }
 
         public override bool IsAvailable()
         {

@@ -24,7 +24,7 @@
     $('workflow').value = 'layers';
     $('recovery-details').hidden = true;
     $('plan-details').hidden = true;
-    setStatus('Demonstration reset. No Unity assets were changed.');
+    setStatus('Choose a surface, then start painting. Design preview only.');
     render();
   }
   function requestReset(target, scenario) {
@@ -44,7 +44,7 @@
     $('plan-details').hidden = true; render();
     setStatus(task === 'paint' ? 'Choose a layer, then activate painting.' : 'Review workflow only; this does not implement the Unity operation.');
     if (task === 'materials') $('make-material').focus();
-    else if (task === 'paint' && state.prepared) $('workflow').focus();
+    else if (task === 'paint' && state.prepared) $('layer-list').children[state.layer]?.focus();
   }
   function commit(strokes) {
     history.push(clone(state.strokes)); redo = [];
@@ -93,19 +93,20 @@
     $('scenario').value = state.scenario;
     const blocked = ['empty', 'mixed', 'unsupported', 'stale', 'error'].includes(state.scenario);
     const named = state.target === 'cube' ? 'Cube' : state.target === 'long' ? 'Environment / Modular_Wall_Exterior_Weathered_Section_01' : 'Lesson Wall';
-    const counts = state.prepared ? state.target === 'cube' && !state.dense ? 'Existing corner vertices · coarse painting' : 'Prepared paint data · illustrative spacing' : state.target === 'cube' ? 'Sparse corner vertices · no face-center detail' : 'Mesh selected · not prepared';
+    const counts = state.prepared ? state.target === 'cube' && !state.dense ? 'Existing corner vertices · coarse painting' : 'Ready to paint · original mesh unchanged' : state.target === 'cube' ? 'Low-detail mesh · small strokes need more vertices' : 'Set up this object to begin';
     $('target-meta').textContent = state.target === 'empty' ? 'Mesh and material readiness will appear here.' : counts;
     $('save-state').textContent = state.target === 'empty' ? 'No target' : state.dirty ? 'Unsaved demo changes' : 'Demo state clean';
     $('scene-title').textContent = state.target === 'empty' ? 'Select a mesh to begin' : named;
-    $('scene-caption').textContent = state.preview ? 'Treatment preview only · Apply or Cancel' : state.active ? `Painting ${layers[state.layer].name} · drag across the demonstration surface` : 'Illustrative front projection. This is not a Unity rendering or brush-accuracy test.';
+    $('scene-caption').textContent = state.preview ? 'Preview only · Apply or Cancel' : state.active ? `Painting ${$('workflow').value === 'rgba' ? $('channel').value : layers[state.layer].name} · drag across the surface` : 'Choose a surface and start painting. Browser sketch, not a Unity render.';
     $('tool-status').textContent = state.active ? `Paint · ${$('workflow').value === 'rgba' ? $('channel').value : layers[state.layer].name}` : 'Tool inactive';
-    $('gesture-hint').textContent = state.active ? 'Drag: paint · Shift: erase · Escape: stop · Ctrl/Cmd+Z: undo' : 'Selection does not automatically activate a tool.';
+    $('gesture-hint').textContent = state.active ? 'Drag to paint · Shift to erase · Escape to stop · Ctrl/Cmd+Z to undo' : 'Your scene is unchanged until you choose an action.';
+    $('brush-surface').textContent = $('workflow').value === 'rgba' ? $('channel').value : layers[state.layer].name;
     for (const button of document.querySelectorAll('[data-task]')) button.setAttribute('aria-pressed', String(button.dataset.task === state.task));
     const notices = {
       empty: ['Choose a target', 'Select Lesson Wall, or switch to Create to review the new-mesh workflow.', ''],
-      setup: ['Prepare before painting', 'Initialize per-renderer paint, then set up a material or choose Direct RGBA.', ''],
+      setup: ['A quick setup first', 'Set up this object, then choose the surfaces you want to paint.', ''],
       sparse: ['This mesh is too sparse for small face strokes', 'Vertex painting needs vertices beneath the brush. Prepare a subdivided copy or deliberately keep coarse painting.', 'warning'],
-      ready: ['Ready to author', 'Original mesh unchanged. Choose a layer and activate painting explicitly.', ''],
+      ready: ['Ready to paint', 'Original mesh unchanged. Choose a surface and start painting.', ''],
       mixed: ['Mixed selection · 2 supported, 1 unsupported', 'Nothing will be changed partially. Narrow the selection; batch preflight is planned in #56.', 'warning'],
       unsupported: ['Unsupported target · camera selected', 'Painting requires a supported mesh renderer. Select a mesh or create one.', 'warning'],
       stale: ['Source topology changed', 'Saved paint is retained but cannot safely use the new vertex indices.', 'error'],
@@ -113,16 +114,17 @@
     };
     const notice = notices[state.scenario];
     if (state.scenario === 'ready' && !state.material && $('workflow').value === 'layers') {
-      notice[0] = 'Choose a material or paint direct data';
-      notice[1] = 'Open Material setup to create the lesson material, or choose Direct RGBA for custom shader data.';
+      notice[0] = 'Choose your surfaces';
+      notice[1] = 'Use Change surfaces to add a material. Custom shader users can choose color channels under More paint options.';
     }
     $('notice').replaceChildren();
     const strong = document.createElement('strong'); strong.textContent = notice[0];
     const message = document.createElement('p'); message.textContent = notice[1];
     $('notice').append(strong, message); $('notice').className = 'notice ' + notice[2];
+    $('notice').classList.toggle('ready', state.scenario === 'ready' && state.material);
     $('setup-panel').hidden = state.task !== 'paint' || state.prepared || ['mixed', 'stale', 'error'].includes(state.scenario);
     $('prepare').hidden = ['empty', 'unsupported'].includes(state.scenario);
-    $('prepare').textContent = state.target === 'cube' ? 'Prepare subdivided paintable copy' : 'Prepare paint data';
+    $('prepare').textContent = state.target === 'cube' ? 'Make a more detailed paint copy' : 'Set up painting';
     $('keep-coarse').hidden = state.target !== 'cube' || state.prepared;
     $('select-wall').hidden = !['empty', 'unsupported'].includes(state.scenario);
     $('paint-panel').hidden = state.task !== 'paint' || !state.prepared || blocked || state.preview;
@@ -148,6 +150,7 @@
     $('layer-list').replaceChildren();
     layers.forEach((layer, index) => {
       const button = document.createElement('button'); button.className = 'layer'; button.setAttribute('aria-pressed', String(index === state.layer));
+      button.setAttribute('aria-label', 'Paint with ' + layer.name);
       const swatch = document.createElement('span'); swatch.className = 'swatch ' + layer.swatch; swatch.setAttribute('aria-hidden', 'true');
       const label = document.createElement('span'); label.className = 'layer-info'; label.textContent = layer.name;
       const hint = document.createElement('small'); hint.textContent = layer.hint; label.append(hint);
@@ -158,7 +161,7 @@
     });
     $('activate').disabled = blocked || !state.prepared || (!state.material && $('workflow').value === 'layers');
     $('activate').title = !state.material && $('workflow').value === 'layers' ? 'Assign a compatible material or choose Direct RGBA first.' : '';
-    $('activate').textContent = state.active ? 'Deactivate painting' : 'Activate painting';
+    $('activate').textContent = state.active ? 'Stop painting' : 'Start painting';
     $('undo').disabled = !history.length || state.preview || !!gesture;
     $('redo').disabled = !redo.length || state.preview || !!gesture;
     $('sample-stroke').disabled = !state.active || state.preview;

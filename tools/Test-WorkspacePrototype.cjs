@@ -24,6 +24,7 @@ const { chromium } = require('playwright');
     await page.keyboard.press('Enter');
     await check(page.evaluate(() => document.activeElement.id === 'open-materials'), 'Preparation hands focus to material setup');
     await check($('activate').isDisabled(), 'Layer painting requires material setup');
+    await page.getByText('More paint options', { exact: true }).click();
     await $('workflow').selectOption('rgba');
     await check($('activate').isEnabled(), 'Direct RGBA does not require a material');
     await $('workflow').selectOption('layers');
@@ -31,8 +32,8 @@ const { chromium } = require('playwright');
     await check(page.evaluate(() => document.activeElement.id === 'make-material'), 'Material panel has a logical focused action');
     await page.keyboard.press('Enter');
     await check($('activate').isEnabled(), 'Material setup enables explicit activation');
-    await page.getByRole('button', { name: 'Moss First overlay Red', exact: true }).click();
-    await check(page.getByRole('button', { name: 'Moss First overlay Red', exact: true }).evaluate(button => button === document.activeElement), 'Layer selection retains keyboard focus');
+    await page.getByRole('button', { name: 'Paint with Moss', exact: true }).click();
+    await check(page.getByRole('button', { name: 'Paint with Moss', exact: true }).evaluate(button => button === document.activeElement), 'Layer selection retains keyboard focus');
     const before = await pixelState();
     await $('activate').click();
     await $('sample-stroke').click();
@@ -42,7 +43,7 @@ const { chromium } = require('playwright');
     await check(pixelState().then(value => value === before), 'One Undo restores pre-stroke state');
     await $('redo').click();
     await check(pixelState().then(value => value === painted), 'Redo restores entire stroke');
-    await page.getByText('Procedural treatment · planned', { exact: true }).click();
+    await page.getByText('Weathering · planned', { exact: true }).click();
     await $('preview-grime').click();
     await check(page.evaluate(() => document.activeElement.id === 'apply-preview'), 'Preview hands keyboard focus to Apply');
     const preview = await pixelState();
@@ -83,7 +84,7 @@ const { chromium } = require('playwright');
     await check($('output-dialog').isVisible(), 'Bake operation has explicit review');
     await $('cancel-output').click();
     await page.locator('[data-task="paint"]').click();
-    await page.getByText('Advanced brush settings', { exact: true }).click();
+    await $('paint-options').evaluate(details => { details.open = true; });
     await $('lock').check();
     await $('activate').click();
     await $('target').selectOption('cube');
@@ -96,7 +97,7 @@ const { chromium } = require('playwright');
     await check($('target-meta').innerText().then(text => text.includes('coarse painting')), 'Sparse target can retain existing vertices');
     await $('scenario').selectOption('sparse');
     await $('prepare').click();
-    await check($('target-meta').innerText().then(text => text.includes('Prepared paint data')), 'Subdivided preparation is a separate choice');
+    await check($('target-meta').innerText().then(text => text.includes('Ready to paint')), 'Subdivided preparation is a separate choice');
     await $('workflow').selectOption('rgba'); await $('activate').click();
     await $('channel').selectOption('Red'); await $('sample-stroke').click();
     const redDataDemo = await pixelState(); await $('undo').click();
@@ -106,15 +107,20 @@ const { chromium } = require('playwright');
     await check($('submesh').isDisabled(), 'Unmodeled submesh control is explicitly unavailable');
     for (const scenario of ['empty', 'setup', 'sparse', 'ready', 'mixed', 'unsupported', 'stale', 'error']) {
       await $('scenario').selectOption(scenario);
-      await check($('notice').innerText().then(text => text.length > 30), `${scenario} has an explanation`);
+      await check($('notice').innerText().then(text => scenario === 'ready' ? text.includes('Ready to paint') : text.length > 30), `${scenario} has an explanation`);
     }
     await $('scenario').selectOption('ready');
+    await $('paint-options').evaluate(details => { details.open = false; });
     for (const theme of ['dark', 'light']) {
       await $('theme').selectOption(theme);
       for (const dock of ['320', '440']) {
         await $('dock').selectOption(dock);
         await check(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${theme}/${dock} no page overflow`);
         await check(page.locator('.workbench').evaluate(panel => panel.scrollWidth <= panel.clientWidth), `${theme}/${dock} no dock overflow`);
+        await check($('activate').evaluate(button => {
+          const r = button.getBoundingClientRect(); const panel = document.querySelector('.panel-scroll').getBoundingClientRect();
+          return r.top >= panel.top && r.bottom <= panel.bottom;
+        }), `${theme}/${dock} primary paint action is visible without scrolling`);
         await page.screenshot({ path: path.join(output, `${theme}-${dock}.png`), fullPage: true });
       }
     }

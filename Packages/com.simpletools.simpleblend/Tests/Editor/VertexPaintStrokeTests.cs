@@ -118,7 +118,8 @@ namespace SimpleBlend.Editor.Tests
             try
             {
                 Assert.That(tool.toolbarIcon, Is.Not.Null);
-                Assert.That(tool.toolbarIcon.text, Is.EqualTo("SB"));
+                Assert.That(tool.toolbarIcon.image, Is.SameAs(SimpleBlendEditorIcons.Load("Paint")));
+                Assert.That(tool.toolbarIcon.text, Is.Empty);
             }
             finally
             {
