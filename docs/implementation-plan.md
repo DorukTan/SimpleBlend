@@ -1,5 +1,7 @@
 # SimpleBlend implementation plan
 
+> Scope revision, 2026-10-16: the batches below are the original foundation plan. For new work follow [the expanded issue order](github-roadmap.md), [feature evidence](realblend-research.md) and [task definitions](product-roadmap.json). M10's interaction specification is next; source-safe geometry, advanced materials, pipeline coverage and complete acceptance must precede RC/1.0. Do not use the old “next session” text to bypass the revised release gate.
+
 This is the executable task order for the roadmap in `docs/roadmap.md`. Each task has a bounded result and a verification point. Do not start a later slice while an earlier gate is red.
 
 ## Execution rules
