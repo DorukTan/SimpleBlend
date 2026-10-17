@@ -7,6 +7,7 @@ Start with installation and the first-stroke guide. Feature availability depends
 
 - [Data safety and storage](data-safety.md)
 - [Paint the first stroke](first-stroke.md)
+- [Paint workspace](workspace.md)
 - [Brush controls and exact behavior](brush-controls.md)
 - [Layer Blend shader setup](layer-blend-shaders.md)
 - [Shader Graph integration and availability](shader-graph.md)

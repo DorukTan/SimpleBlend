@@ -204,7 +204,8 @@ namespace SimpleBlend.Editor.Tests
         [Test]
         public void Brush_settings_normalize_before_creating_a_command()
         {
-            var settings = ScriptableObject.CreateInstance<SimpleBlendBrushSettings>();
+            var settings = SimpleBlendBrushSettings.instance;
+            var original = EditorJsonUtility.ToJson(settings);
             try
             {
                 settings.Radius = -2f;
@@ -230,7 +231,8 @@ namespace SimpleBlend.Editor.Tests
             }
             finally
             {
-                Object.DestroyImmediate(settings);
+                // No SaveSettings call: restore in-memory preferences without writing the user's settings file.
+                EditorJsonUtility.FromJsonOverwrite(original, settings);
             }
         }
 

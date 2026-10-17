@@ -1,6 +1,6 @@
 # Brush controls and exact behavior
 
-The **SimpleBlend Brush** overlay appears in the Scene view. Its controls configure a pure brush command; the overlay does not own paint data or mesh storage.
+The **SimpleBlend Brush** overlay appears in the Scene view. The [paint workspace](workspace.md) uses the same controls and brush settings. These controls configure a pure brush command; neither settings surface owns paint data or mesh storage. Operation, Paint channel, View, Channel values, Brush size (world-space radius), Strength and Fill scope are shown as relevant to the operation. Flow, Falloff, Accumulate and masks are grouped under **More paint options**. Collapsed options remain effective.
 
 ## Channels
 
@@ -38,7 +38,7 @@ Masks restrict destination vertices. Smooth may still read an adjacent vertex ou
 
 ## Preview modes
 
-The **Preview** control changes only the Scene view visualization. It never edits `VertexPaintData` or renderer materials.
+The **View** control changes only the Scene view visualization. It never edits `VertexPaintData` or renderer materials.
 
 - **Red**, **Green**, **Blue**, and **Alpha** isolate one authoritative component.
 - **RGB** displays the three color components together while ignoring alpha as color.

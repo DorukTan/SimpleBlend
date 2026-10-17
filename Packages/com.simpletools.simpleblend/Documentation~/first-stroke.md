@@ -4,13 +4,15 @@ SimpleBlend paints per-renderer vertex colors and provides channel previews, sto
 
 ## Set up a target
 
+For the dockable setup and painting controls, open **Window > SimpleBlend > Workspace**. Select one object, choose **Set up painting**, then explicitly **Start painting**. See [Paint workspace](workspace.md) for readiness, mesh-copy and current material-workflow boundaries. The component/menu path below remains available.
+
 For an owned first lesson, create a Unity Plane and assign a new Layer Blend 3 material. Give the Base a neutral tint and the Red overlay a contrasting tint; default white Albedo and black Height inputs are sufficient for a basic channel test. Use a URP asset in both Graphics and the active Quality level. Imported meshes with existing vertex colors initialize from those colors; meshes without colors initialize with zero channels.
 
 1. Select a GameObject with a `MeshFilter`/`MeshRenderer` or a `SkinnedMeshRenderer`.
 2. Choose **GameObject > SimpleBlend > Enable Vertex Painting**, or use **Enable SimpleBlend Vertex Painting** from the Renderer component context menu.
 3. Confirm that the Inspector reports ready paint data. Open **Source and saved-data details** when you need vertex/submesh counts, the topology hash, storage mode/reason or generated output path/ownership ID.
 4. If the component was added manually, select **Initialize Vertex Painting** in its Inspector.
-5. Select **Activate SimpleBlend Paint Tool** if setup did not already activate it. The tool appears in the Scene view palette with an `SB` badge.
+5. Select **Activate SimpleBlend Paint Tool** if setup did not already activate it. The tool appears in the Scene view palette with the custom brush icon (`SB` is the missing-icon fallback).
 
 ## Painting a cube or another sparse mesh
 
@@ -22,7 +24,7 @@ Subdivision splits triangles without smoothing the shape. It supports readable s
 
 ## Paint
 
-- Use the **SimpleBlend Brush** Scene view overlay to choose a mode, target channel, preview, radius, strength, flow, falloff, accumulation, fill scope, and optional masks.
+- Use the workspace or **SimpleBlend Brush** Scene view overlay to choose Operation, Paint channel, Channel values, View, Brush size (radius), Strength and Fill scope. Flow, Falloff, Accumulate and optional masks are under **More paint options**; hidden settings still apply.
 - Start with Paint, Red channel, a brush color whose Red component is 1, strength 0.35, flow 1, accumulation on, and masks off. Brush color components are channel values, not the visible material tint: Red paint selects the Red overlay even if that overlay is green moss.
 - Drag the primary mouse button over the selected mesh to paint.
 - **Fill** and **Sample** act once when the mesh is clicked.
@@ -34,7 +36,7 @@ Save the scene and reopen it before treating the lesson as complete. The saved C
 
 To render the paint as material layers, assign a material using **SimpleBlend/Layer Blend 3** or **SimpleBlend/Layer Blend 4**. Clear vertices select the base layer; Red, Green, and optionally Blue select the overlay layers. See [Layer Blend shader setup](layer-blend-shaders.md).
 
-The projected wire disc follows the hit point and surface normal. Choose Red, Green, Blue, Alpha, RGB, or Density from **Preview**. The preview does not replace or edit the renderer's materials.
+The projected wire disc follows the hit point and surface normal. Choose Red, Green, Blue, Alpha, RGB, or Density from **View**. The preview does not replace or edit the renderer's materials.
 
 ## Safety and current limitations
 
