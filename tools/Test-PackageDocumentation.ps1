@@ -31,7 +31,11 @@ foreach ($label in @('Initialize Vertex Painting','Activate SimpleBlend Paint To
 }
 if (!$shaderGui.Contains('"Height Transition"')) { throw 'Documented shader control changed.' }
 $index = [IO.File]::ReadAllText((Join-Path $root 'Documentation~/index.md'))
-foreach ($page in @('installation','compatibility','first-stroke','brush-controls','data-safety','layer-blend-shaders','shader-graph','terrain-binding','teaching-samples','troubleshooting','removal')) {
+foreach ($page in @('installation','compatibility','first-stroke','workspace','brush-controls','data-safety','layer-blend-shaders','shader-graph','terrain-binding','teaching-samples','troubleshooting','removal')) {
     if (!$index.Contains($page + '.md')) { throw ('Documentation page is not indexed: ' + $page) }
 }
-[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 8; indexedPages = 11; result = 'Passed' } | ConvertTo-Json
+$workspace = [IO.File]::ReadAllText((Join-Path $root 'Editor/Workspace/SimpleBlendWorkspace.cs'))
+foreach ($label in @('Window/SimpleBlend/Workspace','Set up painting','Start painting','Stop painting','Make a more detailed paint copy')) {
+    if (!$workspace.Contains($label)) { throw ('Documented workspace control changed: ' + $label) }
+}
+[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 13; indexedPages = 12; result = 'Passed' } | ConvertTo-Json

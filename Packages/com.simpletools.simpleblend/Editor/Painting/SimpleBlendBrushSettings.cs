@@ -6,6 +6,7 @@ namespace SimpleBlend.Editor
     [FilePath("SimpleBlend/BrushSettings.asset", FilePathAttribute.Location.PreferencesFolder)]
     internal sealed class SimpleBlendBrushSettings : ScriptableSingleton<SimpleBlendBrushSettings>
     {
+        internal static event System.Action Changed;
         [SerializeField] private VertexPaintBrushMode _mode = VertexPaintBrushMode.Paint;
         [SerializeField] private VertexPaintChannel _channel = VertexPaintChannel.Red;
         [SerializeField] private VertexPaintPreviewMode _previewMode = VertexPaintPreviewMode.Red;
@@ -178,6 +179,7 @@ namespace SimpleBlend.Editor
             Normalize();
             Save(true);
             SceneView.RepaintAll();
+            Changed?.Invoke();
         }
 
         internal void Normalize()

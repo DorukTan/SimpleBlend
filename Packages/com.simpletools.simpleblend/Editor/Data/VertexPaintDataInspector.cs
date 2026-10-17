@@ -58,6 +58,7 @@ namespace SimpleBlend.Editor
             }
 
             EditorGUILayout.Space();
+            if (GUILayout.Button("Open SimpleBlend Workspace")) SimpleBlendWorkspace.Open();
             if (data.SourceMesh == null)
             {
                 if (GUILayout.Button("Initialize Vertex Painting"))
