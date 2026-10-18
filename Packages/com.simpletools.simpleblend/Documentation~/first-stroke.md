@@ -4,7 +4,7 @@ SimpleBlend paints per-renderer vertex colors and provides channel previews, sto
 
 ## Set up a target
 
-For the dockable setup and painting controls, open **Window > SimpleBlend > Workspace**. Select one object, choose **Set up painting**, then explicitly **Start painting**. See [Paint workspace](workspace.md) for readiness, mesh-copy and current material-workflow boundaries. The component/menu path below remains available.
+For the dockable setup and painting controls, open **Window > SimpleBlend > Workspace**. Select one object and choose **Set up painting**. For the guided material path, use **Named surfaces** to create a palette, explicitly assign its material and choose a surface before **Start painting**. Use **Direct channels** for the manual/custom-shader path below. See [Paint workspace](workspace.md) and [surface palettes](surface-palettes.md). The component/menu path remains available.
 
 For an owned first lesson, create a Unity Plane and assign a new Layer Blend 3 material. Give the Base a neutral tint and the Red overlay a contrasting tint; default white Albedo and black Height inputs are sufficient for a basic channel test. Use a URP asset in both Graphics and the active Quality level. Imported meshes with existing vertex colors initialize from those colors; meshes without colors initialize with zero channels.
 
