@@ -2,7 +2,7 @@
 
 Open **Window > SimpleBlend > Workspace** and dock it beside the Scene view. The paint component Inspector and **SimpleBlend Brush** overlay also provide an open-workspace button.
 
-The native workspace provides target preflight, explicit setup/painting, shared brush controls, optional denser mesh copies and [named surface palettes](surface-palettes.md) for the existing three/four-layer URP shaders. This is not the full browser design prototype or the complete product roadmap; generated geometry, richer previews and input refinements remain separate work.
+The native workspace provides target preflight, explicit setup/painting, shared brush controls, optional denser mesh copies, [named surface palettes](surface-palettes.md) and [Scene feedback/input controls](scene-input.md). This is not the full browser design prototype or the complete product roadmap; generated geometry, richer presentation and remaining input/acceptance work stay separate.
 
 ## Begin painting
 
@@ -19,7 +19,7 @@ Existing paint cannot be reinitialized by the workspace setup action. Incompatib
 
 **More paint options** contains Flow, Falloff, Accumulate and the existing normal/submesh/value masks. Collapsing it hides controls, not their effect: enabled masks and saved brush settings still apply, and active masks are summarized while collapsed. The brush engine and capped/continuous behavior have not changed. Vertex alpha is a stored channel, separate from Strength. See [exact brush behavior](brush-controls.md).
 
-The View control changes the existing channel/RGB/density visualization; it is not a material/result preview switch. Changing settings repaints the Scene view. The workspace refreshes its controls after changes made in the overlay or by color sampling.
+View includes Material, which leaves actual assigned materials visible with no diagnostic overlay, plus channel/RGB/density diagnostics. Preview section only can limit the latter to the masked section. Changing settings repaints the Scene view. The workspace refreshes its controls after changes made in the overlay or by color sampling. Lock paint target pins the header renderer without forcing Unity selection; stopping/unlocking releases the pin.
 
 ## Mesh detail and materials
 

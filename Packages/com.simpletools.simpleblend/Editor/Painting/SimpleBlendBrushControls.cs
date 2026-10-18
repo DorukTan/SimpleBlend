@@ -15,6 +15,8 @@ namespace SimpleBlend.Editor
             settings.Mode = (VertexPaintBrushMode)EditorGUILayout.EnumPopup("Operation", settings.Mode);
             if (!surfaceMode) DrawChannels(settings);
             settings.PreviewMode = (VertexPaintPreviewMode)EditorGUILayout.EnumPopup("View", settings.PreviewMode);
+            using (new EditorGUI.DisabledScope(!settings.SubmeshMaskEnabled || settings.PreviewMode == VertexPaintPreviewMode.Material))
+                settings.PreviewSectionOnly = EditorGUILayout.Toggle(new GUIContent("Preview section only", "Restricts the channel overlay to the masked mesh section. Material view keeps all real materials visible."), settings.PreviewSectionOnly);
             if (settings.Mode == VertexPaintBrushMode.Fill)
                 settings.FillScope = (VertexPaintFillScope)EditorGUILayout.EnumPopup("Fill scope", settings.FillScope);
             else if (settings.Mode != VertexPaintBrushMode.Sample)
@@ -33,6 +35,7 @@ namespace SimpleBlend.Editor
             }
             if (_advanced)
             {
+                EditorGUILayout.HelpBox("Configure SimpleBlend keys in Edit > Shortcuts. Commands run only in the focused Scene view, not text fields. Temporary Erase is held before starting a Paint drag.", MessageType.None);
                 if (surfaceMode) DrawChannels(settings);
                 if (settings.Mode != VertexPaintBrushMode.Sample)
                     settings.Flow = EditorGUILayout.Slider("Flow", settings.Flow, 0f, 1f);

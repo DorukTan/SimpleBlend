@@ -10,7 +10,8 @@ namespace SimpleBlend.Editor
         Blue,
         Alpha,
         RGB,
-        Density
+        Density,
+        Material
     }
 
     internal static class VertexPaintPreviewUtility
@@ -22,6 +23,8 @@ namespace SimpleBlend.Editor
             Color result;
             switch (mode)
             {
+                case VertexPaintPreviewMode.Material:
+                    return Color.clear;
                 case VertexPaintPreviewMode.Red:
                     intensity = normalized.r;
                     result = new Color(intensity, 0f, 0f, PreviewAlpha(intensity));

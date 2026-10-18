@@ -25,6 +25,8 @@ namespace SimpleBlend.Editor
                 return result.With(PaintWorkspaceState.Empty, "Select one mesh object in the Hierarchy to begin.");
             if (selection.Length != 1)
                 return result.With(PaintWorkspaceState.Mixed, "Select one object at a time. Nothing has been changed on this selection.");
+            if (selection[0] == null)
+                return result.With(PaintWorkspaceState.Empty, "The target is unavailable. Select a scene mesh object to continue.");
             var gameObject = selection[0] as GameObject;
             if (selection[0] is Component component) gameObject = component.gameObject;
             if (gameObject == null)

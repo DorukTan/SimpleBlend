@@ -9,7 +9,8 @@ namespace SimpleBlend.Editor
         internal static event System.Action Changed;
         [SerializeField] private VertexPaintBrushMode _mode = VertexPaintBrushMode.Paint;
         [SerializeField] private VertexPaintChannel _channel = VertexPaintChannel.Red;
-        [SerializeField] private VertexPaintPreviewMode _previewMode = VertexPaintPreviewMode.Red;
+        [SerializeField] private VertexPaintPreviewMode _previewMode = VertexPaintPreviewMode.Material;
+        [SerializeField] private bool _previewSectionOnly;
         [SerializeField] private VertexPaintFillScope _fillScope = VertexPaintFillScope.WholeMesh;
         [SerializeField] private float _radius = 1.25f;
         [SerializeField] private float _strength = 1f;
@@ -49,6 +50,12 @@ namespace SimpleBlend.Editor
         {
             get => _fillScope;
             set => _fillScope = value;
+        }
+
+        internal bool PreviewSectionOnly
+        {
+            get => _previewSectionOnly;
+            set => _previewSectionOnly = value;
         }
 
         internal float Radius
@@ -141,7 +148,7 @@ namespace SimpleBlend.Editor
             set => _thresholdInclusive = value;
         }
 
-        internal VertexBrushCommand CreateCommand(Vector3 center)
+        internal VertexBrushCommand CreateCommand(Vector3 center, VertexPaintBrushMode? modeOverride = null)
         {
             Normalize();
             var mask = new VertexBrushMask(
@@ -162,7 +169,7 @@ namespace SimpleBlend.Editor
                 _flow,
                 (Color32)_color,
                 _falloff,
-                _mode,
+                modeOverride ?? _mode,
                 _channel,
                 _accumulate,
                 mask);

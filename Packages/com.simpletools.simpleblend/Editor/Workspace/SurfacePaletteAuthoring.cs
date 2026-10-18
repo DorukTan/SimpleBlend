@@ -126,6 +126,8 @@ namespace SimpleBlend.Editor
             // Base = zero RGB, not alpha. An overlay writes only its mapped component.
             settings.Color = surface == 0 ? new Color(0, 0, 0, 1) : Color.white;
             settings.Mode = VertexPaintBrushMode.Paint;
+            settings.PreviewMode = VertexPaintPreviewMode.Material;
+            settings.PreviewSectionOnly = true;
             settings.SubmeshMaskEnabled = true;
             settings.SubmeshMaskIndex = section;
         }

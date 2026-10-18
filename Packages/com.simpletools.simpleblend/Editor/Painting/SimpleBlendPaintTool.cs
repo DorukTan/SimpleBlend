@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 
 namespace SimpleBlend.Editor
 {
-    [EditorTool("SimpleBlend Paint", typeof(VertexPaintData))]
+    [EditorTool("SimpleBlend Paint")]
     public sealed class SimpleBlendPaintTool : EditorTool
     {
         private const int ControlHash = 0x53424C44;
@@ -16,6 +16,9 @@ namespace SimpleBlend.Editor
         private readonly MeshPaintCache _cache = new MeshPaintCache();
         private readonly VertexColorPreviewRenderer _preview = new VertexColorPreviewRenderer();
         private readonly VertexPaintStrokeSession _stroke = new VertexPaintStrokeSession();
+        private int _ownedControl;
+        private bool _gestureErase;
+        private SceneView _inputView;
 
         public override GUIContent toolbarIcon
         {
@@ -38,22 +41,26 @@ namespace SimpleBlend.Editor
 
         public override void OnActivated()
         {
+            SimpleBlendPaintInput.ClearTemporaryErase();
             EditorApplication.projectChanged += OnProjectChanged;
             Selection.selectionChanged += OnSelectionChanged;
+            SimpleBlendTargetLock.Changed += OnTargetLockChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeChanged;
+            EditorApplication.update += OnEditorUpdate;
             _cache.InvalidateTopology();
             SceneView.RepaintAll();
         }
 
         public override void OnWillBeDeactivated()
         {
-            if (_stroke.IsActive)
-            {
-                GUIUtility.hotControl = 0;
-            }
-
-            FinishStroke();
+            ReleaseInput();
+            SimpleBlendPaintInput.ClearTemporaryErase();
             EditorApplication.projectChanged -= OnProjectChanged;
             Selection.selectionChanged -= OnSelectionChanged;
+            SimpleBlendTargetLock.Changed -= OnTargetLockChanged;
+            EditorApplication.playModeStateChanged -= OnPlayModeChanged;
+            EditorApplication.update -= OnEditorUpdate;
+            SimpleBlendTargetLock.Unlock();
             _cache.Dispose();
             _preview.Dispose();
             SceneView.RepaintAll();
@@ -61,17 +68,17 @@ namespace SimpleBlend.Editor
 
         public override void OnToolGUI(EditorWindow window)
         {
-            if (!(window is SceneView sceneView)
-                || !TryGetData(out var data)
-                || !IsSupportedTarget(data))
+            if (!(window is SceneView sceneView)) return;
+            if (!TryGetData(out var data) || !IsSupportedTarget(data))
             {
+                ReleaseInput();
                 return;
             }
 
             var currentEvent = Event.current;
             var settings = SimpleBlendBrushSettings.instance;
             var controlId = GUIUtility.GetControlID(ControlHash, FocusType.Passive);
-            if (currentEvent.type == EventType.Layout)
+            if (currentEvent.type == EventType.Layout && !currentEvent.alt && !EditorGUIUtility.editingTextField)
             {
                 HandleUtility.AddDefaultControl(controlId);
             }
@@ -79,11 +86,20 @@ namespace SimpleBlend.Editor
             var cacheResult = _cache.Ensure(data);
             if (!cacheResult.IsValid)
             {
+                ReleaseInput();
                 DrawValidationMessage(data, cacheResult.Message);
                 return;
             }
 
-            _preview.Draw(_cache, data, settings.PreviewMode);
+            _preview.Draw(_cache, data, settings.PreviewMode,
+                settings.PreviewSectionOnly && settings.SubmeshMaskEnabled ? settings.SubmeshMaskIndex : -1);
+            if (EditorWindow.focusedWindow != sceneView || EditorGUIUtility.editingTextField)
+            {
+                if (_inputView == sceneView) ReleaseInput();
+                if (!(EditorWindow.focusedWindow is SceneView) || EditorGUIUtility.editingTextField)
+                    SimpleBlendPaintInput.ClearTemporaryErase();
+                return;
+            }
 
             var worldRay = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
             var hasHit = _cache.TryRaycast(worldRay, out var hit);
@@ -99,12 +115,8 @@ namespace SimpleBlend.Editor
 
             if (currentEvent.alt)
             {
-                if (_stroke.IsActive)
-                {
-                    GUIUtility.hotControl = 0;
-                    FinishStroke();
-                }
-
+                ReleaseInput();
+                SimpleBlendPaintInput.ClearTemporaryErase();
                 return;
             }
 
@@ -121,11 +133,15 @@ namespace SimpleBlend.Editor
                     }
                     else
                     {
+                        _ownedControl = controlId;
+                        _inputView = sceneView;
                         GUIUtility.hotControl = controlId;
+                        _gestureErase = SimpleBlendPaintInput.EraseAtStrokeStart(settings.Mode);
                         if (_stroke.Begin(data))
                         {
                             PaintAt(hit, settings);
                         }
+                        else ReleaseInput();
                     }
 
                     currentEvent.Use();
@@ -139,21 +155,22 @@ namespace SimpleBlend.Editor
                     currentEvent.Use();
                     break;
                 case EventType.MouseUp when currentEvent.button == 0 && GUIUtility.hotControl == controlId:
-                    GUIUtility.hotControl = 0;
-                    FinishStroke();
+                    ReleaseInput();
                     currentEvent.Use();
                     break;
-                case EventType.KeyDown when currentEvent.keyCode == KeyCode.Escape && _stroke.IsActive:
-                    GUIUtility.hotControl = 0;
-                    FinishStroke();
+                case EventType.KeyDown when currentEvent.keyCode == KeyCode.Escape:
+                    ReleaseInput();
                     currentEvent.Use();
+                    ToolManager.RestorePreviousTool();
                     break;
             }
         }
 
         internal static bool IsSupportedTarget(VertexPaintData data)
         {
-            if (data == null || data.SourceMesh == null || data.ValidationFailure != VertexPaintValidationFailure.None)
+            if (EditorApplication.isPlayingOrWillChangePlaymode || data == null || !data.enabled
+                || !data.gameObject.activeInHierarchy || EditorUtility.IsPersistent(data)
+                || data.SourceMesh == null || data.ValidationFailure != VertexPaintValidationFailure.None)
             {
                 return false;
             }
@@ -169,7 +186,7 @@ namespace SimpleBlend.Editor
 
         private void PaintAt(MeshRaycastHit hit, SimpleBlendBrushSettings settings)
         {
-            _stroke.Paint(_cache, settings.CreateCommand(hit.Point));
+            _stroke.Paint(_cache, settings.CreateCommand(hit.Point, _gestureErase ? VertexPaintBrushMode.Erase : (VertexPaintBrushMode?)null));
         }
 
         private void FillAt(
@@ -207,6 +224,36 @@ namespace SimpleBlend.Editor
             _stroke.End();
         }
 
+        private void ReleaseInput()
+        {
+            if (_ownedControl != 0 && GUIUtility.hotControl == _ownedControl) GUIUtility.hotControl = 0;
+            _ownedControl = 0;
+            _inputView = null;
+            FinishStroke();
+            _gestureErase = false;
+        }
+
+        internal static void UnlockTarget()
+        {
+            if (ToolManager.activeToolType == typeof(SimpleBlendPaintTool)) ToolManager.RestorePreviousTool();
+            SimpleBlendTargetLock.Unlock();
+        }
+
+        private void OnPlayModeChanged(PlayModeStateChange state)
+        {
+            ReleaseInput();
+            SimpleBlendPaintInput.ClearTemporaryErase();
+            UnlockTarget();
+        }
+
+        private void OnEditorUpdate()
+        {
+            if (ShouldReleaseForFocusLoss(_ownedControl != 0, _inputView != null && EditorWindow.focusedWindow == _inputView))
+                ReleaseInput();
+        }
+
+        internal static bool ShouldReleaseForFocusLoss(bool ownsGesture, bool ownerFocused) => ownsGesture && !ownerFocused;
+
         private void DrawBrushDisc(MeshRaycastHit hit, SimpleBlendBrushSettings settings)
         {
             var radius = settings.Mode == VertexPaintBrushMode.Fill
@@ -241,14 +288,7 @@ namespace SimpleBlend.Editor
 
         private bool TryGetData(out VertexPaintData data)
         {
-            data = target as VertexPaintData;
-            if (data != null)
-            {
-                return true;
-            }
-
-            var selected = Selection.activeGameObject;
-            data = selected == null ? null : selected.GetComponent<VertexPaintData>();
+            data = SimpleBlendTargetLock.Resolve(Selection.objects);
             return data != null;
         }
 
@@ -260,12 +300,14 @@ namespace SimpleBlend.Editor
 
         private void OnSelectionChanged()
         {
-            if (_stroke.IsActive)
-            {
-                GUIUtility.hotControl = 0;
-            }
+            if (SimpleBlendTargetLock.IsLocked) return;
+            OnTargetLockChanged();
+        }
 
-            FinishStroke();
+        private void OnTargetLockChanged()
+        {
+            ReleaseInput();
+            SimpleBlendPaintInput.ClearTemporaryErase();
             _cache.Dispose();
             _preview.Dispose();
             SceneView.RepaintAll();
