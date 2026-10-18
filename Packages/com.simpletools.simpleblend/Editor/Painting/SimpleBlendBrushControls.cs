@@ -8,16 +8,13 @@ namespace SimpleBlend.Editor
     {
         private bool _advanced;
 
-        internal void Draw()
+        internal void Draw(bool surfaceMode = false)
         {
             var settings = SimpleBlendBrushSettings.instance;
             EditorGUI.BeginChangeCheck();
             settings.Mode = (VertexPaintBrushMode)EditorGUILayout.EnumPopup("Operation", settings.Mode);
-            settings.Channel = (VertexPaintChannel)EditorGUILayout.EnumPopup(
-                new GUIContent("Paint channel", "Writes vertex values. The material determines their visible surface or tint."), settings.Channel);
+            if (!surfaceMode) DrawChannels(settings);
             settings.PreviewMode = (VertexPaintPreviewMode)EditorGUILayout.EnumPopup("View", settings.PreviewMode);
-            if (settings.Mode == VertexPaintBrushMode.Paint || settings.Mode == VertexPaintBrushMode.Fill || settings.Mode == VertexPaintBrushMode.Sample)
-                settings.Color = EditorGUILayout.ColorField(new GUIContent("Channel values", "RGBA values stored on vertices. Alpha here is a stored channel, not brush strength."), settings.Color);
             if (settings.Mode == VertexPaintBrushMode.Fill)
                 settings.FillScope = (VertexPaintFillScope)EditorGUILayout.EnumPopup("Fill scope", settings.FillScope);
             else if (settings.Mode != VertexPaintBrushMode.Sample)
@@ -36,6 +33,7 @@ namespace SimpleBlend.Editor
             }
             if (_advanced)
             {
+                if (surfaceMode) DrawChannels(settings);
                 if (settings.Mode != VertexPaintBrushMode.Sample)
                     settings.Flow = EditorGUILayout.Slider("Flow", settings.Flow, 0f, 1f);
                 if (settings.Mode != VertexPaintBrushMode.Fill && settings.Mode != VertexPaintBrushMode.Sample)
@@ -64,6 +62,14 @@ namespace SimpleBlend.Editor
                 }
             }
             if (EditorGUI.EndChangeCheck()) settings.SaveSettings();
+        }
+
+        private static void DrawChannels(SimpleBlendBrushSettings settings)
+        {
+            settings.Channel = (VertexPaintChannel)EditorGUILayout.EnumPopup(
+                new GUIContent("Paint channel", "Writes vertex values. The material determines their visible surface or tint."), settings.Channel);
+            if (settings.Mode == VertexPaintBrushMode.Paint || settings.Mode == VertexPaintBrushMode.Fill || settings.Mode == VertexPaintBrushMode.Sample)
+                settings.Color = EditorGUILayout.ColorField(new GUIContent("Channel values", "RGBA values stored on vertices. Alpha here is a stored channel, not brush strength."), settings.Color);
         }
     }
 }
