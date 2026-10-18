@@ -11,7 +11,7 @@ The workspace supports **Named surfaces** for the existing **SimpleBlend/Layer B
 5. Back in the workspace, choose the palette and mesh section. Choose **Assign palette material to this slot** explicitly. Undo restores the old reference; the previous material asset and paint data remain unchanged. Assignment on a prefab instance is an override, not an edit to the prefab asset. In Prefab Mode, saving edits the prefab itself.
 6. Choose a named surface, then **Start painting**. Rows show the material's actual Albedo and Tint, not a generated material-result preview. When no Albedo is assigned, the row shows its tint.
 
-Creation leaves the scene target selected. The workspace picks up the new palette but does not assign it or write paint. Selecting an existing palette is also read-only with respect to assets. Changing workflow, palette or section stops the SimpleBlend paint tool; changing the scene selection while Named surfaces is in use also stops it. Start again after checking the choice. Other tools are not replaced. Closing the workspace still leaves the Scene tool's lifetime alone.
+Creation leaves the scene target selected. The workspace picks up the new palette but does not assign it or write paint. Selecting an existing palette is also read-only with respect to assets. Changing workflow, palette or section stops the SimpleBlend paint tool; changing scene selection in Named surfaces also stops it unless a paint target is explicitly locked. Stopping releases that lock, so confirm the header target before further assignment. Other tools are not replaced. Closing the workspace still leaves the Scene tool's lifetime alone.
 
 ## What a surface paints
 
@@ -22,13 +22,13 @@ Creation leaves the scene target selected. The workspace picks up the new palett
 | Second overlay | Green toward one | Red, Blue and Alpha preserved |
 | Third overlay (four-surface material only) | Blue toward one | Red, Green and Alpha preserved |
 
-Choosing a surface configures the existing brush: Paint operation, mapped channel/value and a mask for the chosen mesh section. It does not immediately paint. Strength, size, flow, falloff and other masks are retained. Base is a strength-controlled return toward the unpainted surface, not a separate fourth stored weight. Overlay choices do not erase competing overlays; height blending and channel normalization retain their existing semantics.
+Choosing a surface configures the existing brush: Paint operation, mapped channel/value, Material view and a mask for the chosen mesh section. It enables section-only diagnostic preview if you later choose a channel view. It does not immediately paint. Strength, size, flow, falloff and other masks are retained. Base is a strength-controlled return toward the unpainted surface, not a separate fourth stored weight. Overlay choices do not erase competing overlays; height blending and channel normalization retain their existing semantics.
 
 Operation can still be changed to Erase, Smooth, Fill or Sample. More paint options exposes raw channel/value controls as an explicit override. Overlay edits and sampled values share the same brush settings; if they no longer match a named choice, the workspace removes its selected-row indication and asks you to choose again. Nothing silently resets your advanced settings. Direct channels remains available for custom shaders, alpha work and non-palette workflows; switching workflow does not clear active masks.
 
 ## Mesh sections are not independent vertex storage
 
-The section choice targets vertices referenced by that submesh. A vertex shared by two sections still has one paint value, so a stroke can also change the neighboring section. Make an appropriately split mesh if independent weights are required. Channel/RGB/density previews currently show the full mesh; this is not an isolated submesh material-result preview. Stop painting to inspect the assigned material without the Scene tool's channel overlay. Selection lock, richer previews and input refinements remain separate work.
+The section choice targets vertices referenced by that submesh. A vertex shared by two sections still has one paint value, so a stroke can also change the neighboring section. Make an appropriately split mesh if independent weights are required. **Preview section only** can restrict channel/RGB/density overlays to the masked section; **Material** view shows the actual assigned materials with no replacement overlay. It does not hide neighboring sections. See [Scene controls](scene-input.md) for target locking and remaining observed-acceptance boundaries.
 
 ## Share and edit
 

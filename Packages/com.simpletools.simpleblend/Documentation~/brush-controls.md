@@ -40,8 +40,12 @@ Masks restrict destination vertices. Smooth may still read an adjacent vertex ou
 
 The **View** control changes only the Scene view visualization. It never edits `VertexPaintData` or renderer materials.
 
+- **Material** draws no diagnostic overlay: the actual assigned materials remain visible while painting. New preferences use this mode; older preview indices are preserved.
+
 - **Red**, **Green**, **Blue**, and **Alpha** isolate one authoritative component.
 - **RGB** displays the three color components together while ignoring alpha as color.
 - **Density** displays topology-relative world-space spacing from cold blue (sparse) through green to hot red (dense). Density is normalized per mesh, uses one-ring edge spacing, and is rebuilt when topology or the target transform changes.
 
 Version `0.3.0-alpha.2` keeps preview rendering and density derivation outside the paint authority. Changing preview mode therefore creates no Undo operation and cannot alter a saved stroke.
+
+**Preview section only** limits diagnostic overlays to the enabled Submesh Mask section; Material view does not hide other sections. See [Scene feedback and keyboard controls](scene-input.md) for target locking, unbound Shortcut Manager commands, temporary erase and the current Escape/focus behavior.

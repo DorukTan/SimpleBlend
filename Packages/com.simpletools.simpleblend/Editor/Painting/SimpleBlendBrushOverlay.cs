@@ -18,7 +18,9 @@ namespace SimpleBlend.Editor
 
         private void DrawSettings()
         {
-            var selected = Selection.activeGameObject == null ? null : Selection.activeGameObject.GetComponent<VertexPaintData>();
+            var selected = SimpleBlendTargetLock.Resolve(Selection.objects);
+            if (SimpleBlendTargetLock.IsLocked)
+                EditorGUILayout.HelpBox(selected == null ? "Locked paint target unavailable. Unlock in the workspace." : "Locked paint target: " + selected.name, MessageType.Info);
             if (selected != null && selected.SourceMesh != null && selected.SourceMesh.vertexCount <= 64)
                 EditorGUILayout.HelpBox("Sparse mesh: strokes only affect existing vertices. Open Mesh detail in the workspace or Inspector to make a denser copy.", MessageType.Warning);
             _controls.Draw();

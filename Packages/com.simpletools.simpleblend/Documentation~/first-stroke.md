@@ -36,7 +36,7 @@ Save the scene and reopen it before treating the lesson as complete. The saved C
 
 To render the paint as material layers, assign a material using **SimpleBlend/Layer Blend 3** or **SimpleBlend/Layer Blend 4**. Clear vertices select the base layer; Red, Green, and optionally Blue select the overlay layers. See [Layer Blend shader setup](layer-blend-shaders.md).
 
-The projected wire disc follows the hit point and surface normal. Choose Red, Green, Blue, Alpha, RGB, or Density from **View**. The preview does not replace or edit the renderer's materials.
+The projected wire disc follows the hit point and surface normal. **Material** in View keeps the real material visible without a diagnostic overlay. Red, Green, Blue, Alpha, RGB and Density remain available; Preview section only can limit those overlays to an enabled mesh-section mask. Neither choice edits the renderer's materials. See [Scene controls](scene-input.md) for target locking, shortcuts and Escape/Undo behavior.
 
 ## Safety and current limitations
 

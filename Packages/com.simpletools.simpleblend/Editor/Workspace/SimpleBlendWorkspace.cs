@@ -36,6 +36,7 @@ namespace SimpleBlend.Editor
             ToolManager.activeToolChanged += Repaint;
             SimpleBlendBrushSettings.Changed += Repaint;
             SurfacePaletteCreator.Created += OnPaletteCreated;
+            SimpleBlendTargetLock.Changed += Refresh;
             Refresh();
         }
 
@@ -49,11 +50,13 @@ namespace SimpleBlend.Editor
             ToolManager.activeToolChanged -= Repaint;
             SimpleBlendBrushSettings.Changed -= Repaint;
             SurfacePaletteCreator.Created -= OnPaletteCreated;
+            SimpleBlendTargetLock.Changed -= Refresh;
             // The Scene tool owns its lifetime; closing a settings window must not take another tool's input.
         }
 
         private void OnSelectionChanged()
         {
+            if (SimpleBlendTargetLock.IsLocked) { Refresh(); return; }
             if (_useSurfaces) StopForSurfaceConfiguration();
             _operationMessage = null;
             _materialSection = 0;
@@ -72,9 +75,12 @@ namespace SimpleBlend.Editor
 
         private void Refresh()
         {
-            _target = PaintWorkspaceTarget.Inspect(Selection.objects);
+            _target = InspectTarget();
             Repaint();
         }
+
+        private static PaintWorkspaceTarget InspectTarget() => PaintWorkspaceTarget.Inspect(
+            SimpleBlendTargetLock.IsLocked ? new Object[] { SimpleBlendTargetLock.Data } : Selection.objects);
 
         private void OnFocus() => Refresh();
 
@@ -100,6 +106,14 @@ namespace SimpleBlend.Editor
                     EditorGUILayout.HelpBox(_target.Message,
                         _target.State == PaintWorkspaceState.Invalid ? MessageType.Error : MessageType.Info);
                     DrawPrimaryAction();
+                    if (SimpleBlendTargetLock.IsLocked)
+                    {
+                        EditorGUILayout.HelpBox(SimpleBlendTargetLock.Data == null
+                            ? "The locked target is unavailable. Unlock before choosing another object."
+                            : "Paint target locked. Hierarchy selection stays usable; the brush still targets the object shown here.", MessageType.Info);
+                        if (GUILayout.Button("Unlock paint target")) SimpleBlendPaintTool.UnlockTarget();
+                    }
+                    else if (_target.CanPaint && GUILayout.Button("Lock paint target")) SimpleBlendTargetLock.Lock(_target.Data);
                 }
                 if (!string.IsNullOrEmpty(_operationMessage)) EditorGUILayout.HelpBox(_operationMessage, _operationType);
                 if (_target.CanPaint)
@@ -152,7 +166,7 @@ namespace SimpleBlend.Editor
                 }
                 else
                 {
-                    var current = PaintWorkspaceTarget.Inspect(Selection.objects);
+                    var current = InspectTarget();
                     if (current.CanPaint) ToolManager.SetActiveTool(typeof(SimpleBlendPaintTool));
                     else { _operationMessage = current.Message; _operationType = MessageType.Error; }
                 }
@@ -178,9 +192,10 @@ namespace SimpleBlend.Editor
                 if (string.IsNullOrEmpty(path)) return;
                 try
                 {
-                    var current = PaintWorkspaceTarget.Inspect(Selection.objects);
+                    var current = InspectTarget();
                     if (!current.CanPaint) throw new System.InvalidOperationException(current.Message);
                     var copy = PaintMeshSubdivision.CreatePaintableCopy(current.Data, _subdivisionLevels, path);
+                    SimpleBlendPaintTool.UnlockTarget();
                     Selection.activeGameObject = copy;
                     _operationMessage = "Copy created. Move or hide one overlapping object, then start painting.";
                     _operationType = MessageType.Info;
@@ -263,7 +278,7 @@ namespace SimpleBlend.Editor
                 if (!matched)
                     EditorGUILayout.HelpBox("Choose a surface to set the brush. Advanced or overlay channel edits may no longer match a named choice.", MessageType.Warning);
                 if (_target.Mesh.subMeshCount > 1)
-                    EditorGUILayout.HelpBox("The brush targets this section's vertices. Shared vertices can also change neighboring sections. Channel previews still show the full mesh, not an isolated material result.", MessageType.Info);
+                    EditorGUILayout.HelpBox("The brush targets this section's vertices. Shared vertices can also change neighboring sections. Preview section only limits the diagnostic overlay; Material view keeps all real materials visible.", MessageType.Info);
                 EditorGUILayout.HelpBox("Base clears RGB toward the unpainted surface and preserves alpha. An overlay writes its channel without clearing other overlays. Choosing a surface sets Paint and this section's mask; other masks, size and strength are retained.", MessageType.None);
                 return true;
             }

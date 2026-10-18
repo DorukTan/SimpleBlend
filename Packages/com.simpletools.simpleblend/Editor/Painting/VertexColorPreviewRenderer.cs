@@ -16,12 +16,16 @@ namespace SimpleBlend.Editor
         internal bool Draw(
             MeshPaintCache cache,
             VertexPaintData data,
-            VertexPaintPreviewMode previewMode)
+            VertexPaintPreviewMode previewMode,
+            int section = -1)
         {
+            if (previewMode == VertexPaintPreviewMode.Material) return false;
             if (cache?.Snapshot == null || data == null || Event.current.type != EventType.Repaint)
             {
                 return false;
             }
+
+            if (section < -1 || section >= cache.Snapshot.Topology.SubmeshCount) return false;
 
             if (!EnsureResources(cache.Snapshot))
             {
@@ -36,7 +40,7 @@ namespace SimpleBlend.Editor
                 return false;
             }
 
-            Graphics.DrawMeshNow(_previewMesh, cache.LocalToWorld);
+            Graphics.DrawMeshNow(_previewMesh, cache.LocalToWorld, section);
             return true;
         }
 
@@ -86,7 +90,17 @@ namespace SimpleBlend.Editor
                 Object.DestroyImmediate(_previewMesh);
             }
 
-            _previewMesh = new Mesh
+            _previewMesh = CreatePreviewMesh(snapshot);
+            _previewMesh.MarkDynamic();
+            _snapshot = snapshot;
+            _densityUv = new Vector2[snapshot.LocalVertices.Length];
+            _densityTransformRevision = -1;
+            return true;
+        }
+
+        internal static Mesh CreatePreviewMesh(MeshPaintSnapshot snapshot)
+        {
+            var mesh = new Mesh
             {
                 name = "SimpleBlend Vertex Color Preview",
                 hideFlags = HideFlags.HideAndDontSave,
@@ -95,14 +109,20 @@ namespace SimpleBlend.Editor
                     : IndexFormat.UInt16,
                 vertices = snapshot.LocalVertices,
                 normals = snapshot.LocalNormals,
-                triangles = snapshot.Triangles,
+                subMeshCount = snapshot.Topology.SubmeshCount,
                 bounds = snapshot.LocalBounds
             };
-            _previewMesh.MarkDynamic();
-            _snapshot = snapshot;
-            _densityUv = new Vector2[snapshot.LocalVertices.Length];
-            _densityTransformRevision = -1;
-            return true;
+            var sections = new System.Collections.Generic.List<int>[mesh.subMeshCount];
+            for (var i = 0; i < sections.Length; i++) sections[i] = new System.Collections.Generic.List<int>();
+            for (var triangle = 0; triangle < snapshot.TriangleCount; triangle++)
+            {
+                var indices = sections[snapshot.TriangleSubmeshIds[triangle]];
+                indices.Add(snapshot.Triangles[triangle * 3]);
+                indices.Add(snapshot.Triangles[triangle * 3 + 1]);
+                indices.Add(snapshot.Triangles[triangle * 3 + 2]);
+            }
+            for (var i = 0; i < sections.Length; i++) mesh.SetTriangles(sections[i], i, false);
+            return mesh;
         }
 
         private void UploadDensityIfNeeded(MeshPaintCache cache)

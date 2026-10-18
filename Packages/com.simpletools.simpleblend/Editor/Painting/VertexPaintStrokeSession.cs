@@ -153,6 +153,7 @@ namespace SimpleBlend.Editor
         {
             if (!IsActive)
             {
+                ResetState();
                 return;
             }
 
@@ -167,6 +168,11 @@ namespace SimpleBlend.Editor
             }
 
             Undo.CollapseUndoOperations(_undoGroup);
+            ResetState();
+        }
+
+        private void ResetState()
+        {
             _data = null;
             _strokeBaseline = null;
             _strongestStrokeWeights = null;
