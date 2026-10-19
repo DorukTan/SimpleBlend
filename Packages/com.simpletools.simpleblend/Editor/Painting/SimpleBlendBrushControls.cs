@@ -36,6 +36,8 @@ namespace SimpleBlend.Editor
             if (_advanced)
             {
                 EditorGUILayout.HelpBox("Configure SimpleBlend keys in Edit > Shortcuts. Commands run only in the focused Scene view, not text fields. Temporary Erase is held before starting a Paint drag.", MessageType.None);
+                EditorGUILayout.HelpBox("Hold Adjust Brush Size or Adjust Strength and left-drag horizontally. Release the mouse to keep the value; Escape or releasing the key first cancels.", MessageType.None);
+                settings.AdjustmentSensitivity = EditorGUILayout.Slider(new GUIContent("Adjustment sensitivity", "Pointer adjustment speed. At 1×, 100 horizontal points double the radius and 200 span the strength range."), settings.AdjustmentSensitivity, 0.25f, 4f);
                 if (surfaceMode) DrawChannels(settings);
                 if (settings.Mode != VertexPaintBrushMode.Sample)
                     settings.Flow = EditorGUILayout.Slider("Flow", settings.Flow, 0f, 1f);
