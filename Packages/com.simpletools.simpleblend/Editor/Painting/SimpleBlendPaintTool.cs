@@ -20,6 +20,7 @@ namespace SimpleBlend.Editor
         private int _ownedControl;
         private bool _gestureErase;
         private SceneView _inputView;
+        private SceneView _pointerOutsideView;
 
         public override GUIContent toolbarIcon
         {
@@ -42,6 +43,8 @@ namespace SimpleBlend.Editor
 
         public override void OnActivated()
         {
+            _pointerOutsideView = null;
+            SimpleBlendPaintFeedback.Clear();
             SimpleBlendPaintInput.ClearAdjustment();
             SimpleBlendPaintInput.ClearTemporaryErase();
             EditorApplication.projectChanged += OnProjectChanged;
@@ -56,6 +59,7 @@ namespace SimpleBlend.Editor
         public override void OnWillBeDeactivated()
         {
             ReleaseInput();
+            SimpleBlendPaintFeedback.Clear();
             SimpleBlendPaintInput.ClearTemporaryErase();
             EditorApplication.projectChanged -= OnProjectChanged;
             Selection.selectionChanged -= OnSelectionChanged;
@@ -74,6 +78,7 @@ namespace SimpleBlend.Editor
             if (!TryGetData(out var data) || !IsSupportedTarget(data))
             {
                 ReleaseInput();
+                SimpleBlendPaintFeedback.Clear();
                 return;
             }
 
@@ -89,6 +94,7 @@ namespace SimpleBlend.Editor
             if (!cacheResult.IsValid)
             {
                 ReleaseInput();
+                SimpleBlendPaintFeedback.Clear();
                 DrawValidationMessage(data, cacheResult.Message);
                 return;
             }
@@ -105,6 +111,12 @@ namespace SimpleBlend.Editor
 
             var worldRay = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
             var hasHit = _cache.TryRaycast(worldRay, out var hit);
+            if (currentEvent.type == EventType.MouseLeaveWindow) _pointerOutsideView = sceneView;
+            else if (currentEvent.type == EventType.MouseEnterWindow || currentEvent.type == EventType.MouseMove
+                     || currentEvent.type == EventType.MouseDown || currentEvent.type == EventType.MouseDrag)
+                _pointerOutsideView = null;
+            SimpleBlendPaintFeedback.SetHover(data,
+                hasHit && !currentEvent.alt && _pointerOutsideView != sceneView ? hit.SubmeshIndex : -1);
             if (currentEvent.type == EventType.Repaint && hasHit)
             {
                 DrawBrushDisc(hit, settings);
@@ -118,6 +130,7 @@ namespace SimpleBlend.Editor
             if (currentEvent.alt)
             {
                 ReleaseInput();
+                SimpleBlendPaintFeedback.SetHover(data, -1);
                 SimpleBlendPaintInput.ClearTemporaryErase();
                 return;
             }
@@ -190,7 +203,9 @@ namespace SimpleBlend.Editor
 
         private void PaintAt(MeshRaycastHit hit, SimpleBlendBrushSettings settings)
         {
-            _stroke.Paint(_cache, settings.CreateCommand(hit.Point, _gestureErase ? VertexPaintBrushMode.Erase : (VertexPaintBrushMode?)null));
+            var command = settings.CreateCommand(hit.Point, _gestureErase ? VertexPaintBrushMode.Erase : (VertexPaintBrushMode?)null);
+            SimpleBlendPaintFeedback.SetActive(_stroke.Target, command);
+            _stroke.Paint(_cache, command);
         }
 
         private void FillAt(
@@ -225,7 +240,9 @@ namespace SimpleBlend.Editor
 
         private void FinishStroke()
         {
-            _stroke.End();
+            var data = _stroke.Target;
+            var result = _stroke.End();
+            SimpleBlendPaintFeedback.SetResult(data, result);
         }
 
         private void ReleaseInput()
@@ -254,6 +271,8 @@ namespace SimpleBlend.Editor
 
         private void OnEditorUpdate()
         {
+            if (!(EditorWindow.focusedWindow is SceneView) && TryGetData(out var currentTarget))
+                SimpleBlendPaintFeedback.SetHover(currentTarget, -1);
             if (ShouldReleaseForFocusLoss(_ownedControl != 0, _inputView != null && EditorWindow.focusedWindow == _inputView))
                 ReleaseInput();
             else if (_adjustment.IsActive && (SimpleBlendPaintInput.AdjustmentHeld != _adjustment.Kind
@@ -361,6 +380,7 @@ namespace SimpleBlend.Editor
 
         private void OnProjectChanged()
         {
+            SimpleBlendPaintFeedback.Clear();
             _cache.InvalidateTopology();
             SceneView.RepaintAll();
         }
@@ -374,6 +394,7 @@ namespace SimpleBlend.Editor
         private void OnTargetLockChanged()
         {
             ReleaseInput();
+            SimpleBlendPaintFeedback.Clear();
             SimpleBlendPaintInput.ClearTemporaryErase();
             _cache.Dispose();
             _preview.Dispose();

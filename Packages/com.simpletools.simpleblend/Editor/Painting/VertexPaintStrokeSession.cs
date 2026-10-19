@@ -10,12 +10,16 @@ namespace SimpleBlend.Editor
         private readonly List<int> _candidates = new List<int>();
         private readonly List<Vector3> _samplePoints = new List<Vector3>();
         private readonly VertexStrokeSampler _strokeSampler = new VertexStrokeSampler();
+        private readonly HashSet<int> _touchedVertices = new HashSet<int>();
+        private VertexPaintTopology _resultTopology;
+        private bool _attempted;
         private VertexPaintData _data;
         private Color32[] _strokeBaseline;
         private float[] _strongestStrokeWeights;
         private int _undoGroup = -1;
 
         internal bool IsActive => _data != null;
+        internal VertexPaintData Target => _data;
 
         internal bool HasChanges { get; private set; }
 
@@ -66,6 +70,9 @@ namespace SimpleBlend.Editor
             _strokeBaseline = (Color32[])data.SerializedColors.Clone();
             _strongestStrokeWeights = new float[data.ColorCount];
             _strokeSampler.Reset();
+            _touchedVertices.Clear();
+            _resultTopology = null;
+            _attempted = false;
             HasChanges = storageChanged || ownershipChanged;
             return true;
         }
@@ -81,6 +88,8 @@ namespace SimpleBlend.Editor
                 return 0;
             }
 
+            _attempted = true;
+            _resultTopology = cache.Snapshot.Topology;
             _strokeSampler.Append(command.Center, command.Radius, _samplePoints);
             var changedCount = 0;
             for (var sampleIndex = 0; sampleIndex < _samplePoints.Count; sampleIndex++)
@@ -96,7 +105,8 @@ namespace SimpleBlend.Editor
                     _data.SerializedColors,
                     false,
                     command.Accumulate ? null : _strokeBaseline,
-                    command.Accumulate ? null : _strongestStrokeWeights);
+                    command.Accumulate ? null : _strongestStrokeWeights,
+                    _touchedVertices);
             }
 
             if (changedCount == 0)
@@ -116,6 +126,8 @@ namespace SimpleBlend.Editor
             }
 
             var topology = cache.Snapshot.Topology;
+            _attempted = true;
+            _resultTopology = topology;
             var candidates = hitSubmeshIndex < 0
                 ? topology.AllVertices
                 : topology.GetSubmeshVertices(hitSubmeshIndex);
@@ -126,7 +138,8 @@ namespace SimpleBlend.Editor
                 candidates,
                 topology,
                 _data.SerializedColors,
-                true);
+                true,
+                changedVertices: _touchedVertices);
             if (changedCount == 0)
             {
                 return 0;
@@ -149,12 +162,12 @@ namespace SimpleBlend.Editor
             SceneView.RepaintAll();
         }
 
-        internal void End()
+        internal VertexPaintStrokeResult End()
         {
             if (!IsActive)
             {
                 ResetState();
-                return;
+                return null;
             }
 
             if (HasChanges)
@@ -168,7 +181,11 @@ namespace SimpleBlend.Editor
             }
 
             Undo.CollapseUndoOperations(_undoGroup);
+            var result = _attempted
+                ? VertexPaintStrokeResult.Create(_strokeBaseline, _data.SerializedColors, _touchedVertices, _resultTopology)
+                : null;
             ResetState();
+            return result;
         }
 
         private void ResetState()
@@ -179,6 +196,9 @@ namespace SimpleBlend.Editor
             _strokeSampler.Reset();
             _undoGroup = -1;
             HasChanges = false;
+            _touchedVertices.Clear();
+            _resultTopology = null;
+            _attempted = false;
         }
     }
 
