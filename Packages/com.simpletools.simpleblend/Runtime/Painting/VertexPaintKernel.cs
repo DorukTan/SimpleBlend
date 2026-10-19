@@ -15,7 +15,8 @@ namespace SimpleBlend
             Color32[] colors,
             bool uniformWeight = false,
             Color32[] strokeBaseline = null,
-            float[] strongestStrokeWeights = null)
+            float[] strongestStrokeWeights = null,
+            ICollection<int> changedVertices = null)
         {
             ValidateInputs(
                 worldPositions,
@@ -86,6 +87,7 @@ namespace SimpleBlend
                 }
 
                 colors[vertexIndex] = result;
+                changedVertices?.Add(vertexIndex);
                 changedCount++;
             }
 

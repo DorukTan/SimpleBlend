@@ -35,6 +35,7 @@ namespace SimpleBlend.Editor
             Undo.undoRedoPerformed += Refresh;
             ToolManager.activeToolChanged += Repaint;
             SimpleBlendBrushSettings.Changed += Repaint;
+            SimpleBlendPaintFeedback.Changed += Repaint;
             SurfacePaletteCreator.Created += OnPaletteCreated;
             SimpleBlendTargetLock.Changed += Refresh;
             Refresh();
@@ -49,6 +50,7 @@ namespace SimpleBlend.Editor
             Undo.undoRedoPerformed -= Refresh;
             ToolManager.activeToolChanged -= Repaint;
             SimpleBlendBrushSettings.Changed -= Repaint;
+            SimpleBlendPaintFeedback.Changed -= Repaint;
             SurfacePaletteCreator.Created -= OnPaletteCreated;
             SimpleBlendTargetLock.Changed -= Refresh;
             // The Scene tool owns its lifetime; closing a settings window must not take another tool's input.
@@ -131,6 +133,7 @@ namespace SimpleBlend.Editor
                         {
                             EditorGUILayout.LabelField("Brush", EditorStyles.boldLabel);
                             _brush.Draw(_useSurfaces);
+                            SimpleBlendPaintFeedback.Draw(_target.Data);
                         }
                     }
                     DrawMeshDetails();

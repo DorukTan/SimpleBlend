@@ -24,6 +24,7 @@ namespace SimpleBlend.Editor
             if (selected != null && selected.SourceMesh != null && selected.SourceMesh.vertexCount <= 64)
                 EditorGUILayout.HelpBox("Sparse mesh: strokes only affect existing vertices. Open Mesh detail in the workspace or Inspector to make a denser copy.", MessageType.Warning);
             _controls.Draw();
+            SimpleBlendPaintFeedback.Draw(selected);
             if (GUILayout.Button("Open workspace")) SimpleBlendWorkspace.Open();
         }
     }
