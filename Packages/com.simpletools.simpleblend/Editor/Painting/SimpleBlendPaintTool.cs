@@ -16,6 +16,7 @@ namespace SimpleBlend.Editor
         private readonly MeshPaintCache _cache = new MeshPaintCache();
         private readonly VertexColorPreviewRenderer _preview = new VertexColorPreviewRenderer();
         private readonly VertexPaintStrokeSession _stroke = new VertexPaintStrokeSession();
+        private readonly BrushAdjustmentSession _adjustment = new BrushAdjustmentSession();
         private int _ownedControl;
         private bool _gestureErase;
         private SceneView _inputView;
@@ -41,6 +42,7 @@ namespace SimpleBlend.Editor
 
         public override void OnActivated()
         {
+            SimpleBlendPaintInput.ClearAdjustment();
             SimpleBlendPaintInput.ClearTemporaryErase();
             EditorApplication.projectChanged += OnProjectChanged;
             Selection.selectionChanged += OnSelectionChanged;
@@ -119,6 +121,8 @@ namespace SimpleBlend.Editor
                 SimpleBlendPaintInput.ClearTemporaryErase();
                 return;
             }
+
+            if (HandleAdjustment(sceneView, currentEvent, controlId, settings)) return;
 
             switch (currentEvent.GetTypeForControl(controlId))
             {
@@ -226,6 +230,8 @@ namespace SimpleBlend.Editor
 
         private void ReleaseInput()
         {
+            _adjustment.Cancel();
+            SimpleBlendPaintInput.ClearAdjustment();
             if (_ownedControl != 0 && GUIUtility.hotControl == _ownedControl) GUIUtility.hotControl = 0;
             _ownedControl = 0;
             _inputView = null;
@@ -250,13 +256,74 @@ namespace SimpleBlend.Editor
         {
             if (ShouldReleaseForFocusLoss(_ownedControl != 0, _inputView != null && EditorWindow.focusedWindow == _inputView))
                 ReleaseInput();
+            else if (_adjustment.IsActive && (SimpleBlendPaintInput.AdjustmentHeld != _adjustment.Kind
+                     || !TryGetData(out var data) || !IsSupportedTarget(data)))
+                ReleaseInput();
+        }
+
+        private bool HandleAdjustment(SceneView view, Event input, int controlId, SimpleBlendBrushSettings settings)
+        {
+            var held = SimpleBlendPaintInput.AdjustmentHeld;
+            if (!_adjustment.IsActive && held == BrushAdjustment.None) return false;
+            if (_adjustment.IsActive && (held != _adjustment.Kind || GUIUtility.hotControl != _ownedControl))
+            {
+                ReleaseInput();
+                return true;
+            }
+            if (input.type == EventType.KeyDown && input.keyCode == KeyCode.Escape)
+            {
+                ReleaseInput();
+                input.Use();
+                view.Repaint();
+                return true;
+            }
+            if (input.type == EventType.MouseDown && input.button == 0 && GUIUtility.hotControl == 0)
+            {
+                if (_adjustment.Begin(held, input.mousePosition.x, settings))
+                {
+                    _ownedControl = controlId;
+                    _inputView = view;
+                    GUIUtility.hotControl = controlId;
+                }
+                input.Use();
+            }
+            else if (_adjustment.IsActive && input.type == EventType.MouseDrag && input.button == 0)
+            {
+                _adjustment.Update(input.mousePosition.x);
+                input.Use();
+                view.Repaint();
+            }
+            else if (_adjustment.IsActive && input.type == EventType.MouseUp && input.button == 0)
+            {
+                _adjustment.Update(input.mousePosition.x);
+                var changed = _adjustment.Commit(settings);
+                ReleaseInput();
+                if (changed) settings.SaveSettings();
+                input.Use();
+                view.Repaint();
+            }
+            if (_adjustment.IsActive && input.type == EventType.Repaint)
+            {
+                Handles.BeginGUI();
+                var width = Mathf.Min(230, view.position.width);
+                var labelRect = new Rect(
+                    Mathf.Clamp(input.mousePosition.x + 16, 0, Mathf.Max(0, view.position.width - width)),
+                    Mathf.Clamp(input.mousePosition.y + 16, 0, Mathf.Max(0, view.position.height - 24)), width, 24);
+                GUI.Label(labelRect,
+                    _adjustment.Kind == BrushAdjustment.Radius
+                        ? $"Brush size: {_adjustment.Value:0.####} m"
+                        : $"Strength: {_adjustment.Value:0.###}", EditorStyles.helpBox);
+                Handles.EndGUI();
+            }
+            return true;
         }
 
         internal static bool ShouldReleaseForFocusLoss(bool ownsGesture, bool ownerFocused) => ownsGesture && !ownerFocused;
 
         private void DrawBrushDisc(MeshRaycastHit hit, SimpleBlendBrushSettings settings)
         {
-            var radius = settings.Mode == VertexPaintBrushMode.Fill
+            var radius = _adjustment.Kind == BrushAdjustment.Radius ? _adjustment.Value
+                : settings.Mode == VertexPaintBrushMode.Fill
                          || settings.Mode == VertexPaintBrushMode.Sample
                 ? HandleUtility.GetHandleSize(hit.Point) * 0.08f
                 : settings.Radius;

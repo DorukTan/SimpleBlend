@@ -29,6 +29,7 @@ Available commands:
 - Lock or Unlock Paint Target.
 - Stop Painting.
 - Temporary Erase (hold/clutch).
+- Adjust Brush Size and Adjust Strength (hold/clutch and left-drag).
 
 Commands require the active SimpleBlend tool in a focused Scene view. Text/UI keyboard focus, Play Mode and Alt navigation are reserved. Discrete changes are ignored during an owned mouse gesture; choose modes or adjust values between strokes. No default activation key or global editing shortcut is installed. Tooltips and native text controls remain the primary discoverable path until binding/focus walkthroughs are observed.
 
@@ -38,6 +39,16 @@ Bind **Temporary Erase**, hold it before starting a Paint drag, then stroke norm
 
 Each drag remains one Undo in capped and continuous modes. **Escape** finishes the current drag, stops the tool and releases its pin; it does not clear saved paint or roll the drag back. Use Undo to revert it. Alt navigation, focus loss, failed stroke startup, invalidated targets and tool deactivation release owned input. Repainting another Scene view is not a reason to end the focused view's gesture. Only a control owned by this tool is released; unrelated GUI controls are not deliberately cleared.
 
-Native theme/focus, remapped-binding conflicts and multi-view mouse walkthroughs still require observed acceptance. Editor-state/policy tests and CPU preview topology checks are not a native rendering or event-delivery verdict. Pointer-drag size/strength gestures, richer affected-section/result presentation and sculpt input are separate remaining work in the input milestone.
+## Adjust without leaving the Scene
+
+Bind **Adjust Brush Size** or **Adjust Strength** in Edit > Shortcuts. With the paint tool active, hold that key and left-drag horizontally in the Scene view. Drag right to increase, left to decrease. Release the mouse while still holding the key to keep the value. Release the key first, press Escape, navigate with Alt or move focus away from the Scene view to cancel. Escape during an adjustment keeps the paint tool active; Escape during painting retains the stop behavior described above. Changing the target or tool, invalidating the target, and Play Mode also cancel an adjustment.
+
+The value label previews the adjustment; size also previews the brush ring over the target. No mesh hit is required to adjust. Preview values are separate from stored preferences, so cancellation writes nothing and completed changes save once. Adjustments never begin a paint stroke or create an Undo entry. Other paint commands are ignored while an adjustment is held. Start a fresh hold for another adjustment after committing or cancelling.
+
+**More paint options > Adjustment sensitivity** sets pointer speed from 0.25× to 4×, default 1×. At 1×, dragging 100 horizontal GUI points doubles/halves radius; 200 points spans the strength range. Radius stays within 0.0001–10,000 m and strength within 0–1. Movement is measured from the initial pointer position, not accumulated per event, and sensitivity is fixed for that drag. Stored vertex alpha, channel, flow and operation are unaffected.
+
+Native theme/focus, remapped-binding conflicts and multi-view mouse walkthroughs still require observed acceptance. Editor-state/policy tests and CPU preview topology checks are not a native rendering or event-delivery verdict. Richer affected-section/result presentation and sculpt input remain separate work in the input milestone.
 
 Verification on 2026-10-18: 259 isolated Unity 6000.4.8f1 EditMode tests passed, no failures or skips, including 33 new Scene/input cases. Coverage includes real ToolManager pin/selection/deactivation, destroyed targets and pre-activation transition cleanup, command registration/policy, temporary-erase Undo in both accumulation modes, stable preview indices and captured submesh geometry. Documentation, roadmap and 63 existing icon checks passed. No desktop automation or native visual verdict was used.
+
+Adjustment verification on 2026-10-19: 280 isolated EditMode tests passed, no failures or skips, including 21 new adjustment cases. These cover baseline-relative values, finite bounds, sensitivity, single-field commits, unchanged settings/Undo during preview and cancellation, and tool cleanup callbacks. All fifteen shortcut registrations remain scoped and initially unbound. Documentation, roadmap and 63 icon checks passed. Actual pointer/key event delivery, conflict handling and multi-view focus release remain pending native observation; the session tests do not certify them.

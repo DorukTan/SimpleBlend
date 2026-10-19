@@ -28,6 +28,7 @@ namespace SimpleBlend.Editor
     {
         private static readonly SimpleBlendShortcutContext Context = new SimpleBlendShortcutContext();
         internal static bool EraseHeld { get; private set; }
+        internal static BrushAdjustment AdjustmentHeld { get; private set; }
 
         static SimpleBlendPaintInput()
         {
@@ -37,13 +38,17 @@ namespace SimpleBlend.Editor
         }
 
         private static void Register() => ShortcutManager.RegisterContext(Context);
-        private static void Unregister() { ShortcutManager.UnregisterContext(Context); ClearTemporaryErase(); }
-        private static void ReleaseLostClutch() { if (EraseHeld && !Context.active) ClearTemporaryErase(); }
+        private static void Unregister() { ShortcutManager.UnregisterContext(Context); ClearTemporaryErase(); ClearAdjustment(); }
+        private static void ReleaseLostClutch()
+        {
+            if (!Context.active) { ClearTemporaryErase(); ClearAdjustment(); }
+        }
 
         internal static bool CanDispatch(bool sceneFocused, bool textOrUiFocused, bool playing, bool paintToolActive, bool gestureActive, bool navigating = false)
             => sceneFocused && !textOrUiFocused && !playing && paintToolActive && !gestureActive && !navigating;
 
-        private static bool CanAct => Context.active && GUIUtility.hotControl == 0 && !(Event.current?.alt ?? false);
+        private static bool CanAct => Context.active && GUIUtility.hotControl == 0 && AdjustmentHeld == BrushAdjustment.None && !(Event.current?.alt ?? false);
+        internal static void ClearAdjustment() => AdjustmentHeld = BrushAdjustment.None;
         internal static void SetTemporaryErase(bool held) => EraseHeld = held;
         internal static void ClearTemporaryErase() => EraseHeld = false;
         internal static bool EraseAtStrokeStart(VertexPaintBrushMode mode) => EraseHeld && mode == VertexPaintBrushMode.Paint;
@@ -126,6 +131,21 @@ namespace SimpleBlend.Editor
         {
             if (arguments.stage == ShortcutStage.End) ClearTemporaryErase();
             else if (CanAct) SetTemporaryErase(true);
+        }
+
+        [ClutchShortcut("SimpleBlend/Adjust Brush Size", typeof(SimpleBlendShortcutContext))]
+        private static void DragRadius(ShortcutArguments arguments) => SetAdjustment(arguments, BrushAdjustment.Radius);
+
+        [ClutchShortcut("SimpleBlend/Adjust Strength", typeof(SimpleBlendShortcutContext))]
+        private static void DragStrength(ShortcutArguments arguments) => SetAdjustment(arguments, BrushAdjustment.Strength);
+
+        private static void SetAdjustment(ShortcutArguments arguments, BrushAdjustment kind)
+        {
+            if (arguments.stage == ShortcutStage.End)
+            {
+                if (AdjustmentHeld == kind) ClearAdjustment();
+            }
+            else if (CanAct && !EraseHeld) AdjustmentHeld = kind;
         }
     }
 }

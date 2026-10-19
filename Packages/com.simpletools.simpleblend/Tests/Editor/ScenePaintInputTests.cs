@@ -161,7 +161,7 @@ namespace SimpleBlend.Editor.Tests
             var attributes = typeof(SimpleBlendPaintInput).GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
                 .SelectMany(method => method.GetCustomAttributesData())
                 .Where(attribute => typeof(ShortcutAttribute).IsAssignableFrom(attribute.AttributeType)).ToArray();
-            Assert.That(attributes.Length, Is.EqualTo(13));
+            Assert.That(attributes.Length, Is.EqualTo(15));
             var ids = attributes.Select(attribute => (string)attribute.ConstructorArguments[0].Value).ToArray();
             Assert.That(ids.Distinct().Count(), Is.EqualTo(ids.Length));
             var registered = ShortcutManager.instance.GetAvailableShortcutIds().ToArray();

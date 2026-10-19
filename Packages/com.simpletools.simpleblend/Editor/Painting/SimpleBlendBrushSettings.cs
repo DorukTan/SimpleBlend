@@ -14,6 +14,7 @@ namespace SimpleBlend.Editor
         [SerializeField] private VertexPaintFillScope _fillScope = VertexPaintFillScope.WholeMesh;
         [SerializeField] private float _radius = 1.25f;
         [SerializeField] private float _strength = 1f;
+        [SerializeField] private float _adjustmentSensitivity = 1f;
         [SerializeField] private float _flow = 1f;
         [SerializeField] private bool _accumulate = true;
         [SerializeField] private Color _color = Color.red;
@@ -74,6 +75,12 @@ namespace SimpleBlend.Editor
         {
             get => _flow;
             set => _flow = value;
+        }
+
+        internal float AdjustmentSensitivity
+        {
+            get => _adjustmentSensitivity;
+            set => _adjustmentSensitivity = value;
         }
 
         internal bool Accumulate
@@ -191,6 +198,7 @@ namespace SimpleBlend.Editor
 
         internal void Normalize()
         {
+            _adjustmentSensitivity = BrushAdjustmentSession.NormalizeSensitivity(_adjustmentSensitivity);
             _radius = Mathf.Max(0.0001f, _radius);
             _strength = Mathf.Clamp01(_strength);
             _flow = Mathf.Clamp01(_flow);
