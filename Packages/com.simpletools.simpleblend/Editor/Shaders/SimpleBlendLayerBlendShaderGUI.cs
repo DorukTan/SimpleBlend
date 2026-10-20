@@ -22,6 +22,9 @@ namespace SimpleBlend.Editor
                     : "Unpainted = Base, Red = Layer 1, Green = Layer 2, Blue = Layer 3. Alpha remains free.",
                 MessageType.Info);
             materialEditor.ShaderProperty(
+                FindProperty("_HeightBlendStrength", properties),
+                new GUIContent("Height contrast", "0 uses smooth normalized weights; 1 uses Height Transition. Existing materials retain the legacy value 1."));
+            materialEditor.ShaderProperty(
                 FindProperty("_BlendTransition", properties),
                 "Height Transition");
 

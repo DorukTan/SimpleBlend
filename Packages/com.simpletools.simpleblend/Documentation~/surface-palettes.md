@@ -17,14 +17,24 @@ Creation leaves the scene target selected. The workspace picks up the new palett
 
 | Choice | Stored channels | Other values |
 | --- | --- | --- |
-| Base | RGB toward zero | Alpha preserved |
-| First overlay | Red toward one | Green, Blue and Alpha preserved |
-| Second overlay | Green toward one | Red, Blue and Alpha preserved |
-| Third overlay (four-surface material only) | Blue toward one | Red, Green and Alpha preserved |
+| Base | Active overlay weights toward zero | Alpha and unused Blue preserved |
+| First overlay | Red toward one; competing active weights toward zero | Alpha and unused Blue preserved |
+| Second overlay | Green toward one; competing active weights toward zero | Alpha and unused Blue preserved |
+| Third overlay (four-surface material only) | Blue toward one; Red and Green toward zero | Alpha preserved |
 
-Choosing a surface configures the existing brush: Paint operation, mapped channel/value, Material view and a mask for the chosen mesh section. It enables section-only diagnostic preview if you later choose a channel view. It does not immediately paint. Strength, size, flow, falloff and other masks are retained. Base is a strength-controlled return toward the unpainted surface, not a separate fourth stored weight. Overlay choices do not erase competing overlays; height blending and channel normalization retain their existing semantics.
+Choosing a surface configures the existing brush: Paint operation, target surface weights, Material view and a mask for the chosen mesh section. It enables section-only diagnostic preview if you later choose a channel view. It does not immediately paint. Strength, radius, flow, stroke behavior, falloff and other masks are retained. At effective influence one, the chosen overlay replaces competing active overlays at that vertex; partial influence moves toward it. Base is the remaining weight after active overlays, not another stored channel. Three-surface materials use Red/Green and preserve unused Blue; four-surface materials use RGB. Alpha is never painted by this workflow.
 
-Operation can still be changed to Erase, Smooth, Fill or Sample. More paint options exposes raw channel/value controls as an explicit override. Overlay edits and sampled values share the same brush settings; if they no longer match a named choice, the workspace removes its selected-row indication and asks you to choose again. Nothing silently resets your advanced settings. Direct channels remains available for custom shaders, alpha work and non-palette workflows; switching workflow does not clear active masks.
+These are **blended surface weights, not an ordered layer stack**. Row order does not put one overlay on top of another. Painting Moss over Stone transfers weight toward Moss. Paint/Fill keep the active sum within one, including byte-rounding correction. Previously oversaturated independent masks are normalized only on touched vertices; existing saved paint is not migrated on selection or view. Reselect a named surface to opt into this behavior after updating; old brush preferences do not silently acquire it.
+
+**Stroke behavior** is visible beside Strength for named-surface drags. Capped per stroke limits the whole drag relative to its starting colors; Build up along stroke accumulates across travel-spaced dabs and overlaps. Your saved setting is preserved, not changed automatically. Strength still combines with Flow and Falloff, so Strength one is not full influence at the outer brush edge. Coarse vertices and triangle interpolation can still make a small stroke angular; no blending rule creates missing mesh detail.
+
+Erase reduces the selected overlay, preserving other active overlay weights; erasing Base reduces all active overlays. Smooth mixes neighboring active surface weights. Fill uses the same selected-surface target but uniform influence across its chosen scope. Sample reads RGBA and does not paint. More paint options exposes raw channel/value controls as an explicit override: editing them switches the shared brush to independent-channel behavior and removes the named selection. Reselect a surface to resume surface mixing. Direct channels also explicitly disables surface mixing; it remains available for custom shaders, alpha work and independent masks. Switching workflow does not clear active masks or stored paint.
+
+## Smooth weights or height contrast
+
+**Surface blend** edits the shared palette material explicitly and supports Undo. Smooth weights uses normalized painted weights directly, giving a softer transition. Height contrast uses height inputs and Height Transition, which can sharpen boundaries even when height maps are flat. The material Inspector exposes a continuous Height contrast amount: zero is smooth, one is the legacy height behavior. This setting affects every renderer using that material, not only the selected section. Save the material asset to persist the edit.
+
+New palettes without Height inputs start with Smooth weights; palettes created with Height inputs opt into Height contrast. Existing materials retain the legacy shader default of one until explicitly edited. For an existing palette with unexpectedly hard transitions, choose **Surface blend > Smooth weights**; this is not automatic asset migration. The existing Shader Graph reference examples retain their height-function behavior (contrast one); the new material helper is used by the shared handwritten shader passes. Graph assets are not silently rewritten.
 
 ## Mesh sections are not independent vertex storage
 
@@ -39,3 +49,5 @@ Editing a shared material changes every renderer using it. Use a separate materi
 Native theme/dock/focus appearance and the complete first-use walkthrough remain pending observed acceptance. Automated persistence, mapping, Undo and source-preservation checks are not evidence of visual quality or complete product parity.
 
 Verification on 2026-10-18: 226 isolated Unity 6000.4.8f1 EditMode tests passed with no failures or skips, including 23 palette cases. These include save/reimport references, asset collision rejection, slot assignment/Undo, prefab overrides and real Base/overlay strokes preserving alpha and source data. Documentation, roadmap and existing icon asset checks also passed. No desktop automation or native visual verdict was used.
+
+Surface-mixing verification (2026-10-20): 340 isolated Unity 6000.4.8f1 EditMode tests passed, no failures/skips, including 22 added cases. These cover full/partial replacement, bounded weight sums, Base/erase, alpha and unused channels, legacy independent commands, capped/continuous real strokes with exact Undo, Smooth, explicit material-edit Undo, new-palette defaults and five GPU probes of smooth/height weight evaluation. Twenty changed source/shader/meta files matched the isolated copies. Documentation (22 source controls), roadmap, scoped whitespace and 63 icon checks passed. Native layout, actual owner artifact, perceived smoothness and first-use acceptance remain unverified; GPU function probes are not a full scene-rendering verdict.

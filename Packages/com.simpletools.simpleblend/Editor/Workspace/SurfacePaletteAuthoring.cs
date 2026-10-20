@@ -52,6 +52,9 @@ namespace SimpleBlend.Editor
             try
             {
                 material.SetFloat("_LayerCount", surfaces.Length);
+                var hasHeight = false;
+                foreach (var surface in surfaces) hasHeight |= surface.Height != null;
+                material.SetFloat("_HeightBlendStrength", hasHeight ? 1 : 0);
                 for (var i = 0; i < surfaces.Length; i++)
                 {
                     var prefix = $"_Layer{i}";
@@ -118,13 +121,26 @@ namespace SimpleBlend.Editor
             return slot < materials.Length && materials[slot] == palette.Material;
         }
 
+        internal static void SetHeightContrast(SurfacePalette palette, bool enabled)
+        {
+            if (palette == null || !string.IsNullOrEmpty(palette.Problem))
+                throw new ArgumentException("Choose a valid surface palette first.");
+            var material = palette.Material;
+            var value = enabled ? 1f : 0f;
+            if (material.GetFloat("_HeightBlendStrength") == value) return;
+            Undo.RegisterCompleteObjectUndo(material, "Change SimpleBlend Surface Blending");
+            material.SetFloat("_HeightBlendStrength", value);
+            EditorUtility.SetDirty(material);
+        }
+
         internal static void SelectSurface(SurfacePalette palette, int surface, int section, SimpleBlendBrushSettings settings)
         {
             if (palette == null || !string.IsNullOrEmpty(palette.Problem) || surface < 0 || surface >= palette.SurfaceCount || section < 0)
                 throw new ArgumentOutOfRangeException(nameof(surface), "Choose a valid surface and mesh section.");
             settings.Channel = ChannelFor(surface);
-            // Base = zero RGB, not alpha. An overlay writes only its mapped component.
-            settings.Color = surface == 0 ? new Color(0, 0, 0, 1) : Color.white;
+            settings.SurfaceWeightChannels = palette.SurfaceCount - 1;
+            settings.Color = surface == 0 ? new Color(0, 0, 0, 1)
+                : surface == 1 ? Color.red : surface == 2 ? Color.green : Color.blue;
             settings.Mode = VertexPaintBrushMode.Paint;
             settings.PreviewMode = VertexPaintPreviewMode.Material;
             settings.PreviewSectionOnly = true;
@@ -134,12 +150,15 @@ namespace SimpleBlend.Editor
 
         internal static bool Matches(SurfacePalette palette, int surface, int section, SimpleBlendBrushSettings settings)
         {
-            if (palette == null || !string.IsNullOrEmpty(palette.Problem) || surface < 0 || surface >= palette.SurfaceCount || !settings.SubmeshMaskEnabled
+            if (palette == null || !string.IsNullOrEmpty(palette.Problem) || surface < 0 || surface >= palette.SurfaceCount
+                || settings.SurfaceWeightChannels != palette.SurfaceCount - 1 || !settings.SubmeshMaskEnabled
                 || settings.SubmeshMaskIndex != section || settings.Channel != ChannelFor(surface)) return false;
             if (settings.Mode != VertexPaintBrushMode.Paint && settings.Mode != VertexPaintBrushMode.Fill) return true;
             var color = settings.Color;
             return surface == 0 ? color.r == 0 && color.g == 0 && color.b == 0
-                : surface == 1 ? color.r == 1 : surface == 2 ? color.g == 1 : color.b == 1;
+                : surface == 1 ? color.r == 1 && color.g == 0 && color.b == 0
+                : surface == 2 ? color.r == 0 && color.g == 1 && color.b == 0
+                : color.r == 0 && color.g == 0 && color.b == 1;
         }
 
         private static VertexPaintChannel ChannelFor(int surface)

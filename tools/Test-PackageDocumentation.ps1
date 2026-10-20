@@ -48,4 +48,7 @@ foreach ($label in @('Lock paint target','Unlock paint target')) {
 }
 $brushControls = [IO.File]::ReadAllText((Join-Path $root 'Editor/Painting/SimpleBlendBrushControls.cs'))
 if (!$brushControls.Contains('Brush radius (m)')) { throw 'Documented world-space radius label changed.' }
-[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 19; indexedPages = 14; result = 'Passed' } | ConvertTo-Json
+if (!$brushControls.Contains('"Stroke behavior"')) { throw 'Documented stroke behavior control changed.' }
+if (!$workspace.Contains('"Surface blend"')) { throw 'Documented surface blend choice changed.' }
+if (!$shaderGui.Contains('"Height contrast"')) { throw 'Documented material height contrast control changed.' }
+[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 22; indexedPages = 14; result = 'Passed' } | ConvertTo-Json

@@ -28,6 +28,7 @@ namespace SimpleBlend.Editor.Tests
             {
                 Assert.That(material.GetFloat("_LayerCount"), Is.EqualTo(expectedLayerCount));
                 Assert.That(material.HasProperty("_BlendTransition"), Is.True);
+                Assert.That(material.GetFloat("_HeightBlendStrength"), Is.EqualTo(1), "Existing materials keep legacy height contrast until explicitly changed.");
                 Assert.That(material.HasProperty("_Cull"), Is.True);
                 for (var layerIndex = 0; layerIndex < 4; layerIndex++)
                 {

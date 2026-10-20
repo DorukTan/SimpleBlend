@@ -14,6 +14,7 @@ namespace SimpleBlend.Editor
             EditorGUI.BeginChangeCheck();
             settings.Mode = (VertexPaintBrushMode)EditorGUILayout.EnumPopup("Operation", settings.Mode);
             if (!surfaceMode) DrawChannels(settings);
+            var namedWeights = surfaceMode || settings.SurfaceWeightChannels > 0;
             settings.PreviewMode = (VertexPaintPreviewMode)EditorGUILayout.EnumPopup("View", settings.PreviewMode);
             using (new EditorGUI.DisabledScope(!settings.SubmeshMaskEnabled || settings.PreviewMode == VertexPaintPreviewMode.Material))
                 settings.PreviewSectionOnly = EditorGUILayout.Toggle(new GUIContent("Preview section only", "Restricts the channel overlay to the masked mesh section. Material view keeps all real materials visible."), settings.PreviewSectionOnly);
@@ -23,6 +24,9 @@ namespace SimpleBlend.Editor
                 settings.Radius = EditorGUILayout.FloatField(new GUIContent("Brush radius (m)", "World-space spherical radius in meters. Diameter is twice this value. The outer edge normally has zero falloff influence."), settings.Radius);
             if (settings.Mode != VertexPaintBrushMode.Sample)
                 settings.Strength = EditorGUILayout.Slider(new GUIContent("Strength", "Brush influence, separate from stored vertex alpha."), settings.Strength, 0f, 1f);
+            if (namedWeights && settings.Mode != VertexPaintBrushMode.Fill && settings.Mode != VertexPaintBrushMode.Sample)
+                settings.Accumulate = EditorGUILayout.Popup("Stroke behavior", settings.Accumulate ? 1 : 0,
+                    new[] { "Capped per stroke", "Build up along stroke" }) == 1;
             if (settings.Mode != VertexPaintBrushMode.Sample && settings.Mode != VertexPaintBrushMode.Fill)
                 EditorGUILayout.HelpBox("Ring: outer radius. Vertex dots: falloff × strength × flow, not material opacity. Coarse meshes cannot paint smoothly between vertices.", MessageType.None);
 
@@ -46,7 +50,8 @@ namespace SimpleBlend.Editor
                 if (settings.Mode != VertexPaintBrushMode.Fill && settings.Mode != VertexPaintBrushMode.Sample)
                 {
                     settings.Falloff = EditorGUILayout.CurveField("Falloff", settings.Falloff);
-                    settings.Accumulate = EditorGUILayout.Toggle(new GUIContent("Accumulate", "On: repeated dabs build continuously. Off: each stroke is capped relative to its starting colors."), settings.Accumulate);
+                    if (!namedWeights)
+                        settings.Accumulate = EditorGUILayout.Toggle(new GUIContent("Accumulate", "On: repeated dabs build continuously. Off: each stroke is capped relative to its starting colors."), settings.Accumulate);
                 }
                 settings.NormalMaskEnabled = EditorGUILayout.Toggle("Normal Mask", settings.NormalMaskEnabled);
                 if (settings.NormalMaskEnabled)
@@ -73,10 +78,14 @@ namespace SimpleBlend.Editor
 
         private static void DrawChannels(SimpleBlendBrushSettings settings)
         {
+            if (settings.SurfaceWeightChannels > 0)
+                EditorGUILayout.HelpBox("Surface mixing changes active overlay weights together. Editing channels below switches to independent channel behavior.", MessageType.None);
+            EditorGUI.BeginChangeCheck();
             settings.Channel = (VertexPaintChannel)EditorGUILayout.EnumPopup(
                 new GUIContent("Paint channel", "Writes vertex values. The material determines their visible surface or tint."), settings.Channel);
             if (settings.Mode == VertexPaintBrushMode.Paint || settings.Mode == VertexPaintBrushMode.Fill || settings.Mode == VertexPaintBrushMode.Sample)
                 settings.Color = EditorGUILayout.ColorField(new GUIContent("Channel values", "RGBA values stored on vertices. Alpha here is a stored channel, not brush strength."), settings.Color);
+            if (EditorGUI.EndChangeCheck()) settings.SurfaceWeightChannels = 0;
         }
     }
 }
