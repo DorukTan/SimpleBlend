@@ -2,6 +2,8 @@
 
 Open **Window > SimpleBlend > Workspace** and dock it beside the Scene view. The paint component Inspector and **SimpleBlend Brush** overlay also provide an open-workspace button.
 
+**Painting method > Texture paint** is the default for detailed material strokes, including on low-poly meshes. Its setup creates a saved paint asset and renderer-only sibling, explicitly hiding the source renderer. See [Texture surface painting](texture-painting.md) for setup, saving and limitations. Choose **Vertex paint** for the existing mesh-color workflow described below; old assets are not converted automatically.
+
 The native workspace provides target preflight, explicit setup/painting, shared brush controls, optional denser mesh copies, [named surface palettes](surface-palettes.md) and [Scene feedback/input controls](scene-input.md). This is not the full browser design prototype or the complete product roadmap; generated geometry, richer presentation and remaining input/acceptance work stay separate.
 
 ## Begin painting

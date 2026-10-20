@@ -22,6 +22,7 @@ namespace SimpleBlend.Editor.Tests
         {
             SimpleBlendPaintFeedback.Clear();
             _settings = EditorJsonUtility.ToJson(SimpleBlendBrushSettings.instance);
+            SimpleBlendBrushSettings.instance.SurfaceWeightChannels = 0;
             _scene = EditorSceneManager.NewPreviewScene();
             _mesh = TestMeshFactory.CreateQuad(includeColors: true);
             _object = new GameObject("Paint feedback target");

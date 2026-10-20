@@ -31,7 +31,7 @@ foreach ($label in @('Initialize Vertex Painting','Activate SimpleBlend Paint To
 }
 if (!$shaderGui.Contains('"Height Transition"')) { throw 'Documented shader control changed.' }
 $index = [IO.File]::ReadAllText((Join-Path $root 'Documentation~/index.md'))
-foreach ($page in @('installation','compatibility','first-stroke','workspace','surface-palettes','scene-input','brush-controls','data-safety','layer-blend-shaders','shader-graph','terrain-binding','teaching-samples','troubleshooting','removal')) {
+foreach ($page in @('installation','compatibility','first-stroke','workspace','texture-painting','surface-palettes','scene-input','brush-controls','data-safety','layer-blend-shaders','shader-graph','terrain-binding','teaching-samples','troubleshooting','removal')) {
     if (!$index.Contains($page + '.md')) { throw ('Documentation page is not indexed: ' + $page) }
 }
 $workspace = [IO.File]::ReadAllText((Join-Path $root 'Editor/Workspace/SimpleBlendWorkspace.cs'))
@@ -51,4 +51,8 @@ if (!$brushControls.Contains('Brush radius (m)')) { throw 'Documented world-spac
 if (!$brushControls.Contains('"Stroke behavior"')) { throw 'Documented stroke behavior control changed.' }
 if (!$workspace.Contains('"Surface blend"')) { throw 'Documented surface blend choice changed.' }
 if (!$shaderGui.Contains('"Height contrast"')) { throw 'Documented material height contrast control changed.' }
-[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 22; indexedPages = 14; result = 'Passed' } | ConvertTo-Json
+$textureWorkspace = [IO.File]::ReadAllText((Join-Path $root 'Editor/Workspace/SimpleBlendWorkspaceTexture.cs'))
+foreach ($label in @('Painting method','Texture paint','Vertex paint','Create texture paint copy','Save painted asset')) {
+    if (!$textureWorkspace.Contains('"' + $label + '"')) { throw ('Documented texture workflow control changed: ' + $label) }
+}
+[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 27; indexedPages = 15; result = 'Passed' } | ConvertTo-Json

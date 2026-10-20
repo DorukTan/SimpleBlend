@@ -12,6 +12,7 @@ struct SimpleBlendAttributes
     float2 uv : TEXCOORD0;
     float2 staticLightmapUV : TEXCOORD1;
     float2 dynamicLightmapUV : TEXCOORD2;
+    float2 paintUv : TEXCOORD3;
     half4 color : COLOR;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
@@ -30,6 +31,7 @@ struct SimpleBlendVaryings
     float2 dynamicLightmapUV : TEXCOORD8;
 #endif
     float4 positionCS : SV_POSITION;
+    float2 paintUv : TEXCOORD9;
     UNITY_VERTEX_INPUT_INSTANCE_ID
     UNITY_VERTEX_OUTPUT_STEREO
 };
@@ -46,6 +48,7 @@ SimpleBlendVaryings SimpleBlendLitVertex(SimpleBlendAttributes input)
     half tangentSign = input.tangentOS.w * GetOddNegativeScale();
 
     output.uv = input.uv;
+    output.paintUv = input.paintUv;
     output.positionWS = positionInputs.positionWS;
     output.normalWS = normalInputs.normalWS;
     output.tangentWS = half4(normalInputs.tangentWS, tangentSign);
@@ -114,7 +117,7 @@ void SimpleBlendForwardFragment(
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     SurfaceData surfaceData;
-    InitializeSimpleBlendSurfaceData(input.uv, input.color, input.positionWS,
+    InitializeSimpleBlendSurfaceData(input.uv, SimpleBlendPaintWeights(input.color, input.paintUv), input.positionWS,
         input.normalWS, input.tangentWS, surfaceData);
     InputData inputData;
     InitializeSimpleBlendInputData(input, surfaceData.normalTS, inputData);

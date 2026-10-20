@@ -1,5 +1,7 @@
 # Data safety and storage
 
+[Texture painting](texture-painting.md) stores authoritative pixels, an owned mesh, material and mask in a separate `TexturePaintAsset`. Duplicated objects share that asset. Setup preserves source mesh and vertex paint, creates a renderer-only sibling and hides the original renderer with Undo. Save both the paint asset and the scene. The storage modes and prefab-forking behavior below apply to **Vertex paint**, not texture paint.
+
 `VertexPaintData` is the durable authority for one renderer's vertex colors. It stores compact `Color32[]` data beside a signature of the original source mesh. Imported FBX, OBJ, and package meshes are never modified.
 
 ## Validation

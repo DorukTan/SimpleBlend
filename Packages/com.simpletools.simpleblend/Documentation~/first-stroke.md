@@ -1,6 +1,6 @@
 # Paint the first stroke
 
-SimpleBlend paints per-renderer vertex colors and provides channel previews, storage/prefab handling and three/four-layer URP height blending. Check the installed revision and [compatibility scope](compatibility.md) before following preview-specific instructions.
+For detailed material strokes on low-poly meshes, use the default [Texture paint workflow](texture-painting.md). It paints a saved blend mask independently of vertex density. The instructions below describe the alternative **Painting method > Vertex paint**, including its channel previews and storage/prefab handling. Check the installed revision and [compatibility scope](compatibility.md) before following preview-specific instructions.
 
 ## Set up a target
 

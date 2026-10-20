@@ -39,8 +39,10 @@ half _Layer3OcclusionStrength;
 half _BlendTransition;
 half _HeightBlendStrength;
 half _LayerCount;
+half _UseTextureWeights;
 CBUFFER_END
 
+TEXTURE2D(_BlendMask);
 TEXTURE2D(_Layer0Albedo);
 TEXTURE2D(_Layer0Normal);
 TEXTURE2D(_Layer0Mask);
@@ -181,4 +183,15 @@ void InitializeSimpleBlendSurfaceData(float2 uv, half4 vertexColor, float3 posit
 }
 
 #endif // SIMPLEBLEND_TERRAIN
+
+half4 SimpleBlendPaintWeights(half4 vertexColor, float2 paintUv)
+{
+#if defined(SIMPLEBLEND_TERRAIN)
+    return vertexColor;
+#else
+    if (_UseTextureWeights > 0.5h)
+        return SAMPLE_TEXTURE2D(_BlendMask, sampler_LinearClamp, paintUv);
+    return vertexColor;
+#endif
+}
 #endif
