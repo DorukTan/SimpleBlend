@@ -60,6 +60,9 @@ namespace SimpleBlend.Editor
 
         private void OnSelectionChanged()
         {
+            if (_texturePainting && SimpleBlendTexturePaintTool.IsActiveFor(SimpleBlendTexturePaintTool.Target)
+                && SimpleBlendTexturePaintTool.KeepTargetForSelection(SimpleBlendTexturePaintTool.Target, Selection.objects))
+            { Refresh(); return; }
             if (SimpleBlendTargetLock.IsLocked) { Refresh(); return; }
             if (_useSurfaces) StopForSurfaceConfiguration();
             _operationMessage = null;

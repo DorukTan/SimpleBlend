@@ -5,14 +5,30 @@ Texture paint is the workspace's default painting method. It writes blend weight
 ## First stroke
 
 1. Open **Window > SimpleBlend > Workspace**. Keep **Painting method > Texture paint** and select one active static mesh object.
-2. Create or choose a [surface palette](surface-palettes.md). Choose the mesh section to paint and a mask resolution: 256, 512 or 1024 square. Higher resolutions retain smaller details but use more memory, save space and Undo storage.
-3. Read the setup notice, then choose **Create texture paint copy** and a new `.asset` path inside Assets. Setup creates a renderer-only sibling and hides the original renderer. It does not delete the original, move its children, copy scripts/colliders or migrate its vertex paint. The original collider remains where it was. The painted copy starts at Base.
-4. Select a surface, choose **Paint**, then **Start painting**. Drag in the Scene view. Alt navigates; Escape stops the tool. Tool changes, selection changes, Play mode and loss of the input view finish an active stroke and release the mouse.
+2. Read the setup notice and choose **Start painting**. No palette or save dialog is required. SimpleBlend creates a uniquely named asset under `Assets/SimpleBlendPaint/`, selects the painted copy and activates the brush. Nothing is created merely by selecting an object or opening the workspace.
+3. Setup creates a renderer-only sibling and hides the original renderer. It does not delete the original, move its children, copy scripts/colliders or migrate its vertex paint. The original collider remains where it was. The painted copy starts at Base. Without a palette, common source-material albedo/tint/normal inputs, tiling and basic scalar settings seed Base, with an editable overlay. Custom shader effects and differently packed PBR maps are not translated automatically.
+4. Choose a surface and drag in the Scene view. Surface selection, Paint/Erase, brush edits, Fill and presets keep the paint tool active. Changing configuration finishes the current stroke before the next one starts. Project asset selection keeps the bound paint object; selecting a different scene object, multiple objects or clearing selection stops the tool. Alt navigates; Escape stops painting. Focus loss finishes the stroke and releases the mouse, without deactivating the tool.
 5. Try a radius of 0.1 m on a default one-metre cube. The ring is the projected outer radius. Falloff controls softness; Strength × Flow controls the maximum influence of a dab. **Capped per stroke** prevents overlapping dabs from repeatedly strengthening one stroke. **Build up along stroke** accumulates them. Existing brush preferences are preserved rather than silently reset.
 6. Choose **Erase** to reduce the selected overlay toward Base while preserving competing overlay weights. Erasing Base reduces all active overlays. **Fill section with selected surface** uses Strength × Flow uniformly on the configured section and ignores radius, falloff and the Paint/Erase choice.
-7. Undo once to restore a complete stroke; redo restores it. **Save painted asset**, then save the scene or prefab. Reopen and inspect the result before relying on the saved scene.
+7. Undo once to restore a complete stroke; redo restores it. Paint assets save automatically after strokes and surface edits, including Undo/redo. **Save painted asset** remains an immediate save action. Save the scene or prefab yourself to retain its object references; reopen and inspect the result before relying on the saved scene.
+
+**Advanced setup** retains an optional [surface palette](surface-palettes.md), mesh section and 256/512/1024-square mask resolution. Higher resolutions retain smaller details but use more memory, save space and Undo storage. A chosen palette is copied; its original material is not edited.
 
 Paint moves toward the selected surface and reduces competing weights. Base is the remaining weight. These are blended material weights, not an ordered layer stack. New texture paint copies use smooth blending even when their source palette uses height contrast; the original palette material remains unchanged. The copied material's Inspector still exposes Height contrast for explicit edits.
+
+## Edit surfaces
+
+Use **Edit** beside a surface to rename it or change its tint, Albedo, Normal, packed Mask, Height, tiling, offset and material scalars. Clearing a texture field removes that texture assignment. Mask packing is R = metallic, G = occlusion, A = smoothness; texture import settings are not changed automatically. Height textures affect the result only when Height contrast is enabled on the copied material.
+
+**+ Add surface** adds an overlay and selects it without stopping painting. There can be up to four surfaces including Base. **Remove surface** asks for confirmation, then returns that overlay's painted weight to Base, compacts the remaining surfaces and preserves their weights and texture settings. Base cannot be removed but all its inputs can be edited. Removal and addition support complete Undo/redo. Adding a surface clears its newly activated mask channel; structural removal clears unused RGB channels. Alpha is preserved.
+
+All these edits affect the owned material and paint asset, not the source palette. Objects sharing that paint asset also share these changes; the removal prompt explicitly identifies this consequence.
+
+## Brush presets
+
+**Quick preset** offers Soft brush (0.15 m, strength 0.6, capped), Hard brush (0.15 m, strength 1, constant falloff, capped), and Wash (0.5 m, strength 0.15, flow 0.5, build-up). Soft/Hard use flow 1. The selector applies a preset only when chosen; opening the workspace does not reset existing brush preferences.
+
+**Save preset…** stores the current radius, strength, flow, stroke behavior and falloff as a reusable asset. Choose it in **Saved preset** to apply it, or use **Apply saved preset** to restore it after manual adjustments. Existing preset paths are rejected rather than overwritten. Curves are copied so editing a brush cannot silently modify a saved preset. Presets leave the selected surface, Paint/Erase action and vertex-specific channels/masks unchanged. They do not stop the active texture tool. Custom preset assets can also be created through **Assets > Create > SimpleBlend > Brush Preset**.
 
 ## Ownership and saving
 
@@ -22,7 +38,7 @@ Setup generates a unique atlas on the owned mesh using Unity's unwrap API. It st
 
 The original mesh, material palette and vertex-paint data are not edited. Setup's Undo removes the new scene object and restores the original renderer; its saved asset remains for recovery. Existing asset paths are rejected. There is no automatic asset deletion on ordinary Undo, object removal or package removal.
 
-Duplicating a painted object shares its paint asset and therefore its paint. There is no automatic per-instance fork in this path. Do not edit the owned mesh's topology or paint UVs after painting; there is no automatic remap. Painting is blocked when the assigned mesh, material or mask no longer matches the paint target's references. Save the asset and scene separately when in doubt. Normal Unity Save Project also saves dirty paint assets.
+Duplicating a painted object shares its paint asset and therefore its paint. There is no automatic per-instance fork in this path. Do not edit the owned mesh's topology or paint UVs after painting; there is no automatic remap. Painting is blocked when the assigned mesh, material or mask no longer matches the paint target's references. Automatic saving is debounced outside active input and scoped to queued paint assets, not every dirty project asset. Save exceptions are reported in the Console and kept queued for retry. Normal Unity Save Project also saves dirty paint assets. Scene/prefab saving remains explicit.
 
 ## Projection and current scope
 
@@ -34,6 +50,6 @@ Forward, deferred, depth-normal and meta passes of the hand-written Layer Blend 
 
 ## Verification
 
-The isolated Windows Unity 6000.4.8f1 / URP 17.4.0 / D3D11 run on 2026-10-20 passed all 364 editor tests, including 24 texture-paint cases. Checks cover small-brush cube texels, soft falloff, replacement/Base/Erase, capped/build-up strokes, zero flow, world radius, gutters, separated UV charts, section isolation, source preservation, setup Undo, stroke Undo/redo, asset reimport, scene save/reopen and GPU weight lookup. Native first-use clarity, appearance on varied meshes, chart-edge appearance at distance and performance on production assets still need observed owner review.
+The isolated Windows Unity 6000.4.8f1 / URP 17.4.0 / D3D11 run on 2026-10-20 passed all 383 editor tests, including 24 texture-paint and 19 authoring-workflow cases. Checks cover small-brush cube texels, soft falloff, mixing/Base/Erase, capped/build-up strokes, zero flow, world radius, gutters, separated UV charts, section isolation, source preservation, setup Undo, stroke Undo/redo, asset reimport, scene save/reopen and GPU weight lookup. Authoring checks cover automatic setup and collision-safe paths, copied Base inputs, optional palettes, active-tool configuration and selection events, surface edit/removal/remapping Undo, one-to-four surfaces, preset isolation/reload and scoped saving. Native first-use clarity, appearance on varied meshes, chart-edge appearance at distance and performance on production assets still need observed owner review.
 
 Implementation references: [Unity unique UV generation](https://docs.unity3d.com/6000.4/Documentation/ScriptReference/Unwrapping.GenerateSecondaryUVSet.html), [texture upload behavior](https://docs.unity3d.com/6000.4/Documentation/ScriptReference/Texture2D.Apply.html), [complete-object Undo](https://docs.unity3d.com/6000.4/Documentation/ScriptReference/Undo.RegisterCompleteObjectUndo.html).

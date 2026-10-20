@@ -52,7 +52,7 @@ if (!$brushControls.Contains('"Stroke behavior"')) { throw 'Documented stroke be
 if (!$workspace.Contains('"Surface blend"')) { throw 'Documented surface blend choice changed.' }
 if (!$shaderGui.Contains('"Height contrast"')) { throw 'Documented material height contrast control changed.' }
 $textureWorkspace = [IO.File]::ReadAllText((Join-Path $root 'Editor/Workspace/SimpleBlendWorkspaceTexture.cs'))
-foreach ($label in @('Painting method','Texture paint','Vertex paint','Create texture paint copy','Save painted asset')) {
+foreach ($label in @('Painting method','Texture paint','Vertex paint','Start painting','Save painted asset','Advanced setup','Quick preset','Saved preset','+ Add surface','Remove surface')) {
     if (!$textureWorkspace.Contains('"' + $label + '"')) { throw ('Documented texture workflow control changed: ' + $label) }
 }
-[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 27; indexedPages = 15; result = 'Passed' } | ConvertTo-Json
+[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 32; indexedPages = 15; result = 'Passed' } | ConvertTo-Json
