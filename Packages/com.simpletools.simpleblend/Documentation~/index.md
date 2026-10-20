@@ -8,6 +8,7 @@ Start with installation and the first-stroke guide. Feature availability depends
 - [Data safety and storage](data-safety.md)
 - [Paint the first stroke](first-stroke.md)
 - [Texture surface painting](texture-painting.md)
+- [Brush tips and strokes](brush-strokes.md)
 - [Paint workspace](workspace.md)
 - [Named surfaces and reusable palettes](surface-palettes.md)
 - [Scene feedback and keyboard controls](scene-input.md)

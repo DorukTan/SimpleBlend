@@ -29,6 +29,13 @@ namespace SimpleBlend.Editor
         [SerializeField] private VertexPaintChannel _thresholdChannel = VertexPaintChannel.Red;
         [SerializeField] private Vector2 _thresholdRange = new Vector2(0f, 1f);
         [SerializeField] private bool _thresholdInclusive = true;
+        [SerializeField] private TextureBrushShape _textureBrush = new TextureBrushShape();
+
+        internal TextureBrushShape TextureBrush
+        {
+            get => _textureBrush ?? (_textureBrush = new TextureBrushShape());
+            set => _textureBrush = (value ?? new TextureBrushShape()).Copy();
+        }
 
         internal VertexPaintBrushMode Mode
         {

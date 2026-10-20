@@ -17,7 +17,9 @@ namespace SimpleBlend.Editor
         internal static TexturePaintAsset LastPaint { get; private set; }
         internal static event Action Changed;
         private readonly TexturePaintStroke _stroke = new TexturePaintStroke();
-        private readonly VertexStrokeSampler _sampler = new VertexStrokeSampler();
+        private readonly TextureStrokeSampler _sampler = new TextureStrokeSampler();
+        private readonly TextureBrushTipCache _tipCache = new TextureBrushTipCache();
+        private readonly Vector3[] _outline = new Vector3[65];
         private readonly List<Vector3> _samples = new List<Vector3>();
         private TexturePaintAtlas _atlas;
         private int _control;
@@ -26,6 +28,8 @@ namespace SimpleBlend.Editor
         private bool _hasPoint;
         private VertexBrushCommand _command;
         private static SimpleBlendTexturePaintTool _active;
+        private TextureBrushTip _strokeTip;
+        private Vector3 _strokeRight;
 
         public override GUIContent toolbarIcon => SimpleBlendEditorIcons.Content("Paint", "", "Paint texture surfaces");
         public override bool IsAvailable() => string.IsNullOrEmpty(TexturePaintStroke.Problem(Target));
@@ -160,15 +164,26 @@ namespace SimpleBlend.Editor
             var hasHit = _atlas.Raycast(HandleUtility.GUIPointToWorldRay(e.mousePosition), out var hit);
             if (e.type == EventType.Repaint && hasHit)
             {
-                using (new Handles.DrawingScope(Erase ? new Color(1, 0.35f, 0.3f) : Color.yellow))
-                    Handles.DrawWireDisc(hit.Point, hit.Normal, Command().Radius);
+                if (_tipCache.TryGet(SimpleBlendBrushSettings.instance.TextureBrush, out var previewTip, out _))
+                {
+                    TextureBrushTip.Frame(hit.Normal, _stroke.Active ? _strokeRight : view.camera.transform.right, out var right, out var up);
+                    for (var i = 0; i < _outline.Length; i++)
+                    {
+                        var point = previewTip.Boundary(i * Mathf.PI * 2 / (_outline.Length - 1));
+                        _outline[i] = hit.Point + (right * point.x + up * point.y) * Command().Radius;
+                    }
+                    using (new Handles.DrawingScope(Erase ? new Color(1, 0.35f, 0.3f) : Color.yellow)) Handles.DrawAAPolyLine(_outline);
+                }
             }
             if (e.type == EventType.MouseMove) view.Repaint();
             switch (e.GetTypeForControl(id))
             {
                 case EventType.MouseDown when e.button == 0 && hasHit && GUIUtility.hotControl == 0 && HandleUtility.nearestControl == id:
                     _command = Command();
-                    _stroke.Begin(Target, _atlas, Surface, Erase, _command);
+                    if (!_tipCache.TryGet(SimpleBlendBrushSettings.instance.TextureBrush, out _strokeTip, out var error))
+                    { LastStroke = error; LastPaint = Target.Paint; Changed?.Invoke(); e.Use(); break; }
+                    _strokeRight = view.camera.transform.right;
+                    _stroke.Begin(Target, _atlas, Surface, Erase, _command, _strokeTip);
                     GUIUtility.hotControl = _control = id;
                     _view = view;
                     _sampler.Reset();
@@ -182,6 +197,12 @@ namespace SimpleBlend.Editor
                     e.Use();
                     break;
                 case EventType.MouseUp when e.button == 0 && _control == id && _view == view:
+                    if (hasHit && _hasPoint && Vector3.Distance(_lastPoint, hit.Point) <= _command.Radius * 100)
+                    {
+                        Append(hit);
+                        _sampler.CatchUp(_command.Radius, _strokeTip.Spacing, _samples);
+                        PaintSamples(hit);
+                    }
                     Finish();
                     e.Use();
                     break;
@@ -192,17 +213,23 @@ namespace SimpleBlend.Editor
         {
             // Do not bridge a large jump between disconnected surfaces or create an unbounded dab list.
             if (_hasPoint && Vector3.Distance(_lastPoint, hit.Point) > _command.Radius * 100) _sampler.Reset();
-            _sampler.Append(hit.Point, _command.Radius, _samples);
+            _sampler.Append(hit.Point, _command.Radius, _strokeTip.Spacing, _strokeTip.Smoothing, _samples);
+            PaintSamples(hit);
+            _lastPoint = hit.Point;
+            _hasPoint = true;
+            SceneView.RepaintAll();
+        }
+
+        private void PaintSamples(MeshRaycastHit hit)
+        {
             foreach (var sample in _samples)
             {
                 // Reproject resampled positions onto the actual section instead of painting through empty space.
                 var ray = new Ray(sample + hit.Normal * _command.Radius, -hit.Normal);
                 if (_atlas.Raycast(ray, out var projected) && Vector3.Distance(projected.Point, sample) <= _command.Radius * 0.25f)
-                    _stroke.Dab(projected.Point, projected.Normal);
+                    _stroke.Dab(projected.Point, projected.Normal, preferredRight: _strokeRight, upload: false);
             }
-            _lastPoint = hit.Point;
-            _hasPoint = true;
-            SceneView.RepaintAll();
+            _stroke.Upload();
         }
 
         private void Finish()
@@ -220,6 +247,7 @@ namespace SimpleBlend.Editor
             _view = null;
             _sampler.Reset();
             _hasPoint = false;
+            _strokeTip = null;
         }
     }
 }

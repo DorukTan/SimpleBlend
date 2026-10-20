@@ -44,6 +44,7 @@ namespace SimpleBlend.Editor
 
         private void OnDisable()
         {
+            _textureStrokePreview.Dispose();
             Selection.selectionChanged -= OnSelectionChanged;
             EditorApplication.projectChanged -= Refresh;
             EditorApplication.hierarchyChanged -= Refresh;
