@@ -12,8 +12,9 @@ namespace SimpleBlend.Editor
         [SerializeField, Range(0, 1)] private float _flow = 1;
         [SerializeField] private bool _buildUp;
         [SerializeField] private AnimationCurve _falloff = AnimationCurve.EaseInOut(0, 1, 1, 0);
+        [SerializeField] private TextureBrushShape _textureBrush = new TextureBrushShape();
 
-        internal static readonly string[] BuiltInNames = { "Choose a preset…", "Soft brush", "Hard brush", "Wash" };
+        internal static readonly string[] BuiltInNames = { "Choose a preset…", "Soft brush", "Hard brush", "Wash", "Flat brush", "Chalk" };
 
         internal void Apply(SimpleBlendBrushSettings settings)
         {
@@ -22,6 +23,7 @@ namespace SimpleBlend.Editor
             settings.Flow = FiniteClamp(_flow, 0, 1, 1);
             settings.Accumulate = _buildUp;
             settings.Falloff = CopyCurve(_falloff);
+            settings.TextureBrush = _textureBrush;
         }
 
         internal void Capture(SimpleBlendBrushSettings settings)
@@ -31,20 +33,32 @@ namespace SimpleBlend.Editor
             _flow = settings.Flow;
             _buildUp = settings.Accumulate;
             _falloff = CopyCurve(settings.Falloff);
+            _textureBrush = settings.TextureBrush.Copy();
         }
 
         internal static void ApplyBuiltIn(int index, SimpleBlendBrushSettings settings)
         {
-            if (index < 1 || index > 3) throw new ArgumentOutOfRangeException(nameof(index));
+            if (index < 1 || index > 5) throw new ArgumentOutOfRangeException(nameof(index));
             settings.Radius = index == 3 ? 0.5f : 0.15f;
             settings.Strength = index == 2 ? 1 : index == 3 ? 0.15f : 0.6f;
             settings.Flow = index == 3 ? 0.5f : 1;
             settings.Accumulate = index == 3;
             settings.Falloff = index == 2 ? AnimationCurve.Constant(0, 1, 1) : AnimationCurve.EaseInOut(0, 1, 1, 0);
+            settings.TextureBrush = new TextureBrushShape
+            {
+                Tip = index == 4 ? TextureBrushTipKind.Flat : index == 5 ? TextureBrushTipKind.Chalk : TextureBrushTipKind.Round,
+                Hardness = index == 2 ? 1 : index == 4 ? 0.8f : 0,
+                Roundness = index == 4 ? 0.3f : 1,
+                Spacing = index == 5 ? 0.2f : 0.1f,
+                LimitOpacity = true
+            };
         }
 
         internal static SimpleBlendBrushPreset SaveNew(string path, SimpleBlendBrushSettings settings)
         {
+            if (settings.TextureBrush.Tip == TextureBrushTipKind.Custom
+                && (settings.TextureBrush.Texture == null || !AssetDatabase.Contains(settings.TextureBrush.Texture)))
+                throw new ArgumentException("Choose a saved brush-tip texture before saving this custom brush preset.");
             if (string.IsNullOrEmpty(path) || !path.StartsWith("Assets/", StringComparison.Ordinal)
                 || !path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase)
                 || !AssetDatabase.IsValidFolder(System.IO.Path.GetDirectoryName(path)?.Replace('\\', '/'))

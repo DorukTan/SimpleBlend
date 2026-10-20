@@ -8,6 +8,7 @@ SimpleBlend is an open-source Unity editor toolkit for painting texture masks, e
 - [Check compatibility and observed results](Documentation~/compatibility.md)
 - [Paint the first stroke](Documentation~/first-stroke.md)
 - [Paint detailed texture masks](Documentation~/texture-painting.md)
+- [Brush tips and stroke controls](Documentation~/brush-strokes.md)
 - [Import the teaching samples](Documentation~/teaching-samples.md)
 - [Full documentation](Documentation~/index.md)
 

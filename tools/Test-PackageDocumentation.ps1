@@ -31,7 +31,7 @@ foreach ($label in @('Initialize Vertex Painting','Activate SimpleBlend Paint To
 }
 if (!$shaderGui.Contains('"Height Transition"')) { throw 'Documented shader control changed.' }
 $index = [IO.File]::ReadAllText((Join-Path $root 'Documentation~/index.md'))
-foreach ($page in @('installation','compatibility','first-stroke','workspace','texture-painting','surface-palettes','scene-input','brush-controls','data-safety','layer-blend-shaders','shader-graph','terrain-binding','teaching-samples','troubleshooting','removal')) {
+foreach ($page in @('installation','compatibility','first-stroke','workspace','texture-painting','brush-strokes','surface-palettes','scene-input','brush-controls','data-safety','layer-blend-shaders','shader-graph','terrain-binding','teaching-samples','troubleshooting','removal')) {
     if (!$index.Contains($page + '.md')) { throw ('Documentation page is not indexed: ' + $page) }
 }
 $workspace = [IO.File]::ReadAllText((Join-Path $root 'Editor/Workspace/SimpleBlendWorkspace.cs'))
@@ -55,4 +55,7 @@ $textureWorkspace = [IO.File]::ReadAllText((Join-Path $root 'Editor/Workspace/Si
 foreach ($label in @('Painting method','Texture paint','Vertex paint','Start painting','Save painted asset','Advanced setup','Quick preset','Saved preset','+ Add surface','Remove surface')) {
     if (!$textureWorkspace.Contains('"' + $label + '"')) { throw ('Documented texture workflow control changed: ' + $label) }
 }
-[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 32; indexedPages = 15; result = 'Passed' } | ConvertTo-Json
+foreach ($label in @('Brush tip','Brush shape','Stroke settings','Opacity (%)','Flow (%)','Tip texture','Hardness (%)','Roundness (%)','Angle','Spacing (%)','Smoothing (%)','Limit stroke to opacity')) {
+    if (!$textureWorkspace.Contains('"' + $label + '"')) { throw ('Documented brush stroke control changed: ' + $label) }
+}
+[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 44; indexedPages = 16; result = 'Passed' } | ConvertTo-Json

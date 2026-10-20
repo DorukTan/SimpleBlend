@@ -17,10 +17,13 @@ namespace SimpleBlend.Editor
         private VertexBrushCommand _command;
         private int _undoGroup;
         private bool _recorded;
+        private TextureBrushTip _tip;
+        private float[] _coverage;
+        private bool _needsUpload;
 
         internal bool Active => _paint != null;
 
-        internal void Begin(TexturePaintTarget target, TexturePaintAtlas atlas, int surface, bool erase, VertexBrushCommand command)
+        internal void Begin(TexturePaintTarget target, TexturePaintAtlas atlas, int surface, bool erase, VertexBrushCommand command, TextureBrushTip tip = null)
         {
             if (Active) throw new InvalidOperationException("Finish the current texture stroke first.");
             var problem = Problem(target);
@@ -35,14 +38,18 @@ namespace SimpleBlend.Editor
             _erase = erase;
             _command = command;
             _recorded = false;
+            _tip = tip;
+            _coverage = tip != null && tip.LimitOpacity ? new float[_baseline.Length] : null;
+            _needsUpload = false;
         }
 
-        internal int Dab(Vector3 center, Vector3 normal, bool fill = false)
+        internal int Dab(Vector3 center, Vector3 normal, bool fill = false, Vector3? preferredRight = null, bool upload = true)
         {
             if (!Active) return 0;
             var normalLength = normal.magnitude;
             if (!fill && normalLength < 0.00001f) return 0;
             normal /= Mathf.Max(normalLength, 0.00001f);
+            TextureBrushTip.Frame(normal, preferredRight ?? Vector3.right, out var right, out var up);
             var target = _surface == 1 ? new Color32(255, 0, 0, 0)
                 : _surface == 2 ? new Color32(0, 255, 0, 0)
                 : _surface == 3 ? new Color32(0, 0, 255, 0) : new Color32();
@@ -50,7 +57,8 @@ namespace SimpleBlend.Editor
                 : _surface == 3 ? VertexPaintChannel.Blue : VertexPaintChannel.RGB;
             var changed = 0;
             var pixels = _paint.Pixels;
-            if (!fill) _atlas.Query(center, _command.Radius * 1.031f, _candidates);
+            var bounds = _tip == null ? 1.031f : Mathf.Sqrt(_tip.BoundingRadius * _tip.BoundingRadius + 0.0625f);
+            if (!fill) _atlas.Query(center, _command.Radius * bounds, _candidates);
             var candidateCount = fill ? _atlas.Pixels.Count : _candidates.Count;
             for (var candidate = 0; candidate < candidateCount; candidate++)
             {
@@ -63,11 +71,19 @@ namespace SimpleBlend.Editor
                     var depth = Vector3.Dot(delta, normal);
                     if (Mathf.Abs(depth) > _command.Radius * 0.25f
                         || Vector3.Dot(_atlas.WorldNormal(index), normal) < 0.25f) continue;
-                    influence = _command.EvaluateWeight((delta - normal * depth).magnitude);
+                    influence = _tip == null ? _command.EvaluateWeight((delta - normal * depth).magnitude)
+                        : _tip.Evaluate(new Vector2(Vector3.Dot(delta, right), Vector3.Dot(delta, up)) / _command.Radius, _command.Falloff)
+                            * _command.Strength * _command.Flow;
                 }
                 if (!float.IsFinite(influence) || influence <= 0) continue;
+                if (!fill && _coverage != null)
+                {
+                    var ink = influence / Mathf.Max(_command.Strength, 0.000001f);
+                    _coverage[i] = _command.Accumulate ? 1 - (1 - _coverage[i]) * (1 - ink) : Mathf.Max(_coverage[i], ink);
+                    influence = _command.Strength * _coverage[i];
+                }
                 if (!_command.Accumulate && influence <= _maximum[i]) continue;
-                var source = _command.Accumulate ? pixels[i] : _baseline[i];
+                var source = _command.Accumulate && (fill || _coverage == null) ? pixels[i] : _baseline[i];
                 var result = VertexSurfaceWeightUtility.Blend(source, target, channel, influence, _paint.WeightChannels, _erase);
                 _maximum[i] = Mathf.Max(_maximum[i], influence);
                 if (pixels[i].Equals(result)) continue;
@@ -84,9 +100,8 @@ namespace SimpleBlend.Editor
             }
             if (changed > 0)
             {
-                _paint.CommitPixels();
-                EditorUtility.SetDirty(_paint);
-                EditorUtility.SetDirty(_paint.Mask);
+                _needsUpload = true;
+                if (upload) Upload();
             }
             return changed;
         }
@@ -94,6 +109,7 @@ namespace SimpleBlend.Editor
         internal int End()
         {
             if (!Active) return 0;
+            Upload();
             var changed = 0;
             for (var i = 0; i < _baseline.Length; i++)
                 if (!_baseline[i].Equals(_paint.Pixels[i]) && _atlas.Coverage[i] == i) changed++;
@@ -103,7 +119,18 @@ namespace SimpleBlend.Editor
             _atlas = null;
             _baseline = null;
             _maximum = null;
+            _coverage = null;
+            _tip = null;
             return changed;
+        }
+
+        internal void Upload()
+        {
+            if (!Active || !_needsUpload) return;
+            _paint.CommitPixels();
+            EditorUtility.SetDirty(_paint);
+            EditorUtility.SetDirty(_paint.Mask);
+            _needsUpload = false;
         }
 
         internal static string Problem(TexturePaintTarget target)

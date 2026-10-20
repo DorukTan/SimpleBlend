@@ -16,6 +16,8 @@ namespace SimpleBlend.Editor
         [SerializeField] private SimpleBlendBrushPreset _texturePreset;
         private int _textureSurfaceEditor = -1;
         private TexturePaintAsset _textureEditingPaint;
+        private readonly TextureBrushPreview _textureStrokePreview = new TextureBrushPreview();
+        private bool _textureShapeOptions;
 
         private bool DrawPaintBackend()
         {
@@ -137,17 +139,35 @@ namespace SimpleBlend.Editor
                 DrawTextureBrushPresets(settings);
                 EditorGUI.BeginChangeCheck();
                 settings.Radius = EditorGUILayout.Slider("Brush radius (m)", settings.Radius, 0.001f, 10);
-                settings.Strength = EditorGUILayout.Slider("Strength", settings.Strength, 0, 1);
+                settings.Strength = EditorGUILayout.Slider(new GUIContent("Opacity (%)", "Per-dab strength, or a maximum per stroke when Limit stroke to opacity is enabled."), settings.Strength * 100, 0, 100) / 100;
+                settings.Flow = EditorGUILayout.Slider("Flow (%)", settings.Flow * 100, 0, 100) / 100;
+                var shape = settings.TextureBrush;
+                shape.Tip = (TextureBrushTipKind)EditorGUILayout.EnumPopup("Brush tip", shape.Tip);
+                if (shape.Tip == TextureBrushTipKind.Custom)
+                {
+                    shape.Texture = (Texture2D)EditorGUILayout.ObjectField("Tip texture", shape.Texture, typeof(Texture2D), false);
+                    shape.MaskMode = (TextureBrushMaskMode)EditorGUILayout.EnumPopup("Tip mask", shape.MaskMode);
+                }
+                _textureShapeOptions = EditorGUILayout.Foldout(_textureShapeOptions, "Brush shape", true);
+                if (_textureShapeOptions)
+                {
+                    shape.Hardness = EditorGUILayout.Slider("Hardness (%)", shape.Hardness * 100, 0, 100) / 100;
+                    shape.Roundness = EditorGUILayout.Slider("Roundness (%)", shape.Roundness * 100, 5, 100) / 100;
+                    shape.Angle = EditorGUILayout.Slider("Angle", shape.Angle, -180, 180);
+                    settings.Falloff = EditorGUILayout.CurveField("Falloff", settings.Falloff);
+                }
                 settings.Accumulate = EditorGUILayout.Popup("Stroke behavior", settings.Accumulate ? 1 : 0,
                     new[] { "Capped per stroke", "Build up along stroke" }) == 1;
-                _textureBrushOptions = EditorGUILayout.Foldout(_textureBrushOptions, "More brush options", true);
+                _textureBrushOptions = EditorGUILayout.Foldout(_textureBrushOptions, "Stroke settings", true);
                 if (_textureBrushOptions)
                 {
-                    settings.Flow = EditorGUILayout.Slider("Flow", settings.Flow, 0, 1);
-                    settings.Falloff = EditorGUILayout.CurveField("Falloff", settings.Falloff);
+                    shape.Spacing = EditorGUILayout.Slider(new GUIContent("Spacing (%)", "Distance between dabs, as a percentage of brush diameter."), shape.Spacing * 100, 1, 200) / 100;
+                    shape.Smoothing = EditorGUILayout.Slider("Smoothing (%)", shape.Smoothing * 100, 0, 100) / 100;
+                    shape.LimitOpacity = EditorGUILayout.Toggle("Limit stroke to opacity", shape.LimitOpacity);
                     EditorGUILayout.HelpBox("The ring is the projected radius. Projection reaches a quarter-radius in depth and excludes opposing faces; it is not a visibility test.", MessageType.None);
                 }
                 if (EditorGUI.EndChangeCheck()) { SimpleBlendTexturePaintTool.FinishCurrentStroke(); settings.SaveSettings(); }
+                _textureStrokePreview.Draw(settings);
             }
             var active = ToolManager.activeToolType == typeof(SimpleBlendTexturePaintTool) && SimpleBlendTexturePaintTool.Target == target;
             if (GUILayout.Button(active ? "Stop painting" : "Start painting", GUILayout.Height(28)))
