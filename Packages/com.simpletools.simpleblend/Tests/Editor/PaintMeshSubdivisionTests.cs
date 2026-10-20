@@ -50,6 +50,66 @@ namespace SimpleBlend.Editor.Tests
             finally { Undo.ClearAll(); Object.DestroyImmediate(cube); if (result != null) Object.DestroyImmediate(result); }
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void SmallNamedSurfaceBrushDistinguishesOrdinaryCubeFromDetailedCopy(bool detailed)
+        {
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var source = cube.GetComponent<MeshFilter>().sharedMesh;
+            var sourceColors = source.colors32;
+            var settings = SimpleBlendBrushSettings.instance;
+            var beforeSettings = EditorJsonUtility.ToJson(settings);
+            Mesh copy = null;
+            var cache = new MeshPaintCache();
+            using (var assets = new TestAssetScope())
+            {
+                try
+                {
+                    if (detailed)
+                    {
+                        copy = PaintMeshSubdivision.Create(source, null, 3);
+                        cube.GetComponent<MeshFilter>().sharedMesh = copy;
+                    }
+                    var renderer = cube.GetComponent<MeshRenderer>();
+                    Assert.That(VertexPaintSetupUtility.Enable(renderer, false, out var data).IsValid, Is.True);
+                    var palette = SurfacePaletteAuthoring.Create(assets.AssetPath + "/Brush.asset", new[]
+                    {
+                        new SurfaceDefinition { Name = "Base" }, new SurfaceDefinition { Name = "Stone" },
+                        new SurfaceDefinition { Name = "Moss" }
+                    });
+                    SurfacePaletteAuthoring.Assign(renderer, 0, palette);
+                    SurfacePaletteAuthoring.SelectSurface(palette, 1, 0, settings);
+                    settings.Radius = 0.12f;
+                    settings.Strength = settings.Flow = 1;
+                    settings.NormalMaskEnabled = settings.ThresholdMaskEnabled = false;
+                    settings.Falloff = AnimationCurve.EaseInOut(0, 1, 1, 0);
+                    Assert.That(cache.Ensure(data).IsValid, Is.True);
+                    var hit = new Vector3(0, 0, 0.5f);
+                    var session = new VertexPaintStrokeSession();
+                    session.Begin(data);
+                    var changes = session.Paint(cache, settings.CreateCommand(hit));
+                    var result = session.End();
+                    Assert.That(changes > 0, Is.EqualTo(detailed));
+                    Assert.That(result.NoRadiusCoverage, Is.EqualTo(!detailed));
+                    for (var corner = 0; corner < source.vertexCount; corner++)
+                        Assert.That(data.GetColor(corner).r, Is.Zero, "The small brush must not expand to corner vertices.");
+                    settings.Mode = VertexPaintBrushMode.Fill;
+                    session.Begin(data);
+                    Assert.That(session.Fill(cache, settings.CreateCommand(hit), -1), Is.GreaterThan(0));
+                    Assert.That(session.End().NoRadiusCoverage, Is.False);
+                    Assert.That(source.colors32, Is.EqualTo(sourceColors));
+                }
+                finally
+                {
+                    EditorJsonUtility.FromJsonOverwrite(beforeSettings, settings);
+                    cache.Dispose();
+                    Undo.ClearAll();
+                    Object.DestroyImmediate(cube);
+                    if (copy != null) Object.DestroyImmediate(copy);
+                }
+            }
+        }
+
         [Test]
         public void MidpointsShareIndicesAndInterpolatePaintAndUvDimensions()
         {

@@ -157,7 +157,9 @@ namespace SimpleBlend.Editor
                 return;
             }
             var label = _target.CanPrepare ? "Set up painting" : "Start painting";
-            var surfaceProblem = _target.CanPaint && _useSurfaces ? SurfaceWorkflowProblem(true) : string.Empty;
+            var surfaceProblem = StartProblem(_target, _useSurfaces, _palette, _materialSection, SimpleBlendBrushSettings.instance);
+            if (_target.CanPaint && !string.IsNullOrEmpty(surfaceProblem))
+                EditorGUILayout.HelpBox(surfaceProblem, MessageType.Info);
             using (new EditorGUI.DisabledScope((!_target.CanPrepare && !_target.CanPaint) || !string.IsNullOrEmpty(surfaceProblem)))
             {
                 if (!GUILayout.Button(label, GUILayout.Height(28))) return;
@@ -174,6 +176,16 @@ namespace SimpleBlend.Editor
                     else { _operationMessage = current.Message; _operationType = MessageType.Error; }
                 }
                 Refresh();
+            }
+            if (_target.CanPaint && _useSurfaces && !string.IsNullOrEmpty(surfaceProblem))
+            {
+                if (_palette == null && GUILayout.Button("Create surface palette")) SurfacePaletteCreator.Open();
+                if (GUILayout.Button("Use Direct channels (no palette)"))
+                {
+                    StopForSurfaceConfiguration();
+                    _useSurfaces = false;
+                    Repaint();
+                }
             }
         }
 
@@ -226,16 +238,25 @@ namespace SimpleBlend.Editor
 
         private string SurfaceWorkflowProblem(bool requireBrush = false)
         {
-            if (_palette == null) return "Choose or create a surface palette below, or switch to Direct channels for a custom shader.";
-            if (!string.IsNullOrEmpty(_palette.Problem)) return _palette.Problem;
-            if (_target.Mesh == null || _materialSection < 0 || _materialSection >= _target.Mesh.subMeshCount)
+            return StartProblem(_target, true, _palette, _materialSection, SimpleBlendBrushSettings.instance, requireBrush);
+        }
+
+        internal static string StartProblem(PaintWorkspaceTarget target, bool useSurfaces, SurfacePalette palette,
+            int section, SimpleBlendBrushSettings settings, bool requireBrush = true)
+        {
+            if (target == null) return "Select a scene mesh object first.";
+            if (!target.CanPaint) return target.CanPrepare ? string.Empty : target.Message;
+            if (!useSurfaces) return string.Empty;
+            if (palette == null) return "Named surfaces needs a surface palette. Create one here, or choose an existing palette under Choose a surface. Direct channels paints vertex values without a palette.";
+            if (!string.IsNullOrEmpty(palette.Problem)) return palette.Problem;
+            if (target.Mesh == null || section < 0 || section >= target.Mesh.subMeshCount)
                 return "Choose an existing mesh section.";
-            if (!SurfacePaletteAuthoring.IsAssigned(_target.Renderer, _materialSection, _palette))
+            if (!SurfacePaletteAuthoring.IsAssigned(target.Renderer, section, palette))
                 return "Assign this palette's material to the chosen mesh section before using its surface names.";
             if (requireBrush)
             {
-                for (var i = 0; i < _palette.SurfaceCount; i++)
-                    if (SurfacePaletteAuthoring.Matches(_palette, i, _materialSection, SimpleBlendBrushSettings.instance)) return string.Empty;
+                for (var i = 0; i < palette.SurfaceCount; i++)
+                    if (SurfacePaletteAuthoring.Matches(palette, i, section, settings)) return string.Empty;
                 return "Choose a named surface before starting the brush.";
             }
             return string.Empty;

@@ -104,6 +104,8 @@ namespace SimpleBlend.Editor
 
         internal static string DescribeResult(VertexPaintStrokeResult result)
         {
+            if (result.NoRadiusCoverage)
+                return "Last stroke: no vertex colors changed — no vertices were inside the brush radius. Increase Brush size (m), or open Mesh detail to make a more detailed paint copy. Fill can work here because it ignores brush radius.";
             if (result.ChangedVertexCount == 0)
                 return "Last stroke: no vertex colors changed. Check brush reach, mesh detail, masks, strength/flow or existing values.";
             var text = new StringBuilder($"Last stroke: {result.ChangedVertexCount:N0} distinct vertices changed");

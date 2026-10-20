@@ -132,7 +132,8 @@ namespace SimpleBlend.Editor.Tests
             var result = session.End();
             Assert.That(result.ChangedVertexCount, Is.Zero);
             Assert.That(result.Sections, Is.Empty);
-            Assert.That(SimpleBlendPaintFeedback.DescribeResult(result), Does.Contain("mesh detail"));
+            Assert.That(result.NoRadiusCoverage, Is.EqualTo(radius < 0.2f));
+            Assert.That(SimpleBlendPaintFeedback.DescribeResult(result), Does.Contain(radius < 0.2f ? "no vertices were inside" : "mesh detail"));
         }
 
         [TestCase(true)]
@@ -147,6 +148,7 @@ namespace SimpleBlend.Editor.Tests
             var result = session.End();
             Assert.That(result.ChangedVertexCount, Is.Zero);
             Assert.That(result.Sections, Is.Empty);
+            Assert.That(result.NoRadiusCoverage, Is.False);
         }
 
         [Test]
@@ -158,6 +160,35 @@ namespace SimpleBlend.Editor.Tests
             var result = session.End();
             Assert.That(result.ChangedVertexCount, Is.EqualTo(3));
             Assert.That(result.Sections, Is.EqualTo(new[] { 0, 1 }));
+        }
+
+        [Test]
+        public void FillAndReusedSessionsCannotInheritAnEarlierNoReachDiagnostic()
+        {
+            var session = new VertexPaintStrokeSession();
+            session.Begin(_data);
+            session.Paint(_cache, Command(radius: 0.1f));
+            Assert.That(session.End().NoRadiusCoverage, Is.True);
+            session.Begin(_data);
+            session.Paint(_cache, Command(strength: 0));
+            Assert.That(session.End().NoRadiusCoverage, Is.False);
+            session.Begin(_data);
+            session.Fill(_cache, Command(VertexPaintBrushMode.Fill), 99);
+            Assert.That(session.End().NoRadiusCoverage, Is.False, "An empty Fill section is not radius-based.");
+        }
+
+        [Test]
+        public void PaintingTheAlreadyFilledValueIsNotMissingGeometryCoverage()
+        {
+            var session = new VertexPaintStrokeSession();
+            session.Begin(_data);
+            session.Fill(_cache, Command(VertexPaintBrushMode.Fill), -1);
+            session.End();
+            session.Begin(_data);
+            session.Paint(_cache, Command());
+            var result = session.End();
+            Assert.That(result.ChangedVertexCount, Is.Zero);
+            Assert.That(result.NoRadiusCoverage, Is.False);
         }
 
         [Test]

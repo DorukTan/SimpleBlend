@@ -17,6 +17,12 @@ Existing paint cannot be reinitialized by the workspace setup action. Incompatib
 
 ## Brush options
 
+If **Start painting** is disabled in Named surfaces, its reason is now shown beside the button: choose/create a palette, explicitly assign its material to the target section, then choose a named surface. **Create surface palette** is available beside the blocked action when no palette is selected. **Use Direct channels (no palette)** switches to vertex-channel painting without requiring palette creation; its material/shader must already consume vertex colors. Nothing is assigned automatically, and initial target setup does not require a palette.
+
+Fill working does not prove a small brush can reach vertices. Fill ignores brush radius; Paint only writes existing vertices inside it. A 0.12 m radius at the center of a default Unity cube face reaches no corner vertices. A three-level subdivided copy has a face-center vertex and supports the same localized stroke without enlarging its radius. When an entire drag reaches no vertices, the result says so explicitly and suggests increasing the radius or making a detailed copy under Mesh detail. Masks or already-filled values are not classified as missing geometry coverage.
+
+After filling a named surface, painting that same value again may make no further change. Choose a different surface or Base to test a change. Do not silently subdivide the original or enlarge the user's brush to make a no-change stroke appear successful.
+
 **More paint options** contains Flow, Falloff, Accumulate and the existing normal/submesh/value masks. Collapsing it hides controls, not their effect: enabled masks and saved brush settings still apply, and active masks are summarized while collapsed. The brush engine and capped/continuous behavior have not changed. Vertex alpha is a stored channel, separate from Strength. See [exact brush behavior](brush-controls.md).
 
 View includes Material, which leaves actual assigned materials visible with no diagnostic overlay, plus channel/RGB/density diagnostics. Preview section only can limit the latter to the masked section. Changing settings repaints the Scene view. The workspace refreshes its controls after changes made in the overlay or by color sampling. Lock paint target pins the header renderer without forcing Unity selection; stopping/unlocking releases the pin.
@@ -32,3 +38,5 @@ View includes Material, which leaves actual assigned materials visible with no d
 Read-only preflight, setup safety, Undo, source preservation and window/tool ownership have isolated editor regression coverage. Native light/dark appearance, 320/440-point docking, keyboard focus and the first-use walkthrough still require observed review. The browser prototype is not evidence of native layout correctness.
 
 The foundation's isolated Unity 6000.4.8f1 EditMode suite passed 203 tests with no failures or skips, including 14 workspace cases. This baseline predates the surface-palette addition; its verification is recorded separately. Tests do not establish native visual acceptance or completion of the broader workflow.
+
+Startup/reach verification (2026-10-20): 307 isolated EditMode tests passed, no failures/skips. Seven added cases cover palette-free startup, each named-surface prerequisite, the 0.12 m ordinary/subdivided cube comparison and no-reach classification after Fill or unchanged values. The owner confirmed increasing radius restored painting on their target. Native startup layout and brush size/strength representation still require review; the latter is a separate follow-up.
