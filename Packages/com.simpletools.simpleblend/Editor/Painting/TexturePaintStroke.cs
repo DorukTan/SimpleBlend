@@ -68,7 +68,7 @@ namespace SimpleBlend.Editor
                 if (!float.IsFinite(influence) || influence <= 0) continue;
                 if (!_command.Accumulate && influence <= _maximum[i]) continue;
                 var source = _command.Accumulate ? pixels[i] : _baseline[i];
-                var result = VertexSurfaceWeightUtility.Blend(source, target, channel, influence, _paint.SurfaceCount - 1, _erase);
+                var result = VertexSurfaceWeightUtility.Blend(source, target, channel, influence, _paint.WeightChannels, _erase);
                 _maximum[i] = Mathf.Max(_maximum[i], influence);
                 if (pixels[i].Equals(result)) continue;
                 if (!_recorded)
@@ -98,6 +98,7 @@ namespace SimpleBlend.Editor
             for (var i = 0; i < _baseline.Length; i++)
                 if (!_baseline[i].Equals(_paint.Pixels[i]) && _atlas.Coverage[i] == i) changed++;
             if (_recorded) Undo.CollapseUndoOperations(_undoGroup);
+            if (_recorded) TexturePaintSaveQueue.Enqueue(_paint);
             _paint = null;
             _atlas = null;
             _baseline = null;
@@ -113,7 +114,7 @@ namespace SimpleBlend.Editor
             if (paint == null || paint.Mesh == null || paint.Mask == null || paint.Material == null) return "The texture paint asset is incomplete. Restore its missing references.";
             if (!paint.Mesh.isReadable || !paint.Mask.isReadable || paint.Pixels.Length != paint.Mask.width * paint.Mask.height)
                 return "The paint mesh and mask must remain readable with matching stored pixels.";
-            if (paint.SurfaceCount != 3 && paint.SurfaceCount != 4) return "The paint asset needs three or four surfaces.";
+            if (paint.SurfaceCount < 1 || paint.SurfaceCount > 4) return "The paint asset needs one to four surfaces, including Base.";
             if (target.GetComponent<MeshFilter>()?.sharedMesh != paint.Mesh) return "Restore this object's owned paint mesh before painting.";
             var renderer = target.GetComponent<MeshRenderer>();
             var materials = renderer == null ? Array.Empty<Material>() : renderer.sharedMaterials;
@@ -135,9 +136,13 @@ namespace SimpleBlend.Editor
         {
             foreach (var paint in Resources.FindObjectsOfTypeAll<TexturePaintAsset>())
             {
-                if (!paint.RebuildMask()) continue;
-                EditorUtility.SetDirty(paint);
-                if (paint.Mask != null) EditorUtility.SetDirty(paint.Mask);
+                if (paint.RebuildMask())
+                {
+                    EditorUtility.SetDirty(paint);
+                    if (paint.Mask != null) EditorUtility.SetDirty(paint.Mask);
+                }
+                if (EditorUtility.IsDirty(paint) || (paint.Mask != null && EditorUtility.IsDirty(paint.Mask))
+                    || (paint.Material != null && EditorUtility.IsDirty(paint.Material))) TexturePaintSaveQueue.Enqueue(paint);
             }
             SceneView.RepaintAll();
         }

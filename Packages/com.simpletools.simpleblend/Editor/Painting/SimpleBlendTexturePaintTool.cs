@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.EditorTools;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace SimpleBlend.Editor
 {
@@ -24,6 +25,7 @@ namespace SimpleBlend.Editor
         private Vector3 _lastPoint;
         private bool _hasPoint;
         private VertexBrushCommand _command;
+        private static SimpleBlendTexturePaintTool _active;
 
         public override GUIContent toolbarIcon => SimpleBlendEditorIcons.Content("Paint", "", "Paint texture surfaces");
         public override bool IsAvailable() => string.IsNullOrEmpty(TexturePaintStroke.Problem(Target));
@@ -32,6 +34,7 @@ namespace SimpleBlend.Editor
         {
             var problem = TexturePaintStroke.Problem(target);
             if (!string.IsNullOrEmpty(problem)) throw new InvalidOperationException(problem);
+            if (IsActiveFor(target)) { Configure(target, surface, erase); return; }
             Stop();
             Target = target;
             Surface = Mathf.Clamp(surface, 0, target.Paint.SurfaceCount - 1);
@@ -46,6 +49,36 @@ namespace SimpleBlend.Editor
             if (ToolManager.activeToolType == typeof(SimpleBlendTexturePaintTool)) ToolManager.RestorePreviousTool();
         }
 
+        internal static bool IsActiveFor(TexturePaintTarget target)
+            => target != null && _active != null && Target == target && ToolManager.activeToolType == typeof(SimpleBlendTexturePaintTool);
+
+        internal static void FinishCurrentStroke() => _active?.Finish();
+
+        internal static void Configure(TexturePaintTarget target, int surface, bool erase)
+        {
+            if (!IsActiveFor(target)) return;
+            _active.Finish();
+            Surface = Mathf.Clamp(surface, 0, target.Paint.SurfaceCount - 1);
+            Erase = erase;
+            Changed?.Invoke();
+            SceneView.RepaintAll();
+        }
+
+        internal static bool KeepTargetForSelection(TexturePaintTarget target, Object[] selection)
+        {
+            if (target == null || selection == null || selection.Length != 1) return false;
+            var selected = selection[0];
+            if (selected == null) return false;
+            if (EditorUtility.IsPersistent(selected)) return true;
+            var gameObject = selected is GameObject go ? go : (selected as Component)?.gameObject;
+            return gameObject == target.gameObject;
+        }
+
+        private void OnSelectionChanged()
+        {
+            if (!KeepTargetForSelection(Target, Selection.objects)) Stop();
+        }
+
         internal static VertexBrushCommand Command()
         {
             var settings = SimpleBlendBrushSettings.instance;
@@ -56,9 +89,11 @@ namespace SimpleBlend.Editor
 
         internal static int Fill(TexturePaintTarget target, int surface)
         {
-            Stop();
+            var problem = TexturePaintStroke.Problem(target);
+            if (!string.IsNullOrEmpty(problem)) throw new InvalidOperationException(problem);
+            FinishCurrentStroke();
             var stroke = new TexturePaintStroke();
-            var atlas = new TexturePaintAtlas(target.Paint.Mesh, target.MaterialSection, target.Paint.Mask.width);
+            var atlas = IsActiveFor(target) ? _active._atlas : new TexturePaintAtlas(target.Paint.Mesh, target.MaterialSection, target.Paint.Mask.width);
             stroke.Begin(target, atlas, surface, false, Command());
             stroke.Dab(Vector3.zero, Vector3.up, true);
             var count = stroke.End();
@@ -72,7 +107,8 @@ namespace SimpleBlend.Editor
         public override void OnActivated()
         {
             _atlas = new TexturePaintAtlas(Target.Paint.Mesh, Target.MaterialSection, Target.Paint.Mask.width);
-            Selection.selectionChanged += Stop;
+            _active = this;
+            Selection.selectionChanged += OnSelectionChanged;
             EditorApplication.update += CheckFocus;
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
             Undo.undoRedoPerformed += OnUndo;
@@ -81,11 +117,12 @@ namespace SimpleBlend.Editor
         public override void OnWillBeDeactivated()
         {
             Finish();
-            Selection.selectionChanged -= Stop;
+            Selection.selectionChanged -= OnSelectionChanged;
             EditorApplication.update -= CheckFocus;
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             Undo.undoRedoPerformed -= OnUndo;
             _atlas = null;
+            _active = null;
             Target = null;
             Changed?.Invoke();
         }
@@ -97,7 +134,13 @@ namespace SimpleBlend.Editor
         }
 
         private void OnPlayModeChanged(PlayModeStateChange state) => Stop();
-        private void OnUndo() { Finish(); LastStroke = null; Changed?.Invoke(); }
+        private void OnUndo()
+        {
+            Finish();
+            if (Target != null && Target.Paint != null) Surface = Mathf.Clamp(Surface, 0, Target.Paint.SurfaceCount - 1);
+            LastStroke = null;
+            Changed?.Invoke();
+        }
 
         public override void OnToolGUI(EditorWindow window)
         {

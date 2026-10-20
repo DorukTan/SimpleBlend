@@ -21,6 +21,9 @@ namespace SimpleBlend
         public int SurfaceCount => _surfaceNames.Length;
         public string SurfaceName(int index) => _surfaceNames[index];
         internal Color32[] Pixels => _pixels;
+        internal int WeightChannels => _surfaceNames.Length > 3 ? 3 : 2;
+
+        internal void SetSurfaceNames(string[] names) => _surfaceNames = (string[])names.Clone();
 
         internal void Configure(Mesh mesh, Material material, Texture2D mask, string[] surfaceNames)
         {
