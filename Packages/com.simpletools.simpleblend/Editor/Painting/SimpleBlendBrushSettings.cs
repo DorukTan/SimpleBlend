@@ -158,6 +158,12 @@ namespace SimpleBlend.Editor
         internal VertexBrushCommand CreateCommand(Vector3 center, VertexPaintBrushMode? modeOverride = null)
         {
             Normalize();
+            return CreatePreviewCommand(center, modeOverride);
+        }
+
+        internal VertexBrushCommand CreatePreviewCommand(Vector3 center, VertexPaintBrushMode? modeOverride = null,
+            float? radiusOverride = null, float? strengthOverride = null)
+        {
             var mask = new VertexBrushMask(
                 _normalMaskEnabled,
                 _normalDirection,
@@ -171,11 +177,11 @@ namespace SimpleBlend.Editor
                 _thresholdInclusive);
             return new VertexBrushCommand(
                 center,
-                _radius,
-                _strength,
+                radiusOverride ?? _radius,
+                strengthOverride ?? _strength,
                 _flow,
                 (Color32)_color,
-                _falloff,
+                _falloff ?? AnimationCurve.EaseInOut(0f, 1f, 1f, 0f),
                 modeOverride ?? _mode,
                 _channel,
                 _accumulate,

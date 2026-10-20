@@ -35,16 +35,23 @@ namespace SimpleBlend.Editor
 
         internal void QuerySphere(Vector3 center, float radius, List<int> results)
         {
+            QuerySphereLimited(center, radius, results, int.MaxValue, int.MaxValue);
+        }
+
+        internal bool QuerySphereLimited(Vector3 center, float radius, List<int> results, int workBudget, int resultBudget)
+        {
             if (results == null)
             {
                 throw new ArgumentNullException(nameof(results));
             }
 
             results.Clear();
+            if (workBudget <= 0 || resultBudget <= 0) return false;
             radius = Mathf.Max(0f, radius);
             var minimum = Cell.FromPosition(center - Vector3.one * radius, _cellSize);
             var maximum = Cell.FromPosition(center + Vector3.one * radius, _cellSize);
             var radiusSquared = radius * radius;
+            var visited = 0;
 
             for (var x = minimum.X; x <= maximum.X; x++)
             {
@@ -52,6 +59,7 @@ namespace SimpleBlend.Editor
                 {
                     for (var z = minimum.Z; z <= maximum.Z; z++)
                     {
+                        if (visited++ >= workBudget) return false;
                         if (!_cells.TryGetValue(new Cell(x, y, z), out var indices))
                         {
                             continue;
@@ -59,15 +67,18 @@ namespace SimpleBlend.Editor
 
                         for (var index = 0; index < indices.Count; index++)
                         {
+                            if (visited++ >= workBudget) return false;
                             var vertexIndex = indices[index];
                             if ((_positions[vertexIndex] - center).sqrMagnitude <= radiusSquared)
                             {
                                 results.Add(vertexIndex);
+                                if (results.Count >= resultBudget) return false;
                             }
                         }
                     }
                 }
             }
+            return true;
         }
 
         private readonly struct Cell : IEquatable<Cell>

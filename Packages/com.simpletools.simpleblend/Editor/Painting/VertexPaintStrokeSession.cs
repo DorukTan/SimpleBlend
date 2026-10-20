@@ -23,6 +23,7 @@ namespace SimpleBlend.Editor
 
         internal bool IsActive => _data != null;
         internal VertexPaintData Target => _data;
+        internal IReadOnlyList<Color32> MaskBaseline => _strokeBaseline;
 
         internal bool HasChanges { get; private set; }
 

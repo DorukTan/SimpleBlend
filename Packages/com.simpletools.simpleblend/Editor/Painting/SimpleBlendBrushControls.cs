@@ -20,9 +20,11 @@ namespace SimpleBlend.Editor
             if (settings.Mode == VertexPaintBrushMode.Fill)
                 settings.FillScope = (VertexPaintFillScope)EditorGUILayout.EnumPopup("Fill scope", settings.FillScope);
             else if (settings.Mode != VertexPaintBrushMode.Sample)
-                settings.Radius = EditorGUILayout.FloatField(new GUIContent("Brush size (m)", "World-space radius in meters, not diameter."), settings.Radius);
+                settings.Radius = EditorGUILayout.FloatField(new GUIContent("Brush radius (m)", "World-space spherical radius in meters. Diameter is twice this value. The outer edge normally has zero falloff influence."), settings.Radius);
             if (settings.Mode != VertexPaintBrushMode.Sample)
                 settings.Strength = EditorGUILayout.Slider(new GUIContent("Strength", "Brush influence, separate from stored vertex alpha."), settings.Strength, 0f, 1f);
+            if (settings.Mode != VertexPaintBrushMode.Sample && settings.Mode != VertexPaintBrushMode.Fill)
+                EditorGUILayout.HelpBox("Ring: outer radius. Vertex dots: falloff × strength × flow, not material opacity. Coarse meshes cannot paint smoothly between vertices.", MessageType.None);
 
             _advanced = EditorGUILayout.Foldout(_advanced, "More paint options", true);
             if (!_advanced && (settings.NormalMaskEnabled || settings.SubmeshMaskEnabled || settings.ThresholdMaskEnabled))
