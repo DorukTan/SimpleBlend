@@ -283,6 +283,43 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(SurfacePaletteAuthoring.AssignmentProblem(_renderer, 0, palette), Is.Not.Empty);
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void StartupExplainsPaletteRequirementOnlyForNamedSurfacesWithoutMutatingAnything(bool namedSurfaces)
+        {
+            var target = PaintWorkspaceTarget.Inspect(new Object[] { _object });
+            var settings = SimpleBlendBrushSettings.instance;
+            var before = EditorJsonUtility.ToJson(settings);
+            var data = EditorJsonUtility.ToJson(_data);
+            var materials = _renderer.sharedMaterials;
+            var undo = Undo.GetCurrentGroup();
+            var problem = SimpleBlendWorkspace.StartProblem(target, namedSurfaces, null, 0, settings);
+            if (namedSurfaces)
+            {
+                Assert.That(problem, Does.Contain("Named surfaces needs a surface palette"));
+                Assert.That(problem, Does.Contain("without a palette"));
+            }
+            else Assert.That(problem, Is.Empty);
+            Assert.That(EditorJsonUtility.ToJson(settings), Is.EqualTo(before));
+            Assert.That(EditorJsonUtility.ToJson(_data), Is.EqualTo(data));
+            Assert.That(_renderer.sharedMaterials, Is.EqualTo(materials));
+            Assert.That(Undo.GetCurrentGroup(), Is.EqualTo(undo));
+        }
+
+        [Test]
+        public void StartupNamesTheCurrentAssignmentAndSurfacePrerequisite()
+        {
+            var palette = CreatePalette();
+            var settings = SimpleBlendBrushSettings.instance;
+            var target = PaintWorkspaceTarget.Inspect(new Object[] { _object });
+            Assert.That(SimpleBlendWorkspace.StartProblem(target, true, palette, 0, settings), Does.Contain("Assign this palette"));
+            SurfacePaletteAuthoring.Assign(_renderer, 0, palette);
+            settings.Channel = VertexPaintChannel.Alpha;
+            Assert.That(SimpleBlendWorkspace.StartProblem(target, true, palette, 0, settings), Does.Contain("Choose a named surface"));
+            SurfacePaletteAuthoring.SelectSurface(palette, 1, 0, settings);
+            Assert.That(SimpleBlendWorkspace.StartProblem(target, true, palette, 0, settings), Is.Empty);
+        }
+
         private SurfacePalette CreatePalette(int count = 3) => SurfacePaletteAuthoring.Create(_assets.AssetPath + "/Surfaces.asset", Definitions(count));
 
         private static SurfaceDefinition[] Definitions(int count)

@@ -13,6 +13,9 @@ namespace SimpleBlend.Editor
         private readonly HashSet<int> _touchedVertices = new HashSet<int>();
         private VertexPaintTopology _resultTopology;
         private bool _attempted;
+        private bool _hadRadiusAttempt;
+        private bool _hadFillAttempt;
+        private bool _hadCandidates;
         private VertexPaintData _data;
         private Color32[] _strokeBaseline;
         private float[] _strongestStrokeWeights;
@@ -73,6 +76,7 @@ namespace SimpleBlend.Editor
             _touchedVertices.Clear();
             _resultTopology = null;
             _attempted = false;
+            _hadRadiusAttempt = _hadFillAttempt = _hadCandidates = false;
             HasChanges = storageChanged || ownershipChanged;
             return true;
         }
@@ -89,6 +93,7 @@ namespace SimpleBlend.Editor
             }
 
             _attempted = true;
+            _hadRadiusAttempt = true;
             _resultTopology = cache.Snapshot.Topology;
             _strokeSampler.Append(command.Center, command.Radius, _samplePoints);
             var changedCount = 0;
@@ -96,6 +101,7 @@ namespace SimpleBlend.Editor
             {
                 var sampleCommand = command.WithCenter(_samplePoints[sampleIndex]);
                 cache.QueryVertices(sampleCommand.Center, sampleCommand.Radius, _candidates);
+                _hadCandidates |= _candidates.Count > 0;
                 changedCount += VertexPaintKernel.Apply(
                     sampleCommand,
                     cache.WorldVertices,
@@ -127,10 +133,12 @@ namespace SimpleBlend.Editor
 
             var topology = cache.Snapshot.Topology;
             _attempted = true;
+            _hadFillAttempt = true;
             _resultTopology = topology;
             var candidates = hitSubmeshIndex < 0
                 ? topology.AllVertices
                 : topology.GetSubmeshVertices(hitSubmeshIndex);
+            _hadCandidates |= candidates.Count > 0;
             var changedCount = VertexPaintKernel.Apply(
                 command,
                 cache.WorldVertices,
@@ -182,7 +190,8 @@ namespace SimpleBlend.Editor
 
             Undo.CollapseUndoOperations(_undoGroup);
             var result = _attempted
-                ? VertexPaintStrokeResult.Create(_strokeBaseline, _data.SerializedColors, _touchedVertices, _resultTopology)
+                ? VertexPaintStrokeResult.Create(_strokeBaseline, _data.SerializedColors, _touchedVertices, _resultTopology,
+                    _hadRadiusAttempt && !_hadFillAttempt && !_hadCandidates)
                 : null;
             ResetState();
             return result;
@@ -199,6 +208,7 @@ namespace SimpleBlend.Editor
             _touchedVertices.Clear();
             _resultTopology = null;
             _attempted = false;
+            _hadRadiusAttempt = _hadFillAttempt = _hadCandidates = false;
         }
     }
 

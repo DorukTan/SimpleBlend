@@ -8,15 +8,17 @@ namespace SimpleBlend.Editor
     {
         internal int ChangedVertexCount { get; }
         internal IReadOnlyList<int> Sections { get; }
+        internal bool NoRadiusCoverage { get; }
 
-        private VertexPaintStrokeResult(int count, int[] sections)
+        private VertexPaintStrokeResult(int count, int[] sections, bool noRadiusCoverage)
         {
             ChangedVertexCount = count;
             Sections = Array.AsReadOnly(sections);
+            NoRadiusCoverage = noRadiusCoverage;
         }
 
         internal static VertexPaintStrokeResult Create(Color32[] baseline, Color32[] colors,
-            HashSet<int> touched, VertexPaintTopology topology)
+            HashSet<int> touched, VertexPaintTopology topology, bool noRadiusCoverage = false)
         {
             if (baseline == null || colors == null || baseline.Length != colors.Length
                 || topology == null || topology.VertexCount != colors.Length) return null;
@@ -37,7 +39,7 @@ namespace SimpleBlend.Editor
                     }
                 }
             }
-            return new VertexPaintStrokeResult(changed.Count, sections.ToArray());
+            return new VertexPaintStrokeResult(changed.Count, sections.ToArray(), noRadiusCoverage && changed.Count == 0);
         }
     }
 }
