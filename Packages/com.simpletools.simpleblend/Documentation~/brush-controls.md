@@ -1,6 +1,6 @@
 # Brush controls and exact behavior
 
-The **SimpleBlend Brush** overlay appears in the Scene view. The [paint workspace](workspace.md) uses the same controls and brush settings. These controls configure a pure brush command; neither settings surface owns paint data or mesh storage. Operation, Paint channel, View, Channel values, Brush radius (m), Strength and Fill scope are shown as relevant to the operation. Flow, Falloff, Accumulate and masks are grouped under **More paint options**. Collapsed options remain effective.
+The **SimpleBlend Brush** overlay appears in the Scene view. The [paint workspace](workspace.md) uses the same controls and brush settings. These controls configure a pure brush command; neither settings surface owns paint data or mesh storage. Operation, Paint channel, View, Channel values, Brush radius (m), Strength and Fill scope are shown as relevant to the operation. Flow, Falloff and masks are grouped under **More paint options**. Named-surface drags show **Stroke behavior** beside Strength; independent channels retain the advanced Accumulate toggle. They control the same saved preference. Collapsed options remain effective.
 
 ## Radius and vertex influence
 

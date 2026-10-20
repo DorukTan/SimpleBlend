@@ -188,6 +188,29 @@ namespace SimpleBlend.Editor.Tests
             }
         }
 
+        [TestCase(3, 0f)]
+        [TestCase(4, 0f)]
+        [TestCase(3, 1f)]
+        [TestCase(4, 1f)]
+        [TestCase(4, 0.5f)]
+        public void MaterialBlendModeGpuProbeDistinguishesSmoothWeightsFromHeightContrast(int layers, float contrast)
+        {
+            RequireGraphics();
+            var material = CreateProbe();
+            try
+            {
+                material.SetFloat("_UseMaterialBlend", 1);
+                material.SetFloat("_LayerCount", layers);
+                material.SetFloat("_HeightBlendStrength", contrast);
+                material.SetFloat("_Transition", 0.2f);
+                material.SetVector("_RawWeights", new Vector4(0.25f, 0.75f, 0, 0));
+                material.SetVector("_Heights", Vector4.one * 0.5f);
+                AssertVector(RenderProbe(material), Vector4.Lerp(new Vector4(0.25f, 0.75f, 0, 0),
+                    new Vector4(0, 1, 0, 0), contrast));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(material); }
+        }
+
         private static void RequireGraphics()
         {
             if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)

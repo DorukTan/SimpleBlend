@@ -20,6 +20,8 @@ Shader "Hidden/SimpleBlend/Shader Graph Parity Probe"
             float _LayerCount;
             float _UseFloat;
             float _Output;
+            float _UseMaterialBlend;
+            float _HeightBlendStrength;
             float4 _Albedo0, _Albedo1, _Albedo2, _Albedo3;
             float4 _Normal0, _Normal1, _Normal2, _Normal3;
             float4 _Mask0, _Mask1, _Mask2, _Mask3;
@@ -27,7 +29,9 @@ Shader "Hidden/SimpleBlend/Shader Graph Parity Probe"
             float4 frag(v2f_img input) : SV_Target
             {
                 float4 weights;
-                if (_UseFloat > 0.5)
+                if (_UseMaterialBlend > 0.5)
+                    weights = SimpleBlendMaterialWeights(_RawWeights, _Heights, _Transition, _LayerCount, _HeightBlendStrength);
+                else if (_UseFloat > 0.5)
                 {
                     if (_LayerCount < 3.5)
                     {

@@ -37,6 +37,7 @@ half _Layer1OcclusionStrength;
 half _Layer2OcclusionStrength;
 half _Layer3OcclusionStrength;
 half _BlendTransition;
+half _HeightBlendStrength;
 half _LayerCount;
 CBUFFER_END
 
@@ -88,9 +89,7 @@ void InitializeSimpleBlendSurfaceData(
         _LayerCount > 3.5h
             ? SAMPLE_TEXTURE2D(_Layer3Height, sampler_LinearRepeat, uv3).r
             : 0.0h);
-    half4 weights = _LayerCount > 3.5h
-        ? SimpleBlendHeightWeights4(rawWeights, heights, _BlendTransition)
-        : half4(SimpleBlendHeightWeights3(rawWeights.xyz, heights.xyz, _BlendTransition), 0.0h);
+    half4 weights = SimpleBlendMaterialWeights(rawWeights, heights, _BlendTransition, _LayerCount, _HeightBlendStrength);
 
     half4 albedo0 = SAMPLE_TEXTURE2D(_Layer0Albedo, sampler_LinearRepeat, uv0) * _Layer0Color;
     half4 albedo1 = SAMPLE_TEXTURE2D(_Layer1Albedo, sampler_LinearRepeat, uv1) * _Layer1Color;

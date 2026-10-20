@@ -68,6 +68,7 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(palette.Problem, Is.Empty);
             Assert.That(AssetDatabase.GetAssetPath(palette.Material), Is.EqualTo(_assets.AssetPath + "/Surfaces.mat"));
             Assert.That(palette.Material.GetFloat("_LayerCount"), Is.EqualTo(count));
+            Assert.That(palette.Material.GetFloat("_HeightBlendStrength"), Is.Zero);
             Assert.That(AssetDatabase.GetAssetPath(palette.Material.GetTexture("_Layer1Albedo")), Is.EqualTo(_assets.AssetPath + "/Albedo.asset"));
             Assert.That(palette.Material.GetColor("_Layer1Color"), Is.EqualTo(definitions[1].Tint));
             Assert.That(File.ReadAllBytes(_assets.AssetPath + "/Albedo.asset"), Is.EqualTo(textureBytes));
@@ -260,13 +261,12 @@ namespace SimpleBlend.Editor.Tests
             if (surface == 0)
             {
                 Assert.That(_data.GetColor(0).g, Is.Zero);
-                Assert.That(_data.GetColor(0).b, Is.Zero);
             }
             else
             {
-                Assert.That(_data.GetColor(0).g, Is.EqualTo(before[0].g));
-                Assert.That(_data.GetColor(0).b, Is.EqualTo(before[0].b));
+                Assert.That(_data.GetColor(0).g, Is.Zero, "Painting toward Red must reduce competing Green weight.");
             }
+            Assert.That(_data.GetColor(0).b, Is.EqualTo(before[0].b), "Three-surface painting leaves unused Blue untouched.");
             // Vertex 0 is shared by both sections: a section mask cannot split a shared vertex's paint.
             Assert.That(_mesh.colors32, Is.EqualTo(before), "The source asset must not receive stroke colors.");
         }
@@ -318,6 +318,111 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(SimpleBlendWorkspace.StartProblem(target, true, palette, 0, settings), Does.Contain("Choose a named surface"));
             SurfacePaletteAuthoring.SelectSurface(palette, 1, 0, settings);
             Assert.That(SimpleBlendWorkspace.StartProblem(target, true, palette, 0, settings), Is.Empty);
+        }
+
+        [Test]
+        public void HeightBlendChoiceIsExplicitAndUndoable()
+        {
+            var palette = CreatePalette();
+            SurfacePaletteAuthoring.SetHeightContrast(palette, true);
+            Assert.That(palette.Material.GetFloat("_HeightBlendStrength"), Is.EqualTo(1));
+            Undo.FlushUndoRecordObjects();
+            Undo.PerformUndo();
+            Assert.That(palette.Material.GetFloat("_HeightBlendStrength"), Is.Zero);
+        }
+
+        [Test]
+        public void NewPalettesWithHeightMapsOptIntoHeightContrast()
+        {
+            var texture = new Texture2D(2, 2);
+            AssetDatabase.CreateAsset(texture, _assets.AssetPath + "/Height.asset");
+            var surfaces = Definitions(3);
+            surfaces[1].Height = texture;
+            var palette = SurfacePaletteAuthoring.Create(_assets.AssetPath + "/HeightPalette.asset", surfaces);
+            Assert.That(palette.Material.GetFloat("_HeightBlendStrength"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void NamedSmoothMixesActiveWeightsWithoutTouchingFreeChannelsOrExcludedVertices()
+        {
+            var palette = CreatePalette();
+            var settings = SimpleBlendBrushSettings.instance;
+            SurfacePaletteAuthoring.SelectSurface(palette, 1, 0, settings);
+            settings.Mode = VertexPaintBrushMode.Smooth;
+            settings.Radius = 3;
+            settings.Strength = settings.Flow = 1;
+            settings.NormalMaskEnabled = settings.ThresholdMaskEnabled = false;
+            settings.Falloff = AnimationCurve.Constant(0, 1, 1);
+            var before = (Color32[])_data.SerializedColors.Clone();
+            var cache = new MeshPaintCache();
+            try
+            {
+                Assert.That(cache.Ensure(_data).IsValid, Is.True);
+                var session = new VertexPaintStrokeSession();
+                session.Begin(_data);
+                session.Paint(cache, settings.CreateCommand(Vector3.zero));
+                session.End();
+                Assert.That(_data.GetColor(0).g, Is.Not.EqualTo(before[0].g));
+                for (var index = 0; index < 3; index++)
+                {
+                    var color = _data.GetColor(index);
+                    Assert.That(color.r + color.g, Is.LessThanOrEqualTo(255));
+                    Assert.That(color.b, Is.EqualTo(before[index].b));
+                    Assert.That(color.a, Is.EqualTo(before[index].a));
+                }
+                Assert.That(_data.GetColor(3), Is.EqualTo(before[3]));
+                Assert.That(_mesh.colors32, Is.EqualTo(before));
+            }
+            finally { cache.Dispose(); }
+        }
+
+        [Test]
+        public void SurfaceFeedbackDoesNotPretendOnlyTheSelectedChannelChanges()
+        {
+            SurfacePaletteAuthoring.SelectSurface(CreatePalette(), 1, 0, SimpleBlendBrushSettings.instance);
+            Assert.That(SimpleBlendPaintFeedback.DescribeBrush(SimpleBlendBrushSettings.instance), Does.Contain("surface weights RG"));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void PaintingAnotherNamedSurfaceReducesThePreviousWeightWithOneExactUndo(bool accumulate)
+        {
+            var palette = CreatePalette();
+            var settings = SimpleBlendBrushSettings.instance;
+            settings.Strength = settings.Flow = 1;
+            settings.Radius = 3;
+            settings.Falloff = AnimationCurve.Constant(0, 1, 1);
+            settings.NormalMaskEnabled = settings.ThresholdMaskEnabled = false;
+            SurfacePaletteAuthoring.SelectSurface(palette, 1, 0, settings);
+            var cache = new MeshPaintCache();
+            try
+            {
+                Assert.That(cache.Ensure(_data).IsValid, Is.True);
+                var session = new VertexPaintStrokeSession();
+                settings.Mode = VertexPaintBrushMode.Fill;
+                session.Begin(_data);
+                session.Fill(cache, settings.CreateCommand(Vector3.zero), -1);
+                session.End();
+                var before = (Color32[])_data.SerializedColors.Clone();
+                SurfacePaletteAuthoring.SelectSurface(palette, 2, 0, settings);
+                settings.Accumulate = accumulate;
+                settings.Strength = 0.5f;
+                session.Begin(_data);
+                session.Paint(cache, settings.CreateCommand(Vector3.zero));
+                session.Paint(cache, settings.CreateCommand(new Vector3(0.7f, 0, 0)));
+                session.End();
+                var after = (Color32[])_data.SerializedColors.Clone();
+                Assert.That(after[0].g, Is.EqualTo(accumulate ? 191 : 128).Within(2));
+                Assert.That(after[0].r + after[0].g, Is.LessThanOrEqualTo(255));
+                Assert.That(after[0].b, Is.EqualTo(before[0].b));
+                Assert.That(after[0].a, Is.EqualTo(before[0].a));
+                Undo.FlushUndoRecordObjects();
+                Undo.PerformUndo();
+                Assert.That(_data.SerializedColors, Is.EqualTo(before));
+                Undo.PerformRedo();
+                Assert.That(_data.SerializedColors, Is.EqualTo(after));
+            }
+            finally { cache.Dispose(); }
         }
 
         private SurfacePalette CreatePalette(int count = 3) => SurfacePaletteAuthoring.Create(_assets.AssetPath + "/Surfaces.asset", Definitions(count));

@@ -4,6 +4,7 @@ Shader "SimpleBlend/Layer Blend 3"
     {
         [Header(Blend Contract)]
         _BlendTransition("Height Transition", Range(0.001, 1.0)) = 0.2
+        _HeightBlendStrength("Height Contrast", Range(0, 1)) = 1
         [HideInInspector] _LayerCount("Layer Count", Float) = 3
 
         [Header(Base Layer Unpainted)]

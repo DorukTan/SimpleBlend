@@ -66,7 +66,9 @@ namespace SimpleBlend.Editor
         internal static void SetActive(VertexPaintData data, VertexBrushCommand command)
         {
             if (data == null) return;
-            var text = $"Current stroke: {command.Mode} · {command.Channel}";
+            var channels = command.SurfaceWeightChannels > 0
+                ? "surface weights " + (command.SurfaceWeightChannels == 2 ? "RG" : "RGB") : command.Channel.ToString();
+            var text = $"Current stroke: {command.Mode} · {channels}";
             if (_target == data && _stroke == text) return;
             if (_target != data) { _hover = null; _section = -1; }
             _target = data;
@@ -96,6 +98,8 @@ namespace SimpleBlend.Editor
                 ? settings.FillScope == VertexPaintFillScope.HitSubmesh ? "hit section" : "whole mesh"
                 : "brush radius";
             var channel = settings.Channel == VertexPaintChannel.Alpha ? "Alpha (stored vertex channel)" : settings.Channel.ToString();
+            if (settings.SurfaceWeightChannels > 0)
+                channel = "surface weights " + (settings.SurfaceWeightChannels == 2 ? "RG" : "RGB");
             var summary = $"Brush: {settings.Mode} · {channel} · {scope}";
             if (settings.SubmeshMaskEnabled)
                 summary += $" · section mask {settings.SubmeshMaskIndex}\nShared vertices can also affect neighboring sections.";

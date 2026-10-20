@@ -39,6 +39,18 @@ half4 SimpleBlendHeightWeights4(half4 rawWeights, half4 heights, half transition
     return contributions / total;
 }
 
+half4 SimpleBlendMaterialWeights(half4 rawWeights, half4 heights, half transition, half layerCount, half contrast)
+{
+    rawWeights = max(rawWeights, 0.0h);
+    if (layerCount < 3.5h) rawWeights.w = 0.0h;
+    half total = dot(rawWeights, half4(1, 1, 1, 1));
+    half4 smoothWeights = total > 0.0001h ? rawWeights / total : half4(1, 0, 0, 0);
+    half4 heightWeights = layerCount > 3.5h
+        ? SimpleBlendHeightWeights4(rawWeights, heights, transition)
+        : half4(SimpleBlendHeightWeights3(rawWeights.xyz, heights.xyz, transition), 0);
+    return lerp(smoothWeights, heightWeights, saturate(contrast));
+}
+
 void SimpleBlendHeightWeights3_half(
     half3 RawWeights,
     half3 Heights,

@@ -141,7 +141,8 @@ namespace SimpleBlend
             VertexPaintBrushMode mode,
             VertexPaintChannel channel,
             bool accumulate,
-            VertexBrushMask mask)
+            VertexBrushMask mask,
+            int surfaceWeightChannels = 0)
         {
             Center = center;
             Radius = Mathf.Max(0.0001f, radius);
@@ -153,6 +154,7 @@ namespace SimpleBlend
             Channel = channel;
             Accumulate = accumulate;
             Mask = mask;
+            SurfaceWeightChannels = surfaceWeightChannels == 2 || surfaceWeightChannels == 3 ? surfaceWeightChannels : 0;
         }
 
         internal Vector3 Center { get; }
@@ -174,6 +176,7 @@ namespace SimpleBlend
         internal bool Accumulate { get; }
 
         internal VertexBrushMask Mask { get; }
+        internal int SurfaceWeightChannels { get; }
 
         internal float UniformWeight => Strength * Flow;
 
@@ -189,7 +192,8 @@ namespace SimpleBlend
                 Mode,
                 Channel,
                 Accumulate,
-                Mask);
+                Mask,
+                SurfaceWeightChannels);
         }
 
         internal float EvaluateWeight(float distance)

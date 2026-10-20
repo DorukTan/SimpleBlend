@@ -76,7 +76,10 @@ namespace SimpleBlend
                     continue;
                 }
 
-                var result = VertexColorChannelUtility.BlendSelected(
+                var result = command.SurfaceWeightChannels > 0
+                    ? VertexSurfaceWeightUtility.Blend(source, target, command.Channel, weight,
+                        command.SurfaceWeightChannels, command.Mode == VertexPaintBrushMode.Erase)
+                    : VertexColorChannelUtility.BlendSelected(
                     source,
                     target,
                     command.Channel,

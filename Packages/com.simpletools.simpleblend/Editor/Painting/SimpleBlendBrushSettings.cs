@@ -15,6 +15,7 @@ namespace SimpleBlend.Editor
         [SerializeField] private float _radius = 1.25f;
         [SerializeField] private float _strength = 1f;
         [SerializeField] private float _adjustmentSensitivity = 1f;
+        [SerializeField] private int _surfaceWeightChannels;
         [SerializeField] private float _flow = 1f;
         [SerializeField] private bool _accumulate = true;
         [SerializeField] private Color _color = Color.red;
@@ -75,6 +76,12 @@ namespace SimpleBlend.Editor
         {
             get => _flow;
             set => _flow = value;
+        }
+
+        internal int SurfaceWeightChannels
+        {
+            get => _surfaceWeightChannels;
+            set => _surfaceWeightChannels = value == 2 || value == 3 ? value : 0;
         }
 
         internal float AdjustmentSensitivity
@@ -185,7 +192,8 @@ namespace SimpleBlend.Editor
                 modeOverride ?? _mode,
                 _channel,
                 _accumulate,
-                mask);
+                mask,
+                _surfaceWeightChannels);
         }
 
         internal void SetSampledColor(Color32 color)

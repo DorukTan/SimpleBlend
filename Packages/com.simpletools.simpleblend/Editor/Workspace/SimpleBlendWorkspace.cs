@@ -125,7 +125,11 @@ namespace SimpleBlend.Editor
                     EditorGUI.BeginChangeCheck();
                     _useSurfaces = EditorGUILayout.Popup("Paint workflow", _useSurfaces ? 0 : 1,
                         new[] { "Named surfaces", "Direct channels" }) == 0;
-                    if (EditorGUI.EndChangeCheck()) StopForSurfaceConfiguration();
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        StopForSurfaceConfiguration();
+                        if (!_useSurfaces) UseDirectChannels();
+                    }
                     var showBrush = !_useSurfaces || DrawSurfacePalette();
                     if (showBrush)
                     {
@@ -182,8 +186,7 @@ namespace SimpleBlend.Editor
                 if (_palette == null && GUILayout.Button("Create surface palette")) SurfacePaletteCreator.Open();
                 if (GUILayout.Button("Use Direct channels (no palette)"))
                 {
-                    StopForSurfaceConfiguration();
-                    _useSurfaces = false;
+                    UseDirectChannels();
                     Repaint();
                 }
             }
@@ -303,7 +306,18 @@ namespace SimpleBlend.Editor
                     EditorGUILayout.HelpBox("Choose a surface to set the brush. Advanced or overlay channel edits may no longer match a named choice.", MessageType.Warning);
                 if (_target.Mesh.subMeshCount > 1)
                     EditorGUILayout.HelpBox("The brush targets this section's vertices. Shared vertices can also change neighboring sections. Preview section only limits the diagnostic overlay; Material view keeps all real materials visible.", MessageType.Info);
-                EditorGUILayout.HelpBox("Base clears RGB toward the unpainted surface and preserves alpha. An overlay writes its channel without clearing other overlays. Choosing a surface sets Paint and this section's mask; other masks, size and strength are retained.", MessageType.None);
+                EditorGUILayout.HelpBox("Paint moves the blend toward the selected surface and reduces competing weights. Base reveals the unpainted surface. These are blended weights, not an ordered layer stack. Alpha stays unchanged.", MessageType.None);
+                for (var i = 0; i < _palette.SurfaceCount; i++)
+                    if (SurfacePaletteAuthoring.Matches(_palette, i, _materialSection, SimpleBlendBrushSettings.instance))
+                        EditorGUILayout.HelpBox("Selected: " + _palette.SurfaceName(i) + " · "
+                            + SurfaceOperationDescription(i, SimpleBlendBrushSettings.instance.Mode), MessageType.Info);
+                var heightContrast = _palette.Material.GetFloat("_HeightBlendStrength") > 0;
+                EditorGUI.BeginChangeCheck();
+                var blend = EditorGUILayout.Popup("Surface blend", heightContrast ? 1 : 0,
+                    new[] { "Smooth weights", "Height contrast" });
+                if (EditorGUI.EndChangeCheck()) SurfacePaletteAuthoring.SetHeightContrast(_palette, blend == 1);
+                if (heightContrast)
+                    EditorGUILayout.HelpBox("Height contrast sharpens transitions, even with flat height maps. Choose Smooth weights for a softer blend. This edits the shared palette material and supports Undo.", MessageType.Warning);
                 return true;
             }
         }
@@ -315,7 +329,8 @@ namespace SimpleBlend.Editor
             var rect = GUILayoutUtility.GetRect(0, 32, GUILayout.ExpandWidth(true));
             var style = new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleLeft, padding = new RectOffset(38, 6, 3, 3) };
             var surfaceName = _palette.SurfaceName(index);
-            var label = index == 0 ? (surfaceName == "Base" ? "Base (unpainted)" : "Base · " + surfaceName) : surfaceName;
+            var label = index == 0 ? (surfaceName == "Base" ? "Base (remaining weight)" : "Base · " + surfaceName)
+                : $"Overlay {index} · {surfaceName}";
             if (GUI.Toggle(rect, selected, new GUIContent(label, "Sets the existing brush's channel values and mesh-section mask. Does not change any material or paint until you stroke."), style) && !selected)
             {
                 SurfacePaletteAuthoring.SelectSurface(_palette, index, _materialSection, settings);
@@ -334,6 +349,22 @@ namespace SimpleBlend.Editor
         private static void StopForSurfaceConfiguration()
         {
             if (ToolManager.activeToolType == typeof(SimpleBlendPaintTool)) ToolManager.RestorePreviousTool();
+        }
+
+        private void UseDirectChannels()
+        {
+            StopForSurfaceConfiguration();
+            _useSurfaces = false;
+            SimpleBlendBrushSettings.instance.SurfaceWeightChannels = 0;
+            SimpleBlendBrushSettings.instance.SaveSettings();
+        }
+
+        private static string SurfaceOperationDescription(int surface, VertexPaintBrushMode mode)
+        {
+            if (mode == VertexPaintBrushMode.Smooth) return "Smooth averages neighboring surface weights";
+            if (mode == VertexPaintBrushMode.Sample) return "Sample reads values; reselect a surface before painting";
+            if (mode == VertexPaintBrushMode.Erase && surface != 0) return "erase this overlay; preserve other overlay weights";
+            return surface == 0 ? "reduce active overlays toward Base" : "paint toward this surface; competing weights decrease";
         }
     }
 }
