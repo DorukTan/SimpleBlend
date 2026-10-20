@@ -1,12 +1,13 @@
 # SimpleBlend
 
-SimpleBlend is an open-source Unity editor toolkit for painting per-renderer vertex colors and blending URP material layers.
+SimpleBlend is an open-source Unity editor toolkit for painting texture masks, editing per-renderer vertex colors and blending URP material layers.
 
 ## Start here
 
 - [Install and choose a revision](Documentation~/installation.md)
 - [Check compatibility and observed results](Documentation~/compatibility.md)
 - [Paint the first stroke](Documentation~/first-stroke.md)
+- [Paint detailed texture masks](Documentation~/texture-painting.md)
 - [Import the teaching samples](Documentation~/teaching-samples.md)
 - [Full documentation](Documentation~/index.md)
 
@@ -20,9 +21,9 @@ Only Windows / Unity `6000.4.8f1` / URP `17.4.0` / D3D11 is described as the obs
 
 ## Workflow and safety
 
-Select a supported renderer and use **GameObject > SimpleBlend > Enable Vertex Painting**. The Renderer context command is **Enable SimpleBlend Vertex Painting**. Choose channels, modes, previews and masks in the **SimpleBlend Brush** Scene view overlay. No collider is required.
+Open **Window > SimpleBlend > Workspace** to choose Texture paint or Vertex paint. No collider is required. The vertex-specific **GameObject > SimpleBlend > Enable Vertex Painting** command and **Enable SimpleBlend Vertex Painting** Renderer context command remain available, along with the **SimpleBlend Brush** vertex overlay.
 
-Default cubes only have corner vertices. For localized face strokes, initialize painting and use **Create Subdivided Paintable Copy** in the Inspector. This saves a new static mesh and renderer copy without editing the original. See [first stroke](Documentation~/first-stroke.md) for limits and Undo behavior.
+For detailed strokes on a default cube, open **Window > SimpleBlend > Workspace** and use **Texture paint**. Its explicit setup creates a uniquely unwrapped paint copy and saved blend-mask asset, then hides the original renderer with Undo. No subdivision is needed. See [texture painting](Documentation~/texture-painting.md) for ownership, saving and current limits. **Vertex paint** remains available; its strokes are still limited by the mesh's vertex density.
 
 Imported source meshes remain unchanged; serialized per-renderer `Color32[]` data is authoritative. Ordinary renderers use transient streams; skinned/static/GPU-resident cases use owned generated clones. Read [storage and ownership](Documentation~/data-safety.md) before editing prefabs or source topology.
 

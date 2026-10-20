@@ -27,6 +27,8 @@ namespace SimpleBlend.Editor.Tests
             try
             {
                 Assert.That(material.GetFloat("_LayerCount"), Is.EqualTo(expectedLayerCount));
+                Assert.That(material.GetFloat("_UseTextureWeights"), Is.Zero, "Existing materials remain vertex-painted.");
+                Assert.That(material.HasProperty("_BlendMask"), Is.True);
                 Assert.That(material.HasProperty("_BlendTransition"), Is.True);
                 Assert.That(material.GetFloat("_HeightBlendStrength"), Is.EqualTo(1), "Existing materials keep legacy height contrast until explicitly changed.");
                 Assert.That(material.HasProperty("_Cull"), Is.True);

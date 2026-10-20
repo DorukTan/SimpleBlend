@@ -16,6 +16,8 @@ namespace SimpleBlend.Editor
             var layerCount = SimpleBlendLayerBlendContract.GetLayerCount(material.shader.name);
             SynchronizeLayerCount(materialEditor, layerCount);
 
+            if (material.GetFloat("_UseTextureWeights") > 0.5f)
+                EditorGUILayout.HelpBox("Weights come from this object's painted blend mask in UV4, not vertex colors. Edit the mask in the SimpleBlend workspace.", MessageType.Info);
             EditorGUILayout.HelpBox(
                 layerCount == 3
                     ? "Unpainted = Base, Red = Layer 1, Green = Layer 2. Alpha remains free."

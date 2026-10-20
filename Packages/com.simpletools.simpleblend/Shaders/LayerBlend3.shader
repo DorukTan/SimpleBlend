@@ -6,6 +6,8 @@ Shader "SimpleBlend/Layer Blend 3"
         _BlendTransition("Height Transition", Range(0.001, 1.0)) = 0.2
         _HeightBlendStrength("Height Contrast", Range(0, 1)) = 1
         [HideInInspector] _LayerCount("Layer Count", Float) = 3
+        [HideInInspector] _UseTextureWeights("Use Texture Weights", Float) = 0
+        [HideInInspector] _BlendMask("Painted Blend Mask", 2D) = "black" {}
 
         [Header(Base Layer Unpainted)]
         [MainTexture] _Layer0Albedo("Base Albedo", 2D) = "white" {}

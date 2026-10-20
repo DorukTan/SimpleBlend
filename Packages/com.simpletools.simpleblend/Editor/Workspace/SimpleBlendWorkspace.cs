@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SimpleBlend.Editor
 {
-    internal sealed class SimpleBlendWorkspace : EditorWindow
+    internal sealed partial class SimpleBlendWorkspace : EditorWindow
     {
         private readonly SimpleBlendBrushControls _brush = new SimpleBlendBrushControls();
         private PaintWorkspaceTarget _target;
@@ -38,6 +38,7 @@ namespace SimpleBlend.Editor
             SimpleBlendPaintFeedback.Changed += Repaint;
             SurfacePaletteCreator.Created += OnPaletteCreated;
             SimpleBlendTargetLock.Changed += Refresh;
+            SimpleBlendTexturePaintTool.Changed += Repaint;
             Refresh();
         }
 
@@ -53,6 +54,7 @@ namespace SimpleBlend.Editor
             SimpleBlendPaintFeedback.Changed -= Repaint;
             SurfacePaletteCreator.Created -= OnPaletteCreated;
             SimpleBlendTargetLock.Changed -= Refresh;
+            SimpleBlendTexturePaintTool.Changed -= Repaint;
             // The Scene tool owns its lifetime; closing a settings window must not take another tool's input.
         }
 
@@ -93,6 +95,7 @@ namespace SimpleBlend.Editor
             EditorGUIUtility.labelWidth = Mathf.Clamp(position.width * 0.4f, 112, 160);
             try
             {
+                if (DrawPaintBackend()) return;
                 using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
                 {
                     GUILayout.Label(SimpleBlendEditorIcons.Content("Paint", " Paint", "Paint mesh vertices."), EditorStyles.boldLabel);
@@ -348,6 +351,7 @@ namespace SimpleBlend.Editor
 
         private static void StopForSurfaceConfiguration()
         {
+            SimpleBlendTexturePaintTool.Stop();
             if (ToolManager.activeToolType == typeof(SimpleBlendPaintTool)) ToolManager.RestorePreviousTool();
         }
 
