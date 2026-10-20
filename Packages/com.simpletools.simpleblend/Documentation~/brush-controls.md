@@ -1,6 +1,18 @@
 # Brush controls and exact behavior
 
-The **SimpleBlend Brush** overlay appears in the Scene view. The [paint workspace](workspace.md) uses the same controls and brush settings. These controls configure a pure brush command; neither settings surface owns paint data or mesh storage. Operation, Paint channel, View, Channel values, Brush size (world-space radius), Strength and Fill scope are shown as relevant to the operation. Flow, Falloff, Accumulate and masks are grouped under **More paint options**. Collapsed options remain effective.
+The **SimpleBlend Brush** overlay appears in the Scene view. The [paint workspace](workspace.md) uses the same controls and brush settings. These controls configure a pure brush command; neither settings surface owns paint data or mesh storage. Operation, Paint channel, View, Channel values, Brush radius (m), Strength and Fill scope are shown as relevant to the operation. Flow, Falloff, Accumulate and masks are grouped under **More paint options**. Collapsed options remain effective.
+
+## Radius and vertex influence
+
+Brush radius is a world-space spherical distance from the hit point; diameter is twice the shown value. The outer ring is its intersection with the hit plane, not a guarantee of a uniformly painted disk. Default falloff reaches zero at the outer edge. Radius can reach through thin geometry; the existing normal/section/value masks still determine eligibility. This change does not introduce screen-space projection or automatic backface rejection.
+
+For Paint, Erase and Smooth, dots mark reachable vertices that pass masks and have positive input influence. Dot intensity follows the brush command's falloff × Strength × Flow. During capped strokes, threshold masking uses the stroke baseline. Radius/strength adjustment previews use the temporary gesture values without saving them. Fill and Sample do not display a radius-based vertex footprint.
+
+Dots show input influence, not shader opacity, final stored channel values or a promise of additional changes: accumulation, capped-stroke limits, byte rounding, already-matching values and material blending affect results. Occluded markers respect Scene depth. A coarse mesh can have no dots inside a small ring; increase radius or explicitly create a more detailed copy rather than expecting new vertices to appear.
+
+Preview work is bounded to 8,192 spatial-cell/vertex checks, at most 2,048 candidate results and 256 markers per repaint. **Vertex preview limited** discloses truncation or an invalid radius; absence of dots in a limited preview does not prove there are no reachable vertices. Painting queries retain their normal complete results. Preview does not write colors, preferences, materials or Undo records.
+
+Verification (2026-10-20): 318 isolated Unity 6000.4.8f1 EditMode tests passed, no failures/skips, including 11 footprint cases. Tests cover exact input weights/positions, zero strength/flow, threshold baselines, non-radius operations, read-only settings/colors/Undo, gesture overrides, marker/work budgets, dense cells without matches and invalid radii. Eleven changed source/meta files matched the isolated copies. Documentation, roadmap, scoped whitespace and 63 icon checks passed. Native marker visibility, perceived intensity, compact text and owner comparison with painting remain pending; these tests are not a visual verdict.
 
 ## Channels
 

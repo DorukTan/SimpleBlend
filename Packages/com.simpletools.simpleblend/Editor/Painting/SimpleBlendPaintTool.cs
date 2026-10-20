@@ -17,6 +17,7 @@ namespace SimpleBlend.Editor
         private readonly VertexColorPreviewRenderer _preview = new VertexColorPreviewRenderer();
         private readonly VertexPaintStrokeSession _stroke = new VertexPaintStrokeSession();
         private readonly BrushAdjustmentSession _adjustment = new BrushAdjustmentSession();
+        private readonly BrushFootprintPreview _footprint = new BrushFootprintPreview();
         private int _ownedControl;
         private bool _gestureErase;
         private SceneView _inputView;
@@ -119,7 +120,7 @@ namespace SimpleBlend.Editor
                 hasHit && !currentEvent.alt && _pointerOutsideView != sceneView ? hit.SubmeshIndex : -1);
             if (currentEvent.type == EventType.Repaint && hasHit)
             {
-                DrawBrushDisc(hit, settings);
+                DrawBrushDisc(data, hit, settings);
             }
 
             if (currentEvent.type == EventType.MouseMove)
@@ -330,7 +331,7 @@ namespace SimpleBlend.Editor
                     Mathf.Clamp(input.mousePosition.y + 16, 0, Mathf.Max(0, view.position.height - 24)), width, 24);
                 GUI.Label(labelRect,
                     _adjustment.Kind == BrushAdjustment.Radius
-                        ? $"Brush size: {_adjustment.Value:0.####} m"
+                        ? $"Brush radius: {_adjustment.Value:0.####} m"
                         : $"Strength: {_adjustment.Value:0.###}", EditorStyles.helpBox);
                 Handles.EndGUI();
             }
@@ -339,7 +340,7 @@ namespace SimpleBlend.Editor
 
         internal static bool ShouldReleaseForFocusLoss(bool ownsGesture, bool ownerFocused) => ownsGesture && !ownerFocused;
 
-        private void DrawBrushDisc(MeshRaycastHit hit, SimpleBlendBrushSettings settings)
+        private void DrawBrushDisc(VertexPaintData data, MeshRaycastHit hit, SimpleBlendBrushSettings settings)
         {
             var radius = _adjustment.Kind == BrushAdjustment.Radius ? _adjustment.Value
                 : settings.Mode == VertexPaintBrushMode.Fill
@@ -357,6 +358,23 @@ namespace SimpleBlend.Editor
                     hit.Point,
                     hit.Point + hit.Normal * Mathf.Min(radius * 0.25f, 0.25f),
                     2f);
+                if (settings.Mode != VertexPaintBrushMode.Fill && settings.Mode != VertexPaintBrushMode.Sample)
+                {
+                    var command = settings.CreatePreviewCommand(hit.Point,
+                        _gestureErase ? VertexPaintBrushMode.Erase : (VertexPaintBrushMode?)null,
+                        _adjustment.Kind == BrushAdjustment.Radius ? _adjustment.Value : (float?)null,
+                        _adjustment.Kind == BrushAdjustment.Strength ? _adjustment.Value : (float?)null);
+                    var maskColors = _stroke.IsActive && !command.Accumulate ? _stroke.MaskBaseline : null;
+                    _footprint.Evaluate(_cache, data, command, maskColors);
+                    var color = Handles.color;
+                    foreach (var point in _footprint.Points)
+                    {
+                        using (new Handles.DrawingScope(new Color(color.r, color.g, color.b, point.Weight)))
+                            Handles.DotHandleCap(0, point.Position, Quaternion.identity,
+                                HandleUtility.GetHandleSize(point.Position) * 0.025f, EventType.Repaint);
+                    }
+                    if (!_footprint.IsComplete) Handles.Label(hit.Point, "Vertex preview limited");
+                }
             }
 
             Handles.zTest = previousZTest;

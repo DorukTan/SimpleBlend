@@ -153,6 +153,9 @@ namespace SimpleBlend.Editor
             _grid.QuerySphere(center, radius, results);
         }
 
+        internal bool QueryPreviewVertices(Vector3 center, float radius, List<int> results)
+            => _grid.QuerySphereLimited(center, radius, results, 8192, 2048);
+
         private void RebuildWorldData(Matrix4x4 localToWorld)
         {
             _localToWorld = localToWorld;

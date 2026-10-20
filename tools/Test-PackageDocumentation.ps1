@@ -46,4 +46,6 @@ if (!$workspace.Contains('Assign palette material to this slot')) { throw 'Docum
 foreach ($label in @('Lock paint target','Unlock paint target')) {
     if (!$workspace.Contains($label)) { throw ('Documented target-lock control changed: ' + $label) }
 }
-[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 18; indexedPages = 14; result = 'Passed' } | ConvertTo-Json
+$brushControls = [IO.File]::ReadAllText((Join-Path $root 'Editor/Painting/SimpleBlendBrushControls.cs'))
+if (!$brushControls.Contains('Brush radius (m)')) { throw 'Documented world-space radius label changed.' }
+[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 19; indexedPages = 14; result = 'Passed' } | ConvertTo-Json
