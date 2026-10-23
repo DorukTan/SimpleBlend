@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SimpleBlend
 {
-    /// <summary>Owns a painted mesh, its blend material and the authoritative linear mask pixels.</summary>
+    /// <summary>References the paint mesh and owns a blend material and the authoritative linear mask pixels.</summary>
     public sealed class TexturePaintAsset : ScriptableObject
     {
         [SerializeField] private Mesh _mesh;

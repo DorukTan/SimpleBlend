@@ -25,14 +25,19 @@ namespace SimpleBlend.Editor
         internal bool Active => _paint != null;
 
         internal void Begin(TexturePaintTarget target, TexturePaintAtlas atlas, int surface, bool erase, VertexBrushCommand command,
-            TextureBrushTip tip = null, TexturePaintVisibility visibility = null)
+            TextureBrushTip tip = null, TexturePaintVisibility visibility = null, int? materialSection = null)
         {
             if (Active) throw new InvalidOperationException("Finish the current texture stroke first.");
-            var problem = Problem(target);
+            var problem = Problem(target, materialSection);
             if (!string.IsNullOrEmpty(problem)) throw new InvalidOperationException(problem);
-            if (surface < 0 || surface >= target.Paint.SurfaceCount) throw new ArgumentOutOfRangeException(nameof(surface));
-            _paint = target.Paint;
-            _atlas = atlas ?? throw new ArgumentNullException(nameof(atlas));
+            var section = materialSection ?? target.MaterialSection;
+            var paint = target.PaintForSection(section);
+            if (atlas == null) throw new ArgumentNullException(nameof(atlas));
+            if (atlas.Mesh != paint.Mesh || atlas.MaterialSection != section || atlas.Resolution != paint.Mask.width)
+                throw new ArgumentException("The paint atlas must match the prepared mesh section and mask resolution.", nameof(atlas));
+            if (surface < 0 || surface >= paint.SurfaceCount) throw new ArgumentOutOfRangeException(nameof(surface));
+            _paint = paint;
+            _atlas = atlas;
             _baseline = (Color32[])_paint.Pixels.Clone();
             _maximum = new float[_baseline.Length];
             _atlas.SetTransform(target.transform.localToWorldMatrix);
@@ -140,20 +145,22 @@ namespace SimpleBlend.Editor
             _needsUpload = false;
         }
 
-        internal static string Problem(TexturePaintTarget target)
+        internal static string Problem(TexturePaintTarget target, int? materialSection = null)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return "Leave Play mode before painting.";
             if (target == null || !target.gameObject.activeInHierarchy || EditorUtility.IsPersistent(target)) return "Select an active scene texture paint object.";
-            var paint = target.Paint;
-            if (paint == null || paint.Mesh == null || paint.Mask == null || paint.Material == null) return "The texture paint asset is incomplete. Restore its missing references.";
+            var section = materialSection ?? target.MaterialSection;
+            var paint = target.PaintForSection(section);
+            if (paint == null) return "Prepare this material section before painting it.";
+            if (paint.Mesh == null || paint.Mask == null || paint.Material == null) return "The texture paint asset is incomplete. Restore its missing references.";
             if (!paint.Mesh.isReadable || !paint.Mask.isReadable || paint.Pixels.Length != paint.Mask.width * paint.Mask.height)
                 return "The paint mesh and mask must remain readable with matching stored pixels.";
             if (paint.SurfaceCount < 1 || paint.SurfaceCount > 4) return "The paint asset needs one to four surfaces, including Base.";
             if (target.GetComponent<MeshFilter>()?.sharedMesh != paint.Mesh) return "Restore this object's owned paint mesh before painting.";
             var renderer = target.GetComponent<MeshRenderer>();
             var materials = renderer == null ? Array.Empty<Material>() : renderer.sharedMaterials;
-            if (renderer == null || !renderer.enabled || target.MaterialSection < 0 || target.MaterialSection >= paint.Mesh.subMeshCount
-                || target.MaterialSection >= materials.Length || materials[target.MaterialSection] != paint.Material)
+            if (renderer == null || !renderer.enabled || section < 0 || section >= paint.Mesh.subMeshCount
+                || section >= materials.Length || materials[section] != paint.Material)
                 return "Enable the renderer and restore its painted material slot before painting.";
             if (!paint.Material.HasProperty("_UseTextureWeights") || paint.Material.GetFloat("_UseTextureWeights") < 0.5f
                 || paint.Material.GetTexture("_BlendMask") != paint.Mask) return "Restore the painted material's texture-weight mode and blend mask.";
