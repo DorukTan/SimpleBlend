@@ -89,9 +89,11 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(tip.Evaluate(new Vector2(0, 0.8f), Linear), Is.EqualTo(1));
         }
 
-        [TestCase(TextureBrushMaskMode.DarkPixels)]
-        [TestCase(TextureBrushMaskMode.Alpha)]
-        public void CustomTipGpuSnapshotReadsMaskWithoutChangingTheSavedTexture(TextureBrushMaskMode mode)
+        [TestCase(TextureBrushMaskMode.DarkPixels, false)]
+        [TestCase(TextureBrushMaskMode.Alpha, false)]
+        [TestCase(TextureBrushMaskMode.DarkPixels, true)]
+        [TestCase(TextureBrushMaskMode.Alpha, true)]
+        public void CustomTipGpuSnapshotReadsMaskWithoutChangingTheSavedTexture(TextureBrushMaskMode mode, bool invert)
         {
             var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false, true);
             texture.SetPixels(new[] { Color.black, Color.white, Color.clear, Color.black }); texture.Apply();
@@ -101,12 +103,119 @@ namespace SimpleBlend.Editor.Tests
             texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             Assert.That(texture.isReadable, Is.False);
             var before = System.IO.File.ReadAllBytes(path);
-            var tip = TextureBrushTip.Capture(new TextureBrushShape { Tip = TextureBrushTipKind.Custom, Texture = texture, MaskMode = mode, Hardness = 1 });
-            Assert.That(tip.Evaluate(new Vector2(-0.99f, -0.99f), Linear), Is.GreaterThan(0.97f));
-            Assert.That(tip.Evaluate(new Vector2(0.99f, -0.99f), Linear), Is.EqualTo(mode == TextureBrushMaskMode.Alpha ? 1 : 0).Within(0.03f));
-            Assert.That(tip.Evaluate(new Vector2(-0.99f, 0.99f), Linear), Is.LessThan(0.03f));
+            var metadata = System.IO.File.ReadAllBytes(path + ".meta");
+            var shape = new TextureBrushShape { Tip = TextureBrushTipKind.Custom, Texture = texture, MaskMode = mode, Hardness = 1, Invert = invert };
+            var cache = new TextureBrushTipCache();
+            Assert.That(cache.TryGet(shape, out var tip, out var error), Is.True, error);
+            Assert.That(tip.Evaluate(new Vector2(-0.99f, -0.99f), Linear), Is.EqualTo(invert ? 0 : 1).Within(0.03f));
+            Assert.That(tip.Evaluate(new Vector2(0.99f, -0.99f), Linear), Is.EqualTo((mode == TextureBrushMaskMode.Alpha) != invert ? 1 : 0).Within(0.03f));
+            Assert.That(tip.Evaluate(new Vector2(-0.99f, 0.99f), Linear), Is.EqualTo(invert && mode == TextureBrushMaskMode.Alpha ? 1 : 0).Within(0.03f));
+            shape.Invert = !invert;
+            Assert.That(cache.TryGet(shape, out var reframed, out error), Is.True, error);
+            Assert.That(reframed.Evaluate(new Vector2(-0.99f, 0.99f), Linear), Is.EqualTo(!invert && mode == TextureBrushMaskMode.Alpha ? 1 : 0).Within(0.03f));
+            Assert.That(tip.Evaluate(new Vector2(-0.99f, -0.99f), Linear), Is.EqualTo(invert ? 0 : 1).Within(0.03f), "Changing cached settings must not mutate an earlier stroke snapshot.");
             Assert.That(texture.isReadable, Is.False);
             Assert.That(System.IO.File.ReadAllBytes(path), Is.EqualTo(before));
+            Assert.That(System.IO.File.ReadAllBytes(path + ".meta"), Is.EqualTo(metadata));
+        }
+
+        [TestCase(TextureBrushMaskMode.DarkPixels, 0.15f)]
+        [TestCase(TextureBrushMaskMode.Alpha, 0.4f)]
+        public void InversionPrecedesFalloffAndRetainsTheBoundedFootprint(TextureBrushMaskMode mode, float expected)
+        {
+            var shape = new TextureBrushShape { Tip = TextureBrushTipKind.Custom, MaskMode = mode, Invert = true };
+            var tip = new TextureBrushTip(shape, new[] { 0.2f }, 1, 1, new[] { 0.5f });
+            Assert.That(tip.Evaluate(new Vector2(0.5f, 0), Linear), Is.EqualTo(expected).Within(0.0001f));
+            Assert.That(tip.Evaluate(new Vector2(1.01f, 0), Linear), Is.Zero);
+            Assert.That(tip.Evaluate(new Vector2(0, -1.01f), Linear), Is.Zero);
+        }
+
+        [Test]
+        public void ReframedInversionOwnsItsMaskAndAlphaSnapshots()
+        {
+            var shape = new TextureBrushShape { Tip = TextureBrushTipKind.Custom, Hardness = 1 };
+            var mask = new[] { 0.1f, 0.2f }; var alpha = new[] { 0.4f, 0.8f };
+            var original = new TextureBrushTip(shape, mask, 2, 1, alpha);
+            shape.Invert = true; shape.Angle = 90;
+            var inverted = original.Reframe(shape);
+            mask[0] = 1; alpha[0] = 0; shape.Invert = false;
+            Assert.That(original.Evaluate(new Vector2(-1, 0), Linear), Is.EqualTo(0.1f).Within(0.0001f));
+            Assert.That(inverted.Evaluate(new Vector2(0, -1), Linear), Is.EqualTo(0.3f).Within(0.0001f));
+            Assert.That(inverted.Evaluate(new Vector2(0.6f, 0), Linear), Is.Zero, "Rotation must retain the image aspect ratio.");
+        }
+
+        [TestCase(TextureBrushTipKind.Round)]
+        [TestCase(TextureBrushTipKind.Flat)]
+        [TestCase(TextureBrushTipKind.Chalk)]
+        public void InversionDoesNotChangeBuiltInTipCoverage(TextureBrushTipKind kind)
+        {
+            var shape = new TextureBrushShape { Tip = kind };
+            var original = new TextureBrushTip(shape); shape.Invert = true;
+            var inverted = new TextureBrushTip(shape);
+            foreach (var point in new[] { Vector2.zero, new Vector2(0.3f, -0.5f), Vector2.one })
+                Assert.That(inverted.Evaluate(point, Linear), Is.EqualTo(original.Evaluate(point, Linear)));
+        }
+
+        [TestCase(0f, false)]
+        [TestCase(90f, false)]
+        [TestCase(0f, true)]
+        [TestCase(90f, true)]
+        public void InvertedCustomDabMatchesEvaluatorOnTransformedMeshAndUndo(float angle, bool erase)
+        {
+            var target = Target();
+            target.transform.SetPositionAndRotation(new Vector3(2, 3, 4), Quaternion.Euler(20, 35, 15));
+            target.transform.localScale = new Vector3(1.3f, 0.8f, 1.1f);
+            var atlas = Atlas(target);
+            foreach (var pixel in atlas.Pixels) target.Paint.Pixels[pixel] = new Color32((byte)(erase ? 255 : 0), 0, 0, 37);
+            target.Paint.CommitPixels();
+            var shape = new TextureBrushShape { Tip = TextureBrushTipKind.Custom, Invert = true, Angle = angle, Roundness = 0.6f };
+            var tip = new TextureBrushTip(shape, new[] { 0f, 1f, 0f, 1f }, 2, 2);
+            var before = (Color32[])target.Paint.Pixels.Clone(); Undo.ClearAll();
+            var command = Command(0.6f, 0.5f);
+            var center = target.transform.TransformPoint(new Vector3(0, 0, -0.5f));
+            var normal = target.transform.TransformDirection(Vector3.back);
+            var preferred = target.transform.right;
+            TextureBrushTip.Frame(normal, preferred, out var right, out var up);
+            var stroke = new TexturePaintStroke(); stroke.Begin(target, atlas, 1, erase, command, tip);
+            stroke.Dab(center, normal, preferredRight: preferred); Assert.That(stroke.End(), Is.GreaterThan(0));
+            var tested = 0;
+            foreach (var pixel in atlas.Pixels)
+            {
+                var delta = target.transform.TransformPoint(atlas.Positions[pixel]) - center;
+                if (Mathf.Abs(Vector3.Dot(delta, normal)) > 0.0001f) continue;
+                var point = new Vector2(Vector3.Dot(delta, right), Vector3.Dot(delta, up)) / command.Radius;
+                var expected = Mathf.RoundToInt(255 * tip.Evaluate(point, command.Falloff) * command.Strength * command.Flow);
+                Assert.That(target.Paint.Pixels[pixel].r, Is.EqualTo(erase ? 255 - expected : expected).Within(1));
+                Assert.That(target.Paint.Pixels[pixel].a, Is.EqualTo(37)); tested++;
+            }
+            Assert.That(tested, Is.GreaterThan(20));
+            var after = (Color32[])target.Paint.Pixels.Clone();
+            Undo.PerformUndo(); Assert.That(target.Paint.Pixels, Is.EqualTo(before));
+            Undo.PerformRedo(); Assert.That(target.Paint.Pixels, Is.EqualTo(after));
+        }
+
+        [Test]
+        public void CustomPresetReloadRetainsInversionAndBuiltInsResetIt()
+        {
+            var texture = new Texture2D(1, 1);
+            AssetDatabase.CreateAsset(texture, _assets.AssetPath + "/PresetTip.asset");
+            var settings = SimpleBlendBrushSettings.instance;
+            settings.TextureBrush = new TextureBrushShape { Tip = TextureBrushTipKind.Custom, Texture = texture, Invert = true, MaskMode = TextureBrushMaskMode.Alpha };
+            var path = _assets.AssetPath + "/InvertedPreset.asset";
+            var preset = SimpleBlendBrushPreset.SaveNew(path, settings);
+            Resources.UnloadAsset(preset);
+            preset = AssetDatabase.LoadAssetAtPath<SimpleBlendBrushPreset>(path);
+            settings.TextureBrush.Invert = false; preset.Apply(settings);
+            Assert.That(settings.TextureBrush.Invert, Is.True);
+            Assert.That(settings.TextureBrush.MaskMode, Is.EqualTo(TextureBrushMaskMode.Alpha));
+            Assert.That(settings.TextureBrush.Texture, Is.EqualTo(texture));
+            settings.TextureBrush.Invert = false; preset.Apply(settings);
+            Assert.That(settings.TextureBrush.Invert, Is.True, "Preset settings must be copied, not shared.");
+            for (var i = 1; i <= 5; i++)
+            {
+                settings.TextureBrush.Invert = true; SimpleBlendBrushPreset.ApplyBuiltIn(i, settings);
+                Assert.That(settings.TextureBrush.Invert, Is.False);
+            }
         }
 
         [Test]
@@ -240,6 +349,7 @@ namespace SimpleBlend.Editor.Tests
                 var shape = SimpleBlendBrushSettings.instance.TextureBrush;
                 Assert.That(shape.Tip, Is.EqualTo(TextureBrushTipKind.Round)); Assert.That(shape.Spacing, Is.EqualTo(0.1f));
                 Assert.That(shape.Smoothing, Is.Zero); Assert.That(shape.Hardness, Is.Zero); Assert.That(shape.LimitOpacity, Is.False);
+                Assert.That(shape.Invert, Is.False);
             }
             finally { Object.DestroyImmediate(preset); }
         }

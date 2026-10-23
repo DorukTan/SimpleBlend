@@ -13,6 +13,7 @@ namespace SimpleBlend.Editor
         [SerializeField] internal TextureBrushTipKind Tip;
         [SerializeField] internal Texture2D Texture;
         [SerializeField] internal TextureBrushMaskMode MaskMode;
+        [SerializeField] internal bool Invert;
         [SerializeField, Range(0, 1)] internal float Hardness;
         [SerializeField, Range(0.05f, 1)] internal float Roundness = 1;
         [SerializeField, Range(-180, 180)] internal float Angle;
@@ -22,7 +23,7 @@ namespace SimpleBlend.Editor
 
         internal TextureBrushShape Copy() => new TextureBrushShape
         {
-            Tip = Tip, Texture = Texture, MaskMode = MaskMode,
+            Tip = Tip, Texture = Texture, MaskMode = MaskMode, Invert = Invert,
             Hardness = Clamp(Hardness, 0, 1, 0), Roundness = Clamp(Roundness, 0.05f, 1, 1),
             Angle = Clamp(Angle, -180, 180, 0), Spacing = Clamp(Spacing, 0.01f, 2, 0.1f),
             Smoothing = Clamp(Smoothing, 0, 1, 0), LimitOpacity = LimitOpacity
@@ -37,6 +38,7 @@ namespace SimpleBlend.Editor
     {
         private readonly TextureBrushShape _shape;
         private readonly float[] _mask;
+        private readonly float[] _alpha;
         private readonly int _width, _height;
         private readonly float _cos, _sin;
         internal bool LimitOpacity => _shape.LimitOpacity;
@@ -44,12 +46,13 @@ namespace SimpleBlend.Editor
         internal float Smoothing => _shape.Smoothing;
         internal float BoundingRadius => _shape.Tip == TextureBrushTipKind.Flat || _shape.Tip == TextureBrushTipKind.Custom
             ? Mathf.Sqrt(1 + _shape.Roundness * _shape.Roundness) : 1;
-        internal TextureBrushTip Reframe(TextureBrushShape shape) => new TextureBrushTip(shape, _mask, _width, _height);
+        internal TextureBrushTip Reframe(TextureBrushShape shape) => new TextureBrushTip(shape, _mask, _width, _height, _alpha);
 
-        internal TextureBrushTip(TextureBrushShape shape, float[] mask = null, int width = 0, int height = 0)
+        internal TextureBrushTip(TextureBrushShape shape, float[] mask = null, int width = 0, int height = 0, float[] alpha = null)
         {
             _shape = (shape ?? new TextureBrushShape()).Copy();
             _mask = mask == null ? null : (float[])mask.Clone();
+            _alpha = alpha == null ? null : (float[])alpha.Clone();
             _width = width; _height = height;
             _cos = Mathf.Cos(_shape.Angle * Mathf.Deg2Rad); _sin = Mathf.Sin(_shape.Angle * Mathf.Deg2Rad);
         }
@@ -73,13 +76,15 @@ namespace SimpleBlend.Editor
                 readback.ReadPixels(new Rect(0, 0, width, height), 0, 0); readback.Apply(false, false);
                 var colors = readback.GetPixels32();
                 var mask = new float[colors.Length];
+                var alpha = new float[colors.Length];
                 for (var i = 0; i < colors.Length; i++)
                 {
                     var color = colors[i];
+                    alpha[i] = color.a / 255f;
                     mask[i] = color.a / 255f * (shape.MaskMode == TextureBrushMaskMode.Alpha ? 1
                         : 1 - (0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b) / 255f);
                 }
-                return new TextureBrushTip(shape, mask, width, height);
+                return new TextureBrushTip(shape, mask, width, height, alpha);
             }
             finally
             {
@@ -115,11 +120,21 @@ namespace SimpleBlend.Editor
                 var py = Mathf.Clamp01(y * 0.5f + 0.5f) * (_height - 1);
                 var ix = Mathf.FloorToInt(px); var iy = Mathf.FloorToInt(py);
                 var nx = Mathf.Min(ix + 1, _width - 1); var ny = Mathf.Min(iy + 1, _height - 1);
-                weight *= Mathf.Lerp(Mathf.Lerp(_mask[iy * _width + ix], _mask[iy * _width + nx], px - ix),
-                    Mathf.Lerp(_mask[ny * _width + ix], _mask[ny * _width + nx], px - ix), py - iy);
+                var mask = Sample(_mask, ix, iy, nx, ny, px - ix, py - iy);
+                if (_shape.Invert)
+                {
+                    var ceiling = _shape.MaskMode == TextureBrushMaskMode.DarkPixels && _alpha != null
+                        && _alpha.Length == _mask.Length ? Sample(_alpha, ix, iy, nx, ny, px - ix, py - iy) : 1;
+                    mask = Mathf.Clamp01(ceiling - mask);
+                }
+                weight *= mask;
             }
             return float.IsFinite(weight) ? Mathf.Clamp01(weight) : 0;
         }
+
+        private float Sample(float[] values, int ix, int iy, int nx, int ny, float x, float y)
+            => Mathf.Lerp(Mathf.Lerp(values[iy * _width + ix], values[iy * _width + nx], x),
+                Mathf.Lerp(values[ny * _width + ix], values[ny * _width + nx], x), y);
 
         internal Vector2 Boundary(float radians)
         {
