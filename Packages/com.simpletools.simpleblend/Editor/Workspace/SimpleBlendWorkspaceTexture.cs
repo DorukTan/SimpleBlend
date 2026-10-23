@@ -148,6 +148,10 @@ namespace SimpleBlend.Editor
                 {
                     shape.Texture = (Texture2D)EditorGUILayout.ObjectField("Tip texture", shape.Texture, typeof(Texture2D), false);
                     shape.MaskMode = (TextureBrushMaskMode)EditorGUILayout.EnumPopup("Tip mask", shape.MaskMode);
+                    shape.Invert = EditorGUILayout.Toggle(new GUIContent("Invert tip",
+                        shape.MaskMode == TextureBrushMaskMode.DarkPixels
+                            ? "Paint light pixels instead of dark pixels. Transparent areas stay empty."
+                            : "Reverse alpha: transparent areas inside the tip paint; opaque areas stay empty."), shape.Invert);
                 }
                 _textureShapeOptions = EditorGUILayout.Foldout(_textureShapeOptions, "Brush shape", true);
                 if (_textureShapeOptions)

@@ -17,7 +17,11 @@ The compact tip/stroke preview shows the selected tip evaluator, spacing, flow a
 - **Angle**: rotates the tip in the projected surface plane. Orientation is relative to the Scene camera's right axis captured at stroke start; rotating the camera between strokes can change tip orientation on the object.
 - **Falloff**: retains the existing curve, remapped by hardness. This keeps curve-based brush customization available.
 
-Custom tips require a saved Texture2D asset. **Tip mask > Dark Pixels** paints dark areas on white, multiplied by alpha; **Alpha** uses alpha alone. Transparent areas do not paint. The image fits within the tip bounds without stretching its source aspect ratio, then roundness/rotation apply. The brush snapshots at most 256 × 256 linear samples through GPU readback, so imported textures do not need Read/Write enabled. Import settings and source texture files are not modified. This is not ABR import or a Photoshop-compatible brush engine.
+Custom tips require a saved Texture2D asset. **Tip mask > Dark Pixels** paints dark areas on white, multiplied by alpha; **Alpha** uses alpha alone. Without inversion, transparent areas do not paint. The image fits within the tip bounds without stretching its source aspect ratio, then roundness/rotation apply. The brush snapshots at most 256 × 256 linear samples through GPU readback, so imported textures do not need Read/Write enabled. Import settings and source texture files are not modified. This is not ABR import or a Photoshop-compatible brush engine.
+
+Custom-tip inversion reverses the selected mask, not the entire stroke influence. In **Dark Pixels** mode, it paints light pixels instead of dark pixels while retaining source alpha: fully transparent pixels still do not paint. In **Alpha** mode, it uses one minus source alpha: transparent areas inside the tip footprint become paintable and opaque areas become empty. Neither mode paints outside the rotated, aspect-correct tip boundary. Falloff, opacity and flow still reduce coverage normally. Painting and the diagnostic preview share this evaluator. Changing inversion creates a new immutable tip snapshot without changing an existing stroke or rewriting the source image. Built-in tips ignore inversion, and choosing a built-in preset resets it.
+
+Choose **Brush tip > Custom**, then enable **Invert tip** directly below **Tip mask**. The tooltip describes the currently selected mask mode. Toggling inversion finishes the current stroke and saves the brush setting without stopping the painting tool; the diagnostic preview updates to the new tip. The checkbox is hidden for built-in tips.
 
 ## Stroke controls
 
@@ -35,9 +39,11 @@ Build-up retains floating-point coverage throughout each stroke and derives the 
 
 ## Save a brush
 
-**Save preset…** retains tip type, custom texture/mask interpretation, hardness, roundness, angle, spacing, smoothing and opacity-limit choice, in addition to radius, strength, flow, stroke behavior and falloff. Selecting a Saved preset applies independent setting/curve copies; manual edits do not rewrite the preset. Keep custom tip textures alongside the preset in the project. Global brush preferences may refer to unavailable textures when switching projects; choose a valid texture or built-in tip in that project.
+**Save preset…** retains tip type, custom texture/mask interpretation and inversion, hardness, roundness, angle, spacing, smoothing and opacity-limit choice, in addition to radius, strength, flow, stroke behavior and falloff. Selecting a Saved preset applies independent setting/curve copies; manual edits do not rewrite the preset. Existing preferences and presets without an inversion field remain non-inverted. Keep custom tip textures alongside the preset in the project. Global brush preferences may refer to unavailable textures when switching projects; choose a valid texture or built-in tip in that project.
 
 ## Verification boundary
+
+The custom-tip inversion follow-up on 2026-10-23 passed all 493 isolated editor tests, including 13 added cases. Coverage includes both mask modes, retained transparency, inversion before falloff, rotated aspect-correct bounds, immutable cached snapshots, source PNG and importer metadata preservation, preset reload and built-in reset, and actual Paint/Erase mask writes with opacity/flow and Undo/redo on a rotated, nonuniformly scaled mesh. After adding the Workspace checkbox, compilation and all 45 brush-stroke tests passed in the isolated project. The full suite was not repeated for this control-only addition, and native visual acceptance is not recorded.
 
 The low-flow follow-up on 2026-10-23 passed all 415 isolated editor tests, including nine new accumulation cases. Before the fix, four regression cases failed: 600 dabs at 1% flow stalled at 205/255 for Paint and 50/255 for Erase, and 100 sub-byte dabs made no change in either action. The fixed tests cover convergence, competing weights, alpha preservation, opacity-limited and capped behavior, independent surface strokes and Undo/redo. This is numerical and persistence evidence, not native brush-feel acceptance.
 
