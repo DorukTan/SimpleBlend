@@ -64,6 +64,7 @@ namespace SimpleBlend.Editor
         internal static void Configure(TexturePaintTarget target, int surface, bool erase)
         {
             if (!IsActiveFor(target)) return;
+            if (Surface != surface || Erase != erase) TextureWeatheringSession.CancelFor(target);
             _active.Finish();
             Surface = Mathf.Clamp(surface, 0, target.Paint.SurfaceCount - 1);
             Erase = erase;
@@ -98,6 +99,7 @@ namespace SimpleBlend.Editor
         {
             var problem = TexturePaintStroke.Problem(target);
             if (!string.IsNullOrEmpty(problem)) throw new InvalidOperationException(problem);
+            TextureWeatheringSession.CancelFor(target);
             FinishCurrentStroke();
             var stroke = new TexturePaintStroke();
             var atlas = IsActiveFor(target) ? _active._atlas : new TexturePaintAtlas(target.Paint.Mesh, target.MaterialSection, target.Paint.Mask.width);
@@ -153,6 +155,7 @@ namespace SimpleBlend.Editor
         {
             if (!(window is SceneView view) || _atlas == null) return;
             if (!string.IsNullOrEmpty(TexturePaintStroke.Problem(Target))) { Finish(); return; }
+            if (TextureWeatheringSession.BlocksBrush(Target)) return;
             var e = Event.current;
             if (_stroke.Active && _view == view
                 && (!_strokeView.Matches(view.camera) || Target.transform.localToWorldMatrix != _strokeTransform)) Finish();

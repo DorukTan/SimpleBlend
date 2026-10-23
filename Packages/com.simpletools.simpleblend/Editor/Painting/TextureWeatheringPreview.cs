@@ -38,11 +38,13 @@ namespace SimpleBlend.Editor
             _atlas = new TexturePaintAtlas(_mesh, _section, _mask.width);
         }
 
-        internal void Generate(TextureWeatheringSettings settings, Func<bool> cancelled = null)
+        internal void Generate(TextureWeatheringSettings settings, Func<bool> cancelled = null, Action<int, int> progress = null)
         {
             Validate();
             if (settings == null) throw new ArgumentNullException(nameof(settings));
-            var snapshot = settings.Snapshot(); TextureWeatheringEdges.CheckCancellation(cancelled);
+            var snapshot = settings.Snapshot();
+            progress?.Invoke(0, _atlas.Pixels.Count);
+            TextureWeatheringEdges.CheckCancellation(cancelled);
             var edges = snapshot.Source == TextureWeatheringSource.Noise ? null : new TextureWeatheringEdges(_mesh, _section, snapshot.Source, cancelled);
             var pixels = (Color32[])_baseline.Clone(); var influences = new float[pixels.Length]; var changed = 0;
             var target = _surface == 1 ? new Color32(255, 0, 0, 0) : _surface == 2 ? new Color32(0, 255, 0, 0)
@@ -51,7 +53,7 @@ namespace SimpleBlend.Editor
                 : _surface == 3 ? VertexPaintChannel.Blue : VertexPaintChannel.RGB;
             for (var i = 0; i < _atlas.Pixels.Count; i++)
             {
-                if ((i & 255) == 0) TextureWeatheringEdges.CheckCancellation(cancelled);
+                if ((i & 255) == 0) { progress?.Invoke(i, _atlas.Pixels.Count); TextureWeatheringEdges.CheckCancellation(cancelled); }
                 var pixel = _atlas.Pixel(i);
                 if (_atlas.Coverage[pixel] != pixel) continue;
                 var point = _atlas.Positions[pixel];
@@ -69,8 +71,11 @@ namespace SimpleBlend.Editor
                     pixels[pixel] = VertexSurfaceWeightUtility.Blend(_baseline[pixel], target, channel, influences[source], _paint.WeightChannels, _erase);
             }
             TextureWeatheringEdges.CheckCancellation(cancelled);
+            progress?.Invoke(_atlas.Pixels.Count, _atlas.Pixels.Count);
             _preview = pixels; ChangedTexels = changed;
         }
+
+        internal void CheckCurrent() => Validate();
 
         internal Color32[] CopyPixels()
         {
