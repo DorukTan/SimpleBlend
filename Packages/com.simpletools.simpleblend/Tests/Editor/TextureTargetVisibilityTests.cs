@@ -169,6 +169,21 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(index.Raycast(new Ray(Vector3.zero, Vector3.zero), out _), Is.False);
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void AutomaticRoutingNeverSkipsANearerUnpreparedOrLockedSection(bool prepared)
+        {
+            var target = Target(true);
+            if (prepared) TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var ray = new Ray(_camera.transform.position, Vector3.forward);
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, Atlas(target), ray, true,
+                0, 1, null, out var hit, out _, out _), Is.EqualTo(prepared));
+            Assert.That(hit.SubmeshIndex, Is.EqualTo(1));
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, Atlas(target), ray, false,
+                0, 1, null, out hit, out _, out _), Is.False);
+            Assert.That(hit.SubmeshIndex, Is.EqualTo(1));
+        }
+
         private TexturePaintTarget Target(bool occludingSection, float gap = 0.02f, bool reverseOccluder = false)
         {
             var mesh = new Mesh { name = "Overlapping shells" };

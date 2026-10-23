@@ -152,10 +152,12 @@ namespace SimpleBlend.Editor
 
         internal bool Raycast(Ray ray, out MeshRaycastHit hit)
         {
-            if (_rayIndex.Raycast(ray, out hit) && hit.SubmeshIndex == _section) return true;
+            if (RaycastAnySection(ray, out hit) && hit.SubmeshIndex == _section) return true;
             hit = default;
             return false;
         }
+
+        internal bool RaycastAnySection(Ray ray, out MeshRaycastHit hit) => _rayIndex.Raycast(ray, out hit);
 
         internal bool Occluded(Ray ray, float maximumDistance) => _rayIndex.Raycast(ray, out _, maximumDistance);
 
