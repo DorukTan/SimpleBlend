@@ -85,7 +85,7 @@ namespace SimpleBlend.Editor
             return foundHit;
         }
 
-        private static bool TryIntersect(
+        internal static bool TryIntersect(
             Vector3 rayOrigin,
             Vector3 rayDirection,
             Vector3 first,

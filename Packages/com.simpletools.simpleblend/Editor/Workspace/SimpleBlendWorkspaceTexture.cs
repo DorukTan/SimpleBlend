@@ -164,7 +164,7 @@ namespace SimpleBlend.Editor
                     shape.Spacing = EditorGUILayout.Slider(new GUIContent("Spacing (%)", "Distance between dabs, as a percentage of brush diameter."), shape.Spacing * 100, 1, 200) / 100;
                     shape.Smoothing = EditorGUILayout.Slider("Smoothing (%)", shape.Smoothing * 100, 0, 100) / 100;
                     shape.LimitOpacity = EditorGUILayout.Toggle("Limit stroke to opacity", shape.LimitOpacity);
-                    EditorGUILayout.HelpBox("The ring is the projected radius. Projection reaches a quarter-radius in depth and excludes opposing faces; it is not a visibility test.", MessageType.None);
+                    EditorGUILayout.HelpBox("The ring is the projected radius. Paint checks visibility within this mesh from the Scene camera, stays in the selected section and excludes opposing faces. Fill covers the whole section. Other scene objects do not block this brush.", MessageType.None);
                 }
                 if (EditorGUI.EndChangeCheck()) { SimpleBlendTexturePaintTool.FinishCurrentStroke(); settings.SaveSettings(); }
                 _textureStrokePreview.Draw(settings);
