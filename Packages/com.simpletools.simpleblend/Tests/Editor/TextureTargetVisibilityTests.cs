@@ -77,13 +77,14 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(stroke.End(), Is.Zero);
         }
 
-        [Test]
-        public void FillRemainsSectionWideDespiteViewOcclusion()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void FillRemainsSectionWideDespiteViewOcclusion(bool throughPaint)
         {
             var target = Target(false); var atlas = Atlas(target);
             var visibility = new TexturePaintVisibility(atlas, new TexturePaintView(_camera));
             var stroke = new TexturePaintStroke();
-            stroke.Begin(target, atlas, 1, false, Command(), visibility: visibility);
+            stroke.Begin(target, atlas, 1, false, Command(), visibility: visibility, throughPaint: throughPaint);
             stroke.Dab(Vector3.zero, Vector3.up, fill: true); stroke.End();
             foreach (var pixel in atlas.Pixels) Assert.That(target.Paint.Pixels[pixel].r, Is.EqualTo(255));
             Assert.That(visibility.QueryCount, Is.Zero);
@@ -184,7 +185,167 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(hit.SubmeshIndex, Is.EqualTo(1));
         }
 
-        private TexturePaintTarget Target(bool occludingSection, float gap = 0.02f, bool reverseOccluder = false)
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(true, true)]
+        public void ThroughPaintReachesBothShellsWithReservedChannelsAndOneUndo(bool orthographic, bool erase)
+        {
+            _camera.orthographic = orthographic;
+            var target = Target(false); var atlas = Atlas(target);
+            var paint = target.Paint;
+            for (var i = 0; i < paint.Pixels.Length; i++) paint.Pixels[i] = new Color32(erase ? (byte)180 : (byte)0, 0, 91, 37);
+            paint.CommitPixels();
+            var before = (Color32[])paint.Pixels.Clone();
+            var visibility = new TexturePaintVisibility(atlas, new TexturePaintView(_camera));
+            var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, erase, Command(), visibility: visibility, throughPaint: true);
+            Assert.That(stroke.Dab(Vector3.zero, Vector3.back), Is.GreaterThan(0));
+            Assert.That(stroke.End(), Is.GreaterThan(0));
+            var after = (Color32[])paint.Pixels.Clone();
+            var front = 0; var hidden = 0;
+            foreach (var pixel in atlas.Pixels)
+            {
+                Assert.That(after[pixel].b, Is.EqualTo(91)); Assert.That(after[pixel].a, Is.EqualTo(37));
+                if (after[pixel].Equals(before[pixel])) continue;
+                var point = atlas.Positions[pixel];
+                Assert.That(new Vector2(point.x, point.y).magnitude, Is.LessThanOrEqualTo(Command().Radius));
+                if (point.z > 0.01f) hidden++; else front++;
+            }
+            Assert.That(front, Is.GreaterThan(20)); Assert.That(hidden, Is.GreaterThan(20));
+            Assert.That(visibility.QueryCount, Is.Zero, "Through strokes bypass only per-texel visibility queries.");
+            for (var i = 0; i < before.Length; i++)
+                if (atlas.Coverage[i] < 0) Assert.That(after[i], Is.EqualTo(before[i]));
+            Assert.That(paint.Mask.GetPixels32(), Is.EqualTo(after));
+            Undo.PerformUndo(); Assert.That(paint.Pixels, Is.EqualTo(before));
+            Undo.PerformRedo(); Assert.That(paint.Pixels, Is.EqualTo(after));
+            Assert.That(target.GetComponent<Collider>(), Is.Null);
+        }
+
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(true, true)]
+        public void ThroughPaintStillRejectsOutOfDepthOrOpposingFaces(bool orthographic, bool opposing)
+        {
+            _camera.orthographic = orthographic;
+            var target = Target(false, opposing ? 0.02f : 0.2f, reverseHiddenNormals: opposing);
+            var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(),
+                visibility: new TexturePaintVisibility(atlas, new TexturePaintView(_camera)), throughPaint: true);
+            stroke.Dab(Vector3.zero, Vector3.back); stroke.End();
+            var front = 0; var hidden = 0;
+            foreach (var pixel in atlas.Pixels)
+                if (atlas.Positions[pixel].z > 0.01f) { Assert.That(target.Paint.Pixels[pixel].r, Is.Zero); hidden++; }
+                else if (target.Paint.Pixels[pixel].r > 0) front++;
+            Assert.That(front, Is.GreaterThan(20)); Assert.That(hidden, Is.GreaterThan(20));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ThroughPaintRetainsSectionOwnershipAndNearestHitLock(bool orthographic)
+        {
+            _camera.orthographic = orthographic;
+            var target = Target(true); var secondary = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var before = (Color32[])secondary.Pixels.Clone(); var atlas = Atlas(target);
+            var ray = new Ray(_camera.transform.position, Vector3.forward);
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, atlas, ray, false, 0, 1, null,
+                out var hit, out _, out _), Is.False);
+            Assert.That(hit.SubmeshIndex, Is.EqualTo(1));
+            var visibility = new TexturePaintVisibility(atlas, new TexturePaintView(_camera));
+            Assert.That(visibility.Project(new Vector3(0, 0, 0.02f), out _), Is.False);
+            var stroke = new TexturePaintStroke();
+            // A direct backend dab can address the hidden section; the Scene pointer still cannot start there.
+            stroke.Begin(target, atlas, 1, false, Command(), visibility: visibility, throughPaint: true);
+            Assert.That(stroke.Dab(new Vector3(0, 0, 0.02f), Vector3.back), Is.GreaterThan(0)); stroke.End();
+            Assert.That(secondary.Pixels, Is.EqualTo(before));
+            Assert.That(target.GetComponent<MeshRenderer>().sharedMaterials[1], Is.EqualTo(secondary.Material));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ThroughPaintUsesWorldReachUnderNonuniformAndMirroredTransforms(bool mirrored)
+        {
+            var target = Target(false); target.transform.localScale = new Vector3(mirrored ? -2 : 2, 0.5f, 1.5f);
+            target.transform.rotation = Quaternion.Euler(0, 15, 0);
+            var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(),
+                visibility: new TexturePaintVisibility(atlas, new TexturePaintView(_camera)), throughPaint: true);
+            stroke.Dab(target.transform.TransformPoint(Vector3.zero), target.transform.TransformDirection(Vector3.back)); stroke.End();
+            var front = 0; var hidden = 0;
+            foreach (var pixel in atlas.Pixels)
+                if (target.Paint.Pixels[pixel].r > 0) { if (atlas.Positions[pixel].z > 0.01f) hidden++; else front++; }
+            Assert.That(front, Is.GreaterThan(20)); Assert.That(hidden, Is.GreaterThan(20));
+        }
+
+        [Test]
+        public void ReusedStrokeReturnsToVisibleDefaultAfterThroughPaint()
+        {
+            var target = Target(false); var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            var visibility = new TexturePaintVisibility(atlas, new TexturePaintView(_camera));
+            stroke.Begin(target, atlas, 1, false, Command(), visibility: visibility, throughPaint: true);
+            stroke.Dab(Vector3.zero, Vector3.back); stroke.End(); Undo.PerformUndo();
+            stroke.Begin(target, atlas, 1, false, Command(), visibility: visibility);
+            stroke.Dab(Vector3.zero, Vector3.back); stroke.End();
+            foreach (var pixel in atlas.Pixels)
+                if (atlas.Positions[pixel].z > 0.01f) Assert.That(target.Paint.Pixels[pixel].r, Is.Zero);
+            Assert.That(visibility.QueryCount, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void ThroughPaintSerializationStaysSeparateFromBrushPresets()
+        {
+            var settings = SimpleBlendBrushSettings.instance;
+            var original = EditorJsonUtility.ToJson(settings);
+            var preset = ScriptableObject.CreateInstance<SimpleBlendBrushPreset>();
+            try
+            {
+                settings.TextureThroughPaint = true;
+                var serialized = EditorJsonUtility.ToJson(settings);
+                settings.TextureThroughPaint = false;
+                EditorJsonUtility.FromJsonOverwrite(serialized, settings);
+                Assert.That(settings.TextureThroughPaint, Is.True);
+                preset.Capture(settings);
+                settings.TextureThroughPaint = false; preset.Apply(settings);
+                Assert.That(settings.TextureThroughPaint, Is.False);
+                settings.TextureThroughPaint = true; preset.Apply(settings);
+                Assert.That(settings.TextureThroughPaint, Is.True);
+                for (var i = 1; i < SimpleBlendBrushPreset.BuiltInNames.Length; i++)
+                {
+                    settings.TextureThroughPaint = false; SimpleBlendBrushPreset.ApplyBuiltIn(i, settings);
+                    Assert.That(settings.TextureThroughPaint, Is.False);
+                    settings.TextureThroughPaint = true; SimpleBlendBrushPreset.ApplyBuiltIn(i, settings);
+                    Assert.That(settings.TextureThroughPaint, Is.True);
+                }
+            }
+            finally { Object.DestroyImmediate(preset); EditorJsonUtility.FromJsonOverwrite(original, settings); }
+        }
+
+        [Test]
+        public void ThroughPaintCapturesReachAndWritesHiddenShellGutters()
+        {
+            var target = Target(false); var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            var settings = SimpleBlendBrushSettings.instance; var original = settings.TextureThroughPaint;
+            try
+            {
+                settings.TextureThroughPaint = true;
+                stroke.Begin(target, atlas, 1, false, Command(),
+                    visibility: new TexturePaintVisibility(atlas, new TexturePaintView(_camera)), throughPaint: settings.TextureThroughPaint);
+                settings.TextureThroughPaint = false;
+                stroke.Dab(new Vector3(0.48f, 0, 0), Vector3.back); stroke.End();
+                var hiddenGutters = 0;
+                foreach (var pixel in atlas.Pixels)
+                    if (atlas.Positions[pixel].z > 0.01f && atlas.Coverage[pixel] != pixel && target.Paint.Pixels[pixel].r > 0)
+                    {
+                        Assert.That(target.Paint.Pixels[pixel], Is.EqualTo(target.Paint.Pixels[atlas.Coverage[pixel]]));
+                        hiddenGutters++;
+                    }
+                Assert.That(hiddenGutters, Is.GreaterThan(0));
+            }
+            finally { stroke.End(); settings.TextureThroughPaint = original; }
+        }
+
+        private TexturePaintTarget Target(bool occludingSection, float gap = 0.02f, bool reverseOccluder = false, bool reverseHiddenNormals = false)
         {
             var mesh = new Mesh { name = "Overlapping shells" };
             mesh.vertices = new[]
@@ -192,7 +353,7 @@ namespace SimpleBlend.Editor.Tests
                 new Vector3(-0.5f,-0.5f,0), new Vector3(-0.5f,0.5f,0), new Vector3(0.5f,0.5f,0), new Vector3(0.5f,-0.5f,0),
                 new Vector3(-0.5f,-0.5f,gap), new Vector3(-0.5f,0.5f,gap), new Vector3(0.5f,0.5f,gap), new Vector3(0.5f,-0.5f,gap)
             };
-            mesh.normals = Enumerable.Repeat(Vector3.back, 8).ToArray();
+            mesh.normals = Enumerable.Range(0, 8).Select(i => reverseHiddenNormals && i >= 4 ? Vector3.forward : Vector3.back).ToArray();
             mesh.uv = new[] { Vector2.zero, Vector2.up, Vector2.one, Vector2.right, Vector2.zero, Vector2.up, Vector2.one, Vector2.right };
             if (occludingSection)
             {

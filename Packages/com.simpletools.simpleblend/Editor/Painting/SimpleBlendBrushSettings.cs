@@ -30,6 +30,13 @@ namespace SimpleBlend.Editor
         [SerializeField] private Vector2 _thresholdRange = new Vector2(0f, 1f);
         [SerializeField] private bool _thresholdInclusive = true;
         [SerializeField] private TextureBrushShape _textureBrush = new TextureBrushShape();
+        [SerializeField] private bool _textureThroughPaint;
+
+        internal bool TextureThroughPaint
+        {
+            get => _textureThroughPaint;
+            set => _textureThroughPaint = value;
+        }
 
         internal TextureBrushShape TextureBrush
         {

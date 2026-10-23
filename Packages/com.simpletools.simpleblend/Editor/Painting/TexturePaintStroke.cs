@@ -21,11 +21,12 @@ namespace SimpleBlend.Editor
         private float[] _coverage;
         private bool _needsUpload;
         private TexturePaintVisibility _visibility;
+        private bool _throughPaint;
 
         internal bool Active => _paint != null;
 
         internal void Begin(TexturePaintTarget target, TexturePaintAtlas atlas, int surface, bool erase, VertexBrushCommand command,
-            TextureBrushTip tip = null, TexturePaintVisibility visibility = null, int? materialSection = null)
+            TextureBrushTip tip = null, TexturePaintVisibility visibility = null, int? materialSection = null, bool throughPaint = false)
         {
             if (Active) throw new InvalidOperationException("Finish the current texture stroke first.");
             var problem = Problem(target, materialSection);
@@ -49,6 +50,7 @@ namespace SimpleBlend.Editor
             _coverage = command.Accumulate || (tip != null && tip.LimitOpacity) ? new float[_baseline.Length] : null;
             _needsUpload = false;
             _visibility = visibility;
+            _throughPaint = throughPaint;
         }
 
         internal int Dab(Vector3 center, Vector3 normal, bool fill = false, Vector3? preferredRight = null, bool upload = true)
@@ -84,7 +86,7 @@ namespace SimpleBlend.Editor
                             * _command.Strength * _command.Flow;
                 }
                 if (!float.IsFinite(influence) || influence <= 0) continue;
-                if (!fill && _visibility != null && !_visibility.Allows(index)) continue;
+                if (!fill && !_throughPaint && _visibility != null && !_visibility.Allows(index)) continue;
                 if (_coverage != null && (_command.Accumulate || (!fill && _tip != null && _tip.LimitOpacity)))
                 {
                     var limited = !fill && _tip != null && _tip.LimitOpacity;
@@ -133,6 +135,7 @@ namespace SimpleBlend.Editor
             _coverage = null;
             _tip = null;
             _visibility = null;
+            _throughPaint = false;
             return changed;
         }
 
