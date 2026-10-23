@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
@@ -489,6 +490,223 @@ namespace SimpleBlend.Editor.Tests
         }
 
         private string SectionPath => _assets.AssetPath + "/Section1.asset";
+
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        public void PreparingFromPrimaryCopiesNamedSurfacesButNotExistingPaint(int count)
+        {
+            var target = MultiSectionTarget();
+            while (target.Paint.SurfaceCount > count) TextureSurfaceAuthoring.Remove(target.Paint, target.Paint.SurfaceCount - 1);
+            target.Paint.Material.SetFloat("_HeightBlendStrength", 1.7f);
+            Fill(target, Atlas(target), count > 1 ? 1 : 0, 0.6f);
+            var before = (Color32[])target.Paint.Pixels.Clone();
+            var material = EditorJsonUtility.ToJson(target.Paint.Material); var uv = target.Paint.Mesh.uv4;
+            var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            Assert.That(second.SurfaceCount, Is.EqualTo(count));
+            Assert.That(second.Material.GetFloat("_HeightBlendStrength"), Is.EqualTo(1.7f));
+            for (var i = 0; i < count; i++)
+            {
+                Assert.That(second.SurfaceName(i), Is.EqualTo(target.Paint.SurfaceName(i)));
+                Assert.That(second.Material.GetColor($"_Layer{i}Color"), Is.EqualTo(target.Paint.Material.GetColor($"_Layer{i}Color")));
+            }
+            Assert.That(second.Pixels.All(pixel => pixel.Equals(new Color32())), Is.True);
+            Assert.That(target.Paint.Pixels, Is.EqualTo(before)); Assert.That(target.Paint.Mesh.uv4, Is.EqualTo(uv));
+            Assert.That(EditorJsonUtility.ToJson(target.Paint.Material), Is.EqualTo(material));
+            Assert.That(AssetDatabase.GetAssetPath(second), Does.StartWith(_assets.AssetPath + "/"));
+            Assert.That(TexturePaintStroke.Problem(target, 1), Is.Empty);
+        }
+
+        [Test]
+        public void RepreparingAfterUndoRetainsOldAssetAndChoosesANewPath()
+        {
+            var target = MultiSectionTarget(); Undo.FlushUndoRecordObjects(); Undo.ClearAll();
+            var first = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var path = AssetDatabase.GetAssetPath(first);
+            Undo.FlushUndoRecordObjects(); Undo.PerformUndo();
+            var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            Assert.That(AssetDatabase.GetAssetPath(second), Is.Not.EqualTo(path));
+            Assert.That(AssetDatabase.LoadAssetAtPath<TexturePaintAsset>(path), Is.EqualTo(first));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void AutomaticHitSelectsPreparedNearestSectionWhileLockRejectsIt(bool automatic)
+        {
+            var target = MultiSectionTarget(); TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var files = AssetDatabase.FindAssets("", new[] { _assets.AssetPath });
+            var before = EditorJsonUtility.ToJson(target);
+            var resolved = SimpleBlendTexturePaintTool.ResolveHit(target, Atlas(target), SectionRay(target, 0.25f), automatic,
+                0, 1, null, out var hit, out var surface, out var problem);
+            Assert.That(resolved, Is.EqualTo(automatic)); Assert.That(hit.SubmeshIndex, Is.EqualTo(1));
+            if (automatic) { Assert.That(surface, Is.EqualTo(1)); Assert.That(problem, Is.Null); }
+            else Assert.That(problem, Does.Contain("locked"));
+            Assert.That(EditorJsonUtility.ToJson(target), Is.EqualTo(before));
+            Assert.That(AssetDatabase.FindAssets("", new[] { _assets.AssetPath }), Is.EqualTo(files));
+        }
+
+        [Test]
+        public void UnpreparedHitBlocksAutomaticRoutingWithoutCreatingAssets()
+        {
+            var target = MultiSectionTarget(); var files = AssetDatabase.FindAssets("", new[] { _assets.AssetPath });
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, Atlas(target), SectionRay(target, 0.25f), true,
+                0, 1, null, out var hit, out _, out var problem), Is.False);
+            Assert.That(hit.SubmeshIndex, Is.EqualTo(1)); Assert.That(problem, Does.Contain("Prepare this material section"));
+            Assert.That(target.PaintForSection(1), Is.Null);
+            Assert.That(AssetDatabase.FindAssets("", new[] { _assets.AssetPath }), Is.EqualTo(files));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void AutomaticRoutingHandlesMirroredAndNonuniformTargetTransforms(bool mirrored)
+        {
+            var target = MultiSectionTarget(); TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            target.transform.SetPositionAndRotation(new Vector3(2, 3, 4), Quaternion.Euler(10, 20, 30));
+            target.transform.localScale = new Vector3(mirrored ? -2 : 2, 0.5f, 1.3f);
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, Atlas(target), SectionRay(target, 0.25f), true,
+                0, 1, null, out var hit, out _, out _), Is.True);
+            Assert.That(hit.SubmeshIndex, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void AutomaticSurfaceMappingUsesNamesInsteadOfReorderedChannelIndices()
+        {
+            var target = MultiSectionTarget(); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            second.SetSurfaceNames(new[] { "Stone", "Dirt", "Moss", "Snow" });
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, Atlas(target), SectionRay(target, 0.25f), true,
+                0, 1, null, out _, out var surface, out _), Is.True);
+            Assert.That(surface, Is.EqualTo(2));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void DifferentPalettesBlockUnmatchedOverlaysButAllowExplicitBase(bool useBase)
+        {
+            var target = MultiSectionTarget(); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            second.SetSurfaceNames(new[] { "Sand", "Wet sand", "Shells" });
+            var resolved = SimpleBlendTexturePaintTool.ResolveHit(target, Atlas(target), SectionRay(target, 0.25f), true,
+                0, useBase ? 0 : 1, null, out _, out var surface, out var problem);
+            Assert.That(resolved, Is.EqualTo(useBase));
+            if (useBase) Assert.That(surface, Is.Zero);
+            else Assert.That(problem, Does.Contain("choose a surface"));
+        }
+
+        [Test]
+        public void RememberedSurfaceOverridesNameMappingAndAmbiguousNamesAreBlocked()
+        {
+            var target = MultiSectionTarget(); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            second.SetSurfaceNames(new[] { "Stone", "Moss", "Moss", "Snow" });
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, Atlas(target), SectionRay(target, 0.25f), true,
+                0, 1, null, out _, out _, out _), Is.False);
+            var choices = new Dictionary<int, string> { [1] = "Snow" };
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, Atlas(target), SectionRay(target, 0.25f), true,
+                0, 1, choices, out _, out var surface, out _), Is.True);
+            Assert.That(surface, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void RememberedSurfaceNameSurvivesRemovalUndoAndRedoWithoutChangingMeaning()
+        {
+            var target = MultiSectionTarget(); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            SimpleBlendTexturePaintTool.Start(target, 3, false, 1, true);
+            Undo.FlushUndoRecordObjects(); Undo.ClearAll();
+            TextureSurfaceAuthoring.Remove(second, 1);
+            SimpleBlendTexturePaintTool.Configure(target, 2, false);
+            Assert.That(second.SurfaceName(SimpleBlendTexturePaintTool.Surface), Is.EqualTo("Snow"));
+            Undo.PerformUndo();
+            Assert.That(SimpleBlendTexturePaintTool.Surface, Is.EqualTo(3));
+            Assert.That(second.SurfaceName(SimpleBlendTexturePaintTool.Surface), Is.EqualTo("Snow"));
+            Undo.PerformRedo();
+            Assert.That(SimpleBlendTexturePaintTool.Surface, Is.EqualTo(2));
+            Assert.That(second.SurfaceName(SimpleBlendTexturePaintTool.Surface), Is.EqualTo("Snow"));
+        }
+
+        [Test]
+        public void SectionSwitchFillAndModeChangesKeepToolActiveAndRememberLocalSurfaces()
+        {
+            var target = MultiSectionTarget(); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var settings = SimpleBlendBrushSettings.instance; var beforeSettings = EditorJsonUtility.ToJson(settings);
+            try
+            {
+                settings.Strength = 0.5f; settings.Flow = 1;
+                SimpleBlendTexturePaintTool.Start(target, 2, false, automatic: true);
+                SimpleBlendTexturePaintTool.SelectSection(target, 1);
+                Assert.That(SimpleBlendTexturePaintTool.Fill(target, 1), Is.GreaterThan(0));
+                Assert.That(SimpleBlendTexturePaintTool.Section, Is.EqualTo(1));
+                Assert.That(SimpleBlendTexturePaintTool.Paint, Is.EqualTo(second));
+                Assert.That(SimpleBlendTexturePaintTool.LastPaint, Is.EqualTo(second));
+                Assert.That(target.Paint.Pixels.All(pixel => pixel.r == 0), Is.True);
+                SimpleBlendTexturePaintTool.Configure(target, 3, true);
+                SimpleBlendTexturePaintTool.SelectSection(target, 0);
+                Assert.That(SimpleBlendTexturePaintTool.Surface, Is.EqualTo(2));
+                SimpleBlendTexturePaintTool.SelectSection(target, 1);
+                Assert.That(SimpleBlendTexturePaintTool.Surface, Is.EqualTo(3));
+                SimpleBlendTexturePaintTool.SetSectionMode(target, false);
+                Assert.That(SimpleBlendTexturePaintTool.AutomaticSections, Is.False);
+                Assert.That(SimpleBlendTexturePaintTool.IsActiveFor(target), Is.True);
+            }
+            finally { EditorJsonUtility.FromJsonOverwrite(beforeSettings, settings); }
+        }
+
+        [Test]
+        public void UndoingPreparedActiveSectionFallsBackToPrimaryAndInvalidatesCachedAtlas()
+        {
+            var target = MultiSectionTarget(); Undo.FlushUndoRecordObjects(); Undo.ClearAll();
+            SimpleBlendTexturePaintTool.Start(target, 1, false, automatic: true);
+            TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            SimpleBlendTexturePaintTool.SelectSection(target, 1);
+            Undo.FlushUndoRecordObjects(); Undo.PerformUndo();
+            Assert.That(SimpleBlendTexturePaintTool.IsActiveFor(target), Is.True);
+            Assert.That(SimpleBlendTexturePaintTool.Section, Is.Zero);
+            Assert.That(SimpleBlendTexturePaintTool.Paint, Is.EqualTo(target.Paint));
+            Assert.That(target.PaintForSection(1), Is.Null);
+            Undo.PerformRedo(); SimpleBlendTexturePaintTool.SelectSection(target, 1);
+            Assert.That(SimpleBlendTexturePaintTool.Section, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void AutomaticDestinationWritesOnlyItsMaskAndRejectsBoundaryCrossingWithinOneUndo()
+        {
+            var target = MultiSectionTarget(); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var atlas = Atlas(target);
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, atlas, SectionRay(target, 0.25f), true,
+                0, 1, null, out var hit, out var surface, out _), Is.True);
+            var primary = (Color32[])target.Paint.Pixels.Clone(); var before = (Color32[])second.Pixels.Clone(); Undo.ClearAll();
+            var stroke = new TexturePaintStroke(); var destination = new TexturePaintAtlas(second.Mesh, hit.SubmeshIndex, 256);
+            stroke.Begin(target, destination, surface, false, SectionCommand(), materialSection: hit.SubmeshIndex);
+            stroke.Dab(hit.Point, hit.Normal);
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, destination, SectionRay(target, -0.25f), false,
+                1, surface, null, out _, out _, out _), Is.False);
+            Assert.That(stroke.End(), Is.GreaterThan(0));
+            Assert.That(target.Paint.Pixels, Is.EqualTo(primary)); Assert.That(second.Pixels, Is.Not.EqualTo(before));
+            Undo.PerformUndo(); Assert.That(second.Pixels, Is.EqualTo(before)); Assert.That(target.Paint.Pixels, Is.EqualTo(primary));
+        }
+
+        [Test]
+        public void StoppingForSectionPreparationRetainsSceneContextAfterProjectAssetSelection()
+        {
+            var selection = Selection.objects;
+            try
+            {
+                var target = MultiSectionTarget();
+                SimpleBlendTexturePaintTool.Start(target, 1, false, automatic: true);
+                Selection.activeObject = target.Paint;
+                Assert.That(SimpleBlendTexturePaintTool.IsActiveFor(target), Is.True);
+                SimpleBlendTexturePaintTool.StopForSectionSetup(target);
+                Assert.That(SimpleBlendTexturePaintTool.IsActiveFor(target), Is.False);
+                Assert.That(Selection.activeGameObject, Is.EqualTo(target.gameObject));
+                Assert.That(target.PaintForSection(1), Is.Null);
+            }
+            finally { Selection.objects = selection; }
+        }
+
+        private static Ray SectionRay(TexturePaintTarget target, float x)
+        {
+            var point = target.transform.TransformPoint(new Vector3(x, 0, 0));
+            var front = target.transform.TransformDirection(Vector3.forward);
+            return new Ray(point + front * 2, -front);
+        }
         private TexturePaintTarget MultiSectionTarget(int section = 0)
         {
             _source.GetComponent<MeshFilter>().sharedMesh = SplitPlane(true);

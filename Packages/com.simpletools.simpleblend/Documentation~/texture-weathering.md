@@ -2,6 +2,8 @@
 
 Open **Window > SimpleBlend > Workspace**, choose **Texture paint**, and select a prepared paint object. Expand **Weathering** below the Brush panel. It uses the selected named surface and the existing Paint/Erase choice; it does not create a separate window.
 
+Weathering currently addresses the target's primary material section only. Choose that section in the Workspace to use this panel. Selecting a secondary section cancels this workspace's preview and shows the limitation instead of applying a treatment to the primary mask. Manual painting and Fill support independently prepared secondary sections.
+
 ## Preview a treatment
 
 1. Choose **Noise**, **Mesh borders** or **UV seams** as Source.

@@ -98,12 +98,56 @@ namespace SimpleBlend.Editor
             }
         }
 
-        internal static TexturePaintAsset PrepareSection(TexturePaintTarget target, SurfacePalette palette, int section, string path)
+        internal static TexturePaintAsset PrepareSectionFromPrimary(TexturePaintTarget target, int section)
+        {
+            var problem = TexturePaintStroke.Problem(target);
+            if (!string.IsNullOrEmpty(problem)) throw new InvalidOperationException(problem);
+            var primary = target.Paint;
+            var names = new string[primary.SurfaceCount];
+            for (var i = 0; i < names.Length; i++) names[i] = primary.SurfaceName(i);
+            var palette = ScriptableObject.CreateInstance<SurfacePalette>();
+            try
+            {
+                // Palette validation follows shader capacity; the paint asset can expose fewer named surfaces.
+                var capacity = primary.Material.shader.name == SimpleBlendLayerBlendContract.LayerBlend4ShaderName ? 4 : 3;
+                var paletteNames = new string[capacity];
+                var used = new System.Collections.Generic.HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+                for (var i = 0; i < capacity; i++)
+                {
+                    if (i < names.Length) paletteNames[i] = names[i];
+                    else
+                    {
+                        var unused = "Unused surface " + i;
+                        while (!used.Add(unused)) unused += "_";
+                        paletteNames[i] = unused;
+                    }
+                }
+                palette.Configure(primary.Material, paletteNames);
+                var primaryPath = AssetDatabase.GetAssetPath(primary);
+                var path = System.IO.Path.GetDirectoryName(primaryPath)?.Replace('\\', '/') + "/"
+                    + System.IO.Path.GetFileNameWithoutExtension(primaryPath) + " Section " + section + ".asset";
+                return PrepareSection(target, palette, section, AssetDatabase.GenerateUniqueAssetPath(path), names, copyBlendSettings: true);
+            }
+            finally { Object.DestroyImmediate(palette); }
+        }
+
+        internal static TexturePaintAsset PrepareSection(TexturePaintTarget target, SurfacePalette palette, int section, string path,
+            string[] surfaceNames = null, bool copyBlendSettings = false)
         {
             var problem = TexturePaintStroke.Problem(target);
             if (!string.IsNullOrEmpty(problem)) throw new InvalidOperationException(problem);
             if (palette == null) throw new ArgumentNullException(nameof(palette));
             if (!string.IsNullOrEmpty(palette.Problem)) throw new InvalidOperationException(palette.Problem);
+            if (surfaceNames != null)
+            {
+                surfaceNames = (string[])surfaceNames.Clone();
+                var distinct = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (surfaceNames.Length < 1 || surfaceNames.Length > palette.SurfaceCount)
+                    throw new ArgumentException("Choose one to the palette's supported number of surfaces.", nameof(surfaceNames));
+                foreach (var name in surfaceNames)
+                    if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 64 || !distinct.Add(name.Trim()))
+                        throw new ArgumentException("Give each surface a distinct name of 1–64 characters.", nameof(surfaceNames));
+            }
             var mesh = target.Paint.Mesh;
             var renderer = target.GetComponent<MeshRenderer>();
             var beforeMaterials = renderer.sharedMaterials;
@@ -138,12 +182,12 @@ namespace SimpleBlend.Editor
                 };
                 material = new Material(palette.Material) { name = target.name + " Section " + section + " Surfaces" };
                 material.SetFloat("_UseTextureWeights", 1);
-                material.SetFloat("_HeightBlendStrength", 0);
+                if (!copyBlendSettings) material.SetFloat("_HeightBlendStrength", 0);
                 material.SetTexture("_BlendMask", mask);
                 paint = ScriptableObject.CreateInstance<TexturePaintAsset>();
                 paint.name = target.name + " Section " + section + " Paint";
-                var names = new string[palette.SurfaceCount];
-                for (var i = 0; i < names.Length; i++) names[i] = palette.SurfaceName(i);
+                var names = surfaceNames ?? new string[palette.SurfaceCount];
+                if (surfaceNames == null) for (var i = 0; i < names.Length; i++) names[i] = palette.SurfaceName(i);
                 paint.Configure(mesh, material, mask, names);
                 AssetDatabase.CreateAsset(paint, path);
                 if (AssetDatabase.LoadMainAssetAtPath(path) != paint) throw new InvalidOperationException("The section paint asset could not be saved.");

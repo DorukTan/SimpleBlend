@@ -18,6 +18,9 @@ namespace SimpleBlend.Editor
         private TexturePaintAsset _textureEditingPaint;
         private readonly TextureBrushPreview _textureStrokePreview = new TextureBrushPreview();
         private bool _textureShapeOptions;
+        [SerializeField] private int _textureSection = -1;
+        [SerializeField] private bool _textureAutomaticSections = true;
+        private TexturePaintTarget _textureSectionTarget;
 
         private bool DrawPaintBackend()
         {
@@ -80,7 +83,8 @@ namespace SimpleBlend.Editor
                     Selection.activeGameObject = created.gameObject;
                     _textureSurface = Mathf.Min(1, created.Paint.SurfaceCount - 1);
                     _textureErase = false;
-                    SimpleBlendTexturePaintTool.Start(created, _textureSurface, false);
+                    _textureSectionTarget = created; _textureSection = created.MaterialSection;
+                    SimpleBlendTexturePaintTool.Start(created, _textureSurface, false, _textureSection, _textureAutomaticSections);
                     _operationMessage = "Ready to paint. The original renderer is hidden, not deleted. Paint assets save automatically; save your scene too.";
                     _operationType = MessageType.Info;
                 }
@@ -91,11 +95,23 @@ namespace SimpleBlend.Editor
 
         private void DrawTextureTarget(TexturePaintTarget target)
         {
-            var problem = TexturePaintStroke.Problem(target);
+            if (_textureSectionTarget != target)
+            {
+                _textureSectionTarget = target; _textureSection = target.MaterialSection;
+                _textureSurface = Mathf.Min(1, target.Paint == null ? 0 : target.Paint.SurfaceCount - 1);
+            }
+            if (SimpleBlendTexturePaintTool.IsActiveFor(target))
+            {
+                _textureSection = SimpleBlendTexturePaintTool.Section;
+                _textureSurface = SimpleBlendTexturePaintTool.Surface;
+                _textureAutomaticSections = SimpleBlendTexturePaintTool.AutomaticSections;
+            }
+            if (!DrawTextureSections(target)) return;
+            var problem = TexturePaintStroke.Problem(target, _textureSection);
             if (!string.IsNullOrEmpty(problem)) { _weathering.Cancel(); EditorGUILayout.HelpBox(problem, MessageType.Error); return; }
-            var paint = target.Paint;
+            var paint = target.PaintForSection(_textureSection);
             if (_textureEditingPaint != paint) { _textureSurfaceEditor = -1; _textureEditingPaint = paint; }
-            EditorGUILayout.LabelField($"{paint.Mask.width} × {paint.Mask.height} mask · Section {target.MaterialSection}");
+            EditorGUILayout.LabelField($"{paint.Mask.width} × {paint.Mask.height} mask · Section {_textureSection}");
             EditorGUILayout.LabelField("Choose a surface", EditorStyles.boldLabel);
             _textureSurface = Mathf.Clamp(_textureSurface, 0, paint.SurfaceCount - 1);
             for (var i = 0; i < paint.SurfaceCount; i++)
@@ -113,7 +129,7 @@ namespace SimpleBlend.Editor
                 GUI.DrawTexture(new Rect(rect.x + 4, rect.y + 4, 24, 24),
                     paint.Material.GetTexture($"_Layer{i}Albedo") ?? Texture2D.whiteTexture, ScaleMode.ScaleToFit);
                 GUI.color = color;
-                if (_textureSurfaceEditor == i) DrawTextureSurfaceEditor(target, i);
+                if (_textureSurfaceEditor == i) DrawTextureSurfaceEditor(target, paint, i);
             }
             using (new EditorGUI.DisabledScope(paint.SurfaceCount >= 4))
                 if (GUILayout.Button("+ Add surface"))
@@ -174,7 +190,12 @@ namespace SimpleBlend.Editor
                 if (EditorGUI.EndChangeCheck()) { SimpleBlendTexturePaintTool.FinishCurrentStroke(); settings.SaveSettings(); }
                 _textureStrokePreview.Draw(settings);
             }
-            DrawWeathering(target);
+            if (_textureSection == target.MaterialSection) DrawWeathering(target);
+            else
+            {
+                _weathering.Cancel();
+                EditorGUILayout.HelpBox($"Weathering is currently available only on the primary section ({target.MaterialSection}). Brush painting and Fill use section {_textureSection}.", MessageType.None);
+            }
             var active = ToolManager.activeToolType == typeof(SimpleBlendTexturePaintTool) && SimpleBlendTexturePaintTool.Target == target;
             if (GUILayout.Button(active ? "Stop painting" : "Start painting", GUILayout.Height(28)))
             {
@@ -185,13 +206,13 @@ namespace SimpleBlend.Editor
                     else
                     {
                         if (ToolManager.activeToolType == typeof(SimpleBlendPaintTool)) ToolManager.RestorePreviousTool();
-                        SimpleBlendTexturePaintTool.Start(target, _textureSurface, _textureErase);
+                        SimpleBlendTexturePaintTool.Start(target, _textureSurface, _textureErase, _textureSection, _textureAutomaticSections);
                     }
                 }
                 catch (System.Exception exception) { _operationMessage = exception.Message; _operationType = MessageType.Error; }
             }
             if (GUILayout.Button("Fill section with selected surface"))
-            { _weathering.Cancel(); SimpleBlendTexturePaintTool.Fill(target, _textureSurface); }
+            { _weathering.Cancel(); SimpleBlendTexturePaintTool.Fill(target, _textureSurface, _textureSection); }
             if (SimpleBlendTexturePaintTool.LastPaint == paint && !string.IsNullOrEmpty(SimpleBlendTexturePaintTool.LastStroke))
                 EditorGUILayout.HelpBox(SimpleBlendTexturePaintTool.LastStroke, MessageType.Info);
             if (GUILayout.Button("Save painted asset"))
@@ -207,9 +228,61 @@ namespace SimpleBlend.Editor
                 using (new EditorGUI.DisabledScope(true)) EditorGUILayout.ObjectField("Paint asset", paint, typeof(TexturePaintAsset), false);
         }
 
-        private void DrawTextureSurfaceEditor(TexturePaintTarget target, int index)
+        private bool DrawTextureSections(TexturePaintTarget target)
         {
-            var surface = TextureSurfaceAuthoring.Read(target.Paint, index);
+            var mesh = target.GetComponent<MeshFilter>()?.sharedMesh;
+            var materials = target.GetComponent<MeshRenderer>()?.sharedMaterials;
+            var count = mesh == null || materials == null ? 0 : Mathf.Min(mesh.subMeshCount, materials.Length);
+            if (count == 0) { _weathering.Cancel(); EditorGUILayout.HelpBox("Restore the paint mesh and renderer material slots.", MessageType.Error); return false; }
+            _textureSection = Mathf.Clamp(_textureSection, 0, count - 1);
+            var labels = new string[count];
+            for (var i = 0; i < count; i++) labels[i] = $"Section {i} · " + (target.PaintForSection(i) == null ? "Not prepared" : "Ready");
+            EditorGUI.BeginChangeCheck();
+            var section = EditorGUILayout.Popup("Section", _textureSection, labels);
+            if (EditorGUI.EndChangeCheck())
+            {
+                _weathering.Cancel(); SimpleBlendTexturePaintTool.FinishCurrentStroke();
+                if (Selection.activeGameObject != target.gameObject) Selection.activeGameObject = target.gameObject;
+                _textureSection = section; _textureSurfaceEditor = -1;
+                if (SimpleBlendTexturePaintTool.IsActiveFor(target))
+                {
+                    if (string.IsNullOrEmpty(TexturePaintStroke.Problem(target, section))) SimpleBlendTexturePaintTool.SelectSection(target, section);
+                    else SimpleBlendTexturePaintTool.StopForSectionSetup(target);
+                }
+                var paint = target.PaintForSection(section);
+                _textureSurface = SimpleBlendTexturePaintTool.IsActiveFor(target) ? SimpleBlendTexturePaintTool.Surface
+                    : Mathf.Min(1, paint == null ? 0 : paint.SurfaceCount - 1);
+            }
+            EditorGUI.BeginChangeCheck();
+            _textureAutomaticSections = EditorGUILayout.Popup("Section targeting", _textureAutomaticSections ? 0 : 1,
+                new[] { "Automatic", "Lock to section" }) == 0;
+            if (EditorGUI.EndChangeCheck()) { _weathering.Cancel(); SimpleBlendTexturePaintTool.SetSectionMode(target, _textureAutomaticSections); }
+            EditorGUILayout.HelpBox(_textureAutomaticSections
+                ? "Automatic chooses a prepared section when a stroke starts. Each stroke stays on that section until release. Fill and surface edits use the displayed section."
+                : "Brush strokes stay on the displayed section. Other sections block painting through to it.", MessageType.None);
+            if (SimpleBlendTexturePaintTool.IsActiveFor(target) && !string.IsNullOrEmpty(SimpleBlendTexturePaintTool.PointerStatus))
+                EditorGUILayout.HelpBox(SimpleBlendTexturePaintTool.PointerStatus, MessageType.None);
+            if (target.PaintForSection(_textureSection) != null) return true;
+            _weathering.Cancel();
+            EditorGUILayout.HelpBox($"Prepare section {_textureSection} to paint it. This copies the primary section's surfaces into a separate mask and material, using the same mesh and UVs. Earlier paint stays unchanged. Assets save beside the primary paint asset.", MessageType.Info);
+            if (GUILayout.Button("Prepare section"))
+            {
+                RunTextureEdit(() =>
+                {
+                    var paint = TexturePaintSetup.PrepareSectionFromPrimary(target, _textureSection);
+                    _textureSurface = Mathf.Min(1, paint.SurfaceCount - 1);
+                    SimpleBlendTexturePaintTool.Start(target, _textureSurface, _textureErase, _textureSection, _textureAutomaticSections);
+                    _operationMessage = "Section prepared. Paint assets save automatically; save your scene too.";
+                    _operationType = MessageType.Info;
+                });
+                GUIUtility.ExitGUI();
+            }
+            return false;
+        }
+
+        private void DrawTextureSurfaceEditor(TexturePaintTarget target, TexturePaintAsset paint, int index)
+        {
+            var surface = TextureSurfaceAuthoring.Read(paint, index);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUI.BeginChangeCheck();
@@ -228,17 +301,18 @@ namespace SimpleBlend.Editor
                 if (EditorGUI.EndChangeCheck()) RunTextureEdit(() =>
                 {
                     SimpleBlendTexturePaintTool.FinishCurrentStroke();
-                    TextureSurfaceAuthoring.Edit(target.Paint, index, surface);
+                    TextureSurfaceAuthoring.Edit(paint, index, surface);
+                    SimpleBlendTexturePaintTool.Configure(target, _textureSurface, _textureErase);
                 });
                 using (new EditorGUI.DisabledScope(index == 0))
                     if (GUILayout.Button("Remove surface"))
                     {
                         SimpleBlendTexturePaintTool.FinishCurrentStroke();
-                        if (!EditorUtility.DisplayDialog("Remove surface", "Remove " + target.Paint.SurfaceName(index)
+                        if (!EditorUtility.DisplayDialog("Remove surface", "Remove " + paint.SurfaceName(index)
                             + "? Its painted weight returns to Base. Other surfaces keep their weights. This changes every object sharing this paint asset and supports Undo.", "Remove", "Cancel")) return;
                         RunTextureEdit(() =>
                         {
-                            TextureSurfaceAuthoring.Remove(target.Paint, index);
+                            TextureSurfaceAuthoring.Remove(paint, index);
                             if (_textureSurface == index) _textureSurface = 0;
                             else if (_textureSurface > index) _textureSurface--;
                             _textureSurfaceEditor = -1;
@@ -285,7 +359,7 @@ namespace SimpleBlend.Editor
 
         private void RunTextureEdit(System.Action action)
         {
-            try { _weathering.Cancel(); action(); _operationMessage = null; }
+            try { _weathering.Cancel(); _operationMessage = null; action(); }
             catch (System.Exception exception) { _operationMessage = exception.Message; _operationType = MessageType.Error; }
         }
     }
