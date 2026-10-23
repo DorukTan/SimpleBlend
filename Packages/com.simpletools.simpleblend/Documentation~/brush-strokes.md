@@ -21,7 +21,7 @@ Custom tips require a saved Texture2D asset. **Tip mask > Dark Pixels** paints d
 
 Custom-tip inversion reverses the selected mask, not the entire stroke influence. In **Dark Pixels** mode, it paints light pixels instead of dark pixels while retaining source alpha: fully transparent pixels still do not paint. In **Alpha** mode, it uses one minus source alpha: transparent areas inside the tip footprint become paintable and opaque areas become empty. Neither mode paints outside the rotated, aspect-correct tip boundary. Falloff, opacity and flow still reduce coverage normally. Painting and the diagnostic preview share this evaluator. Changing inversion creates a new immutable tip snapshot without changing an existing stroke or rewriting the source image. Built-in tips ignore inversion, and choosing a built-in preset resets it.
 
-The inversion setting is currently implemented in tip evaluation and preset serialization, but is not yet exposed in the Workspace. The control placement is pending; this is not yet an artist-accessible inversion workflow.
+Choose **Brush tip > Custom**, then enable **Invert tip** directly below **Tip mask**. The tooltip describes the currently selected mask mode. Toggling inversion finishes the current stroke and saves the brush setting without stopping the painting tool; the diagnostic preview updates to the new tip. The checkbox is hidden for built-in tips.
 
 ## Stroke controls
 
@@ -43,7 +43,7 @@ Build-up retains floating-point coverage throughout each stroke and derives the 
 
 ## Verification boundary
 
-The custom-tip inversion follow-up on 2026-10-23 passed all 493 isolated editor tests, including 13 added cases. Coverage includes both mask modes, retained transparency, inversion before falloff, rotated aspect-correct bounds, immutable cached snapshots, source PNG and importer metadata preservation, preset reload and built-in reset, and actual Paint/Erase mask writes with opacity/flow and Undo/redo on a rotated, nonuniformly scaled mesh. These checks cover the engine and serialization only: the Workspace control is still pending, and native visual acceptance is not recorded.
+The custom-tip inversion follow-up on 2026-10-23 passed all 493 isolated editor tests, including 13 added cases. Coverage includes both mask modes, retained transparency, inversion before falloff, rotated aspect-correct bounds, immutable cached snapshots, source PNG and importer metadata preservation, preset reload and built-in reset, and actual Paint/Erase mask writes with opacity/flow and Undo/redo on a rotated, nonuniformly scaled mesh. After adding the Workspace checkbox, compilation and all 45 brush-stroke tests passed in the isolated project. The full suite was not repeated for this control-only addition, and native visual acceptance is not recorded.
 
 The low-flow follow-up on 2026-10-23 passed all 415 isolated editor tests, including nine new accumulation cases. Before the fix, four regression cases failed: 600 dabs at 1% flow stalled at 205/255 for Paint and 50/255 for Erase, and 100 sub-byte dabs made no change in either action. The fixed tests cover convergence, competing weights, alpha preservation, opacity-limited and capped behavior, independent surface strokes and Undo/redo. This is numerical and persistence evidence, not native brush-feel acceptance.
 
