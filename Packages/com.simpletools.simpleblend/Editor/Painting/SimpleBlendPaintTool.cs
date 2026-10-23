@@ -9,6 +9,7 @@ namespace SimpleBlend.Editor
     public sealed class SimpleBlendPaintTool : EditorTool
     {
         private const int ControlHash = 0x53424C44;
+        private static SimpleBlendPaintTool _active;
         private static readonly GUIContent ToolIcon = new GUIContent(
             "SB",
             "SimpleBlend Paint\nPaint, erase, smooth, fill, or sample vertex colors.");
@@ -44,6 +45,7 @@ namespace SimpleBlend.Editor
 
         public override void OnActivated()
         {
+            _active = this;
             _pointerOutsideView = null;
             SimpleBlendPaintFeedback.Clear();
             SimpleBlendPaintInput.ClearAdjustment();
@@ -60,6 +62,7 @@ namespace SimpleBlend.Editor
         public override void OnWillBeDeactivated()
         {
             ReleaseInput();
+            if (_active == this) _active = null;
             SimpleBlendPaintFeedback.Clear();
             SimpleBlendPaintInput.ClearTemporaryErase();
             EditorApplication.projectChanged -= OnProjectChanged;
@@ -76,6 +79,7 @@ namespace SimpleBlend.Editor
         public override void OnToolGUI(EditorWindow window)
         {
             if (!(window is SceneView sceneView)) return;
+            if (TextureWeatheringSession.BlocksPaintInput) { ReleaseInput(); return; }
             if (!TryGetData(out var data) || !IsSupportedTarget(data))
             {
                 ReleaseInput();
@@ -237,6 +241,12 @@ namespace SimpleBlend.Editor
                 hit.TriangleIndex,
                 hit.BarycentricCoordinate);
             settings.SetSampledColor(sampled);
+        }
+
+        internal static void FinishCurrentGesture()
+        {
+            _active?.ReleaseInput();
+            SimpleBlendPaintInput.ClearTemporaryErase();
         }
 
         private void FinishStroke()

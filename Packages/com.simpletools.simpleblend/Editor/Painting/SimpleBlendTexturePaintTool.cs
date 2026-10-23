@@ -155,7 +155,7 @@ namespace SimpleBlend.Editor
         {
             if (!(window is SceneView view) || _atlas == null) return;
             if (!string.IsNullOrEmpty(TexturePaintStroke.Problem(Target))) { Finish(); return; }
-            if (TextureWeatheringSession.BlocksBrush(Target)) return;
+            if (TextureWeatheringSession.BlocksPaintInput) return;
             var e = Event.current;
             if (_stroke.Active && _view == view
                 && (!_strokeView.Matches(view.camera) || Target.transform.localToWorldMatrix != _strokeTransform)) Finish();
