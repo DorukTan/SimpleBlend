@@ -29,6 +29,8 @@ Custom tips require a saved Texture2D asset. **Tip mask > Dark Pixels** paints d
 
 Without the opacity limit, the previous mixing rules remain: capped mode uses the maximum falloff × strength × flow; build-up applies each dab to the current weights and can exceed the displayed opacity over multiple dabs. Existing preferences and old custom presets default to Round, 0% hardness, 100% roundness, 0° angle, 10% spacing, no smoothing and no opacity limit. They are not silently migrated. Choose a new built-in preset or enable the limit explicitly for per-stroke opacity.
 
+Build-up retains floating-point coverage throughout each stroke and derives the displayed bytes from that stroke's original weights. Small contributions can therefore add up even when an individual dab is too faint to change an 8-bit texel. This also prevents repeated low-flow dabs from stalling short of the selected surface because of per-dab byte rounding. Saved masks remain 8-bit, and starting another stroke starts from those saved weights; sub-byte coverage does not carry across strokes. Capped strokes still use the strongest dab rather than adding overlapping dabs.
+
 **Fill** ignores tip shape, angle, spacing, smoothing and opacity limit, and applies uniform strength × flow to the selected section. Normal stroke Undo/redo and automatic owned-asset saving remain intact. Mask uploads are batched per input event rather than per stamp.
 
 ## Save a brush
@@ -36,6 +38,8 @@ Without the opacity limit, the previous mixing rules remain: capped mode uses th
 **Save preset…** retains tip type, custom texture/mask interpretation, hardness, roundness, angle, spacing, smoothing and opacity-limit choice, in addition to radius, strength, flow, stroke behavior and falloff. Selecting a Saved preset applies independent setting/curve copies; manual edits do not rewrite the preset. Keep custom tip textures alongside the preset in the project. Global brush preferences may refer to unavailable textures when switching projects; choose a valid texture or built-in tip in that project.
 
 ## Verification boundary
+
+The low-flow follow-up on 2026-10-23 passed all 415 isolated editor tests, including nine new accumulation cases. Before the fix, four regression cases failed: 600 dabs at 1% flow stalled at 205/255 for Paint and 50/255 for Erase, and 100 sub-byte dabs made no change in either action. The fixed tests cover convergence, competing weights, alpha preservation, opacity-limited and capped behavior, independent surface strokes and Undo/redo. This is numerical and persistence evidence, not native brush-feel acceptance.
 
 The isolated Windows Unity 6000.4.8f1 / URP 17.4.0 / D3D11 run on 2026-10-20 passed all 406 editor tests, including 23 brush-stroke cases. Coverage checks the evaluator and actual texture writes, custom non-readable texture sampling without source changes, aspect ratio, rotation, deterministic grain, spacing across event subdivisions, stabilizer catch-up/reset, opacity-limited Paint/Erase, batched uploads, Fill, preset reload, invalid custom presets and legacy defaults. Native stroke feel, docking, varied mesh curvature, custom-tip orientation and production performance still require observed owner review. Pressure/tilt, scatter, color dynamics, smudge, ABR import and image-decal layers are not implemented here.
 

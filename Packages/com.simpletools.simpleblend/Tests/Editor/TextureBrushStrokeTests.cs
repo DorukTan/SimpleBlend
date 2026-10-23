@@ -254,6 +254,90 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(AssetDatabase.LoadMainAssetAtPath(path), Is.Null);
         }
 
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(true, true)]
+        public void LowFlowBuildUpConvergesWithoutByteRoundingStalls(bool erase, bool limitOpacity)
+        {
+            var target = Target(); TextureSurfaceAuthoring.Add(target.Paint); var atlas = Atlas(target);
+            var seed = erase ? new Color32(255, 0, 0, 37) : new Color32(0, 255, 0, 37);
+            foreach (var pixel in atlas.Pixels) target.Paint.Pixels[pixel] = seed;
+            target.Paint.CommitPixels(); Undo.ClearAll();
+            var before = (Color32[])target.Paint.Pixels.Clone();
+            var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, erase, SmallCommand(1, 0.01f, true),
+                new TextureBrushTip(new TextureBrushShape { Hardness = 1, LimitOpacity = limitOpacity }));
+            for (var i = 0; i < 600; i++) stroke.Dab(new Vector3(0, 0, -0.5f), Vector3.back, upload: false);
+            Assert.That(stroke.End(), Is.GreaterThan(0));
+            var pixelIndex = atlas.Pixels.First(pixel => target.Paint.Pixels[pixel].r != seed.r);
+            var expected = Mathf.RoundToInt(255 * (1 - Mathf.Pow(0.99f, 600)));
+            Assert.That(target.Paint.Pixels[pixelIndex].r, Is.EqualTo(erase ? 255 - expected : expected).Within(1));
+            Assert.That(target.Paint.Pixels[pixelIndex].g, Is.EqualTo(erase ? 0 : 255 - expected).Within(1));
+            Assert.That(target.Paint.Pixels[pixelIndex].a, Is.EqualTo(37));
+            var after = (Color32[])target.Paint.Pixels.Clone();
+            Undo.PerformUndo(); Assert.That(target.Paint.Pixels, Is.EqualTo(before));
+            Undo.PerformRedo(); Assert.That(target.Paint.Pixels, Is.EqualTo(after));
+            Assert.That(target.Paint.Mask.GetPixels32(), Is.EqualTo(after));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void SubByteDabsEventuallyChangePixelsWithinOneStroke(bool erase)
+        {
+            var target = Target(); var atlas = Atlas(target);
+            if (erase)
+            {
+                foreach (var pixel in atlas.Pixels) target.Paint.Pixels[pixel] = new Color32(255, 0, 0, 0);
+                target.Paint.CommitPixels();
+            }
+            var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, erase, SmallCommand(0.001f, 1, true),
+                new TextureBrushTip(new TextureBrushShape { Hardness = 1 }));
+            for (var i = 0; i < 100; i++) stroke.Dab(new Vector3(0, 0, -0.5f), Vector3.back, upload: false);
+            Assert.That(stroke.End(), Is.GreaterThan(0));
+            var expected = Mathf.RoundToInt(255 * (1 - Mathf.Pow(0.999f, 100)));
+            Assert.That(atlas.Pixels.Any(pixel => Mathf.Abs(target.Paint.Pixels[pixel].r - (erase ? 255 - expected : expected)) <= 1), Is.True);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void RepeatedCappedDabsDoNotBuildUp(bool limitOpacity)
+        {
+            var target = Target(); var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, SmallCommand(0.4f, 0.2f, false),
+                new TextureBrushTip(new TextureBrushShape { Hardness = 1, LimitOpacity = limitOpacity }));
+            stroke.Dab(new Vector3(0, 0, -0.5f), Vector3.back, upload: false);
+            var first = (Color32[])target.Paint.Pixels.Clone();
+            for (var i = 0; i < 20; i++) stroke.Dab(new Vector3(0, 0, -0.5f), Vector3.back, upload: false);
+            stroke.End(); Assert.That(target.Paint.Pixels, Is.EqualTo(first));
+        }
+
+        [Test]
+        public void NewSurfaceStrokeUsesItsOwnBaselineAndUndoRestoresEachStroke()
+        {
+            var target = Target(); TextureSurfaceAuthoring.Add(target.Paint); var atlas = Atlas(target);
+            Undo.ClearAll(); var baseline = (Color32[])target.Paint.Pixels.Clone();
+            var stroke = new TexturePaintStroke();
+            var tip = new TextureBrushTip(new TextureBrushShape { Hardness = 1, LimitOpacity = true });
+            stroke.Begin(target, atlas, 1, false, SmallCommand(0.5f, 1, true), tip);
+            stroke.Dab(new Vector3(0, 0, -0.5f), Vector3.back); stroke.End();
+            var first = (Color32[])target.Paint.Pixels.Clone();
+            stroke.Begin(target, atlas, 2, false, SmallCommand(0.5f, 1, true), tip);
+            stroke.Dab(new Vector3(0, 0, -0.5f), Vector3.back); stroke.End();
+            var second = (Color32[])target.Paint.Pixels.Clone();
+            var pixelIndex = atlas.Pixels.First(pixel => second[pixel].g > 0);
+            Assert.That(second[pixelIndex].r, Is.EqualTo(64).Within(1));
+            Assert.That(second[pixelIndex].g, Is.EqualTo(128).Within(1));
+            Undo.PerformUndo(); Assert.That(target.Paint.Pixels, Is.EqualTo(first));
+            Undo.PerformUndo(); Assert.That(target.Paint.Pixels, Is.EqualTo(baseline));
+            Undo.PerformRedo(); Undo.PerformRedo(); Assert.That(target.Paint.Pixels, Is.EqualTo(second));
+        }
+
+        private static VertexBrushCommand SmallCommand(float opacity, float flow, bool accumulate)
+            => new VertexBrushCommand(Vector3.zero, 0.04f, opacity, flow, new Color32(), AnimationCurve.Constant(0, 1, 1),
+                VertexPaintBrushMode.Paint, VertexPaintChannel.RGB, accumulate, VertexBrushMask.None);
+
         private TexturePaintTarget Target()
         {
             var source = GameObject.CreatePrimitive(PrimitiveType.Cube); SceneManager.MoveGameObjectToScene(source, _scene);

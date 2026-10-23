@@ -39,7 +39,7 @@ namespace SimpleBlend.Editor
             _command = command;
             _recorded = false;
             _tip = tip;
-            _coverage = tip != null && tip.LimitOpacity ? new float[_baseline.Length] : null;
+            _coverage = command.Accumulate || (tip != null && tip.LimitOpacity) ? new float[_baseline.Length] : null;
             _needsUpload = false;
         }
 
@@ -76,14 +76,16 @@ namespace SimpleBlend.Editor
                             * _command.Strength * _command.Flow;
                 }
                 if (!float.IsFinite(influence) || influence <= 0) continue;
-                if (!fill && _coverage != null)
+                if (_coverage != null && (_command.Accumulate || (!fill && _tip != null && _tip.LimitOpacity)))
                 {
-                    var ink = influence / Mathf.Max(_command.Strength, 0.000001f);
+                    var limited = !fill && _tip != null && _tip.LimitOpacity;
+                    var ink = limited ? influence / Mathf.Max(_command.Strength, 0.000001f) : influence;
+                    // Retain sub-byte contributions instead of repeatedly blending rounded mask bytes.
                     _coverage[i] = _command.Accumulate ? 1 - (1 - _coverage[i]) * (1 - ink) : Mathf.Max(_coverage[i], ink);
-                    influence = _command.Strength * _coverage[i];
+                    influence = limited ? _command.Strength * _coverage[i] : _coverage[i];
                 }
                 if (!_command.Accumulate && influence <= _maximum[i]) continue;
-                var source = _command.Accumulate && (fill || _coverage == null) ? pixels[i] : _baseline[i];
+                var source = _baseline[i];
                 var result = VertexSurfaceWeightUtility.Blend(source, target, channel, influence, _paint.WeightChannels, _erase);
                 _maximum[i] = Mathf.Max(_maximum[i], influence);
                 if (pixels[i].Equals(result)) continue;
