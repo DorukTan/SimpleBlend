@@ -12,7 +12,8 @@ namespace SimpleBlend.Editor
 
         private void DrawWeathering(TexturePaintTarget target)
         {
-            if (_weathering.Active && !_weathering.Matches(target, _textureSurface, _textureErase)) _weathering.Cancel();
+            if (_weathering.Active && !_weathering.Matches(target, _textureSurface, _textureErase, _textureSection)) _weathering.Cancel();
+            var paint = target.PaintForSection(_textureSection);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUI.BeginChangeCheck();
@@ -21,8 +22,8 @@ namespace SimpleBlend.Editor
                 if (!_weatheringExpanded) return;
                 if (_weatheringSettings == null) _weatheringSettings = new TextureWeatheringSettings();
                 var settings = _weatheringSettings;
-                EditorGUILayout.LabelField((_textureErase ? "Erase · " : "Paint · ") + target.Paint.SurfaceName(_textureSurface)
-                    + " · Section " + target.MaterialSection, EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField((_textureErase ? "Erase · " : "Paint · ") + paint.SurfaceName(_textureSurface)
+                    + " · Section " + _textureSection, EditorStyles.wordWrappedMiniLabel);
                 EditorGUI.BeginChangeCheck();
                 settings.Source = (TextureWeatheringSource)EditorGUILayout.Popup("Source", (int)settings.Source,
                     new[] { "Noise", "Mesh borders", "UV seams" });
@@ -72,7 +73,7 @@ namespace SimpleBlend.Editor
                     () => EditorUtility.DisplayCancelableProgressBar("Weathering preview",
                         completed == 0 ? "Preparing geometry and mask texels…" : $"Mask texels: {completed:N0} / {total:N0}",
                         total == 0 ? 0 : (float)completed / total),
-                    (done, count) => { completed = done; total = count; });
+                    (done, count) => { completed = done; total = count; }, materialSection: _textureSection);
                 _operationMessage = null;
             }
             catch (OperationCanceledException) { _operationMessage = "Weathering preview cancelled. Saved paint was not changed."; _operationType = MessageType.Info; }

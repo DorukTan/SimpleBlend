@@ -2,7 +2,7 @@
 
 Open **Window > SimpleBlend > Workspace**, choose **Texture paint**, and select a prepared paint object. Expand **Weathering** below the Brush panel. It uses the selected named surface and the existing Paint/Erase choice; it does not create a separate window.
 
-Weathering currently addresses the target's primary material section only. Choose that section in the Workspace to use this panel. Selecting a secondary section cancels this workspace's preview and shows the limitation instead of applying a treatment to the primary mask. Manual painting and Fill support independently prepared secondary sections.
+Weathering uses the **Section** currently displayed in the Workspace, including independently prepared secondary sections. The panel identifies that section and its selected named surface. Prepare a section before using it; changing the displayed section cancels any existing preview rather than moving the preview to another mask. Automatic brush targeting does not choose a weathering destination from a hover: treatments always use the displayed section when Preview is requested.
 
 ## Preview a treatment
 
@@ -36,7 +36,9 @@ Settings reject nonfinite or out-of-range values. Noise scale must be greater th
 
 ## Preview and Apply safety
 
-`TextureWeatheringPreview` captures the selected texture target, material section, surface, Paint/Erase choice, original pixels, surface names, material state and geometry fingerprint. Generate computes detached CPU pixels from that baseline; rebuilding never builds on the previous preview. CopyPixels returns a copy, not writable access to saved paint. Cancel/Dispose closes the transaction without writing textures, registering Undo or queuing a save.
+`TextureWeatheringPreview` captures the selected texture target, exact section-to-paint-asset binding, material section, surface, Paint/Erase choice, original pixels, surface names, material state and geometry fingerprint. Generate computes detached CPU pixels from that baseline; rebuilding never builds on the previous preview. CopyPixels returns a copy, not writable access to saved paint. Cancel/Dispose closes the transaction without writing textures, registering Undo or queuing a save. Legacy internal callers that omit a section still use the primary section.
+
+The temporary change texture uses the captured section's mask dimensions, baseline and active weight channels; Scene drawing uses that same section of the shared paint mesh. Apply revalidates the captured binding and cannot follow a replacement asset. Edits to another section's pixels, material or material slot do not invalidate an otherwise unchanged selected section. Shared-mesh geometry changes still invalidate the preview because topology and edge classification depend on the entire mesh. Switching sections during generation or display cancels the request and releases the brush-input pause; newer section requests retain ownership of their own preview resources.
 
 Generation accepts a cancellation callback. Cancellation throws before publishing a new preview and retains the previous completed result; the caller can then cancel the whole transaction. No partial result is applied automatically.
 
@@ -47,6 +49,8 @@ Generation is limited to the configured material section and its generated gutte
 The Scene overlay draws only the configured section using a temporary change texture/material, with depth testing and no renderer, material-property-block or mesh assignments. It does not replace the object's material, predict final lighting, or display hidden faces through other geometry. Apply still operates on the entire section, including hidden faces. This first UI supports texture weathering only; vertex-mode operations and observed native theme/docking/input/appearance/performance acceptance remain unfinished.
 
 ## Verification
+
+The section-aware follow-up on 2026-10-23 passed all 562 isolated editor tests, including 30 added cases. Coverage includes Noise, mesh-border and UV-seam Paint/Erase on secondary sections, independent mask and file preservation, reserved channels, one-operation Undo/redo, read-only preview/Cancel, section-local surface limits, stale or replaced bindings, unrelated primary edits, captured mask dimensions and blue-channel deltas, cancellation during section switches and nested-request ownership. All six changed source/test files matched the isolated project. The earlier focused run passed 80 weathering tests before strengthening the section-local surface-limit fixture. These checks do not establish native Scene appearance, panel interaction or production-scale performance acceptance.
 
 The request-ownership follow-up on 2026-10-23 passed all 480 isolated editor tests, including nine new cases. Five regression cases first reproduced lost cancellation, changed selection and superseded/nested requests publishing incorrectly. The fixed cases cover cancellation from progress and cancellation polls, same-session/different-session request supersession, preserved newer resources, Project selection, input suspension during generation/display and release afterward, and finishing a locked vertex gesture without deactivating its tool, unlocking its target or changing either paint baseline. No new controls or native visual acceptance are claimed by this follow-up.
 

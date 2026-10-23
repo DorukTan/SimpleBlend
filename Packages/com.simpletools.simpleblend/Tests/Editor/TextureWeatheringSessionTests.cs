@@ -305,9 +305,130 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(data.SerializedColors, Is.EqualTo(vertexBaseline)); Assert.That(target.Paint.Pixels, Is.EqualTo(paintBaseline));
         }
 
-        private TexturePaintTarget Target()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void SecondarySessionPreviewApplyAndCancelKeepPrimaryAndToolContext(bool apply)
+        {
+            var target = Target(true); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            for (var i = 0; i < target.Paint.Pixels.Length; i++) target.Paint.Pixels[i] = new Color32(180, 0, 219, 37);
+            target.Paint.CommitPixels();
+            var primary = (Color32[])target.Paint.Pixels.Clone(); var before = (Color32[])second.Pixels.Clone();
+            SimpleBlendTexturePaintTool.Start(target, 1, false, 1, true);
+            var session = Session(); session.Begin(target, 1, false, Settings(), materialSection: 1);
+            var changes = session.Changes;
+            Assert.That(session.Section, Is.EqualTo(1)); Assert.That(session.Paint, Is.EqualTo(second));
+            Assert.That(session.Matches(target, 1, false, 1), Is.True); Assert.That(session.Matches(target, 1, false), Is.False);
+            Assert.That(changes.width, Is.EqualTo(second.Mask.width));
+            Assert.That(changes.GetPixels32().Any(pixel => pixel.r == 128), Is.True, "Highlight deltas must use the secondary baseline, not primary pixels.");
+            Assert.That(second.Pixels, Is.EqualTo(before)); Assert.That(TextureWeatheringSession.BlocksPaintInput, Is.True);
+            if (apply)
+            {
+                Assert.That(session.Apply(), Is.GreaterThan(0)); var expected = (Color32[])second.Pixels.Clone();
+                Undo.PerformUndo(); Assert.That(second.Pixels, Is.EqualTo(before));
+                Undo.PerformRedo(); Assert.That(second.Pixels, Is.EqualTo(expected));
+            }
+            else { session.Cancel(); Assert.That(second.Pixels, Is.EqualTo(before)); }
+            Assert.That(changes == null, Is.True); Assert.That(target.Paint.Pixels, Is.EqualTo(primary));
+            Assert.That(TextureWeatheringSession.BlocksPaintInput, Is.False);
+            Assert.That(SimpleBlendTexturePaintTool.IsActiveFor(target), Is.True); Assert.That(SimpleBlendTexturePaintTool.Section, Is.EqualTo(1));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void SectionSwitchCancelsGeneratingOrDisplayedSecondaryPreview(bool duringGeneration)
+        {
+            var target = Target(true); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            SimpleBlendTexturePaintTool.Start(target, 1, false, 1, true);
+            var primary = (Color32[])target.Paint.Pixels.Clone(); var pixels = (Color32[])second.Pixels.Clone();
+            var session = Session();
+            if (duringGeneration)
+            {
+                var switched = false;
+                Assert.Throws<OperationCanceledException>(() => session.Begin(target, 1, false, Settings(), progress: (done, total) =>
+                { if (!switched) { switched = true; SimpleBlendTexturePaintTool.SelectSection(target, 0); } }, materialSection: 1));
+            }
+            else
+            {
+                session.Begin(target, 1, false, Settings(), materialSection: 1); var texture = session.Changes;
+                SimpleBlendTexturePaintTool.SelectSection(target, 0); Assert.That(texture == null, Is.True);
+            }
+            Assert.That(session.Active, Is.False); Assert.That(session.Changes == null, Is.True);
+            Assert.That(TextureWeatheringSession.BlocksPaintInput, Is.False);
+            Assert.That(SimpleBlendTexturePaintTool.IsActiveFor(target), Is.True); Assert.That(SimpleBlendTexturePaintTool.Section, Is.Zero);
+            Assert.That(target.Paint.Pixels, Is.EqualTo(primary)); Assert.That(second.Pixels, Is.EqualTo(pixels));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void NestedSectionGenerationRetainsOnlyTheNewerSecondaryPreview(bool sameSession)
+        {
+            var target = Target(true); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var first = Session(); var newer = sameSession ? first : Session(); var started = false; Texture2D texture = null;
+            Assert.Throws<OperationCanceledException>(() => first.Begin(target, 1, false, Settings(), progress: (done, total) =>
+            {
+                if (started) return;
+                started = true; newer.Begin(target, 1, false, Settings(), materialSection: 1); texture = newer.Changes;
+            }, materialSection: 0));
+            Assert.That(newer.Active, Is.True); Assert.That(newer.Section, Is.EqualTo(1)); Assert.That(newer.Paint, Is.EqualTo(second));
+            Assert.That(newer.Changes, Is.EqualTo(texture)); Assert.That(texture != null, Is.True);
+            if (!sameSession) Assert.That(first.Active, Is.False);
+            Assert.That(Resources.FindObjectsOfTypeAll<Texture2D>().Count(item => item.name == "SimpleBlend Weathering Changes"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SecondaryHighlightUsesItsOwnMaskDimensionsAndBlueWeightChannel()
+        {
+            var target = Target(true);
+            var palette = SurfacePaletteAuthoring.Create(_assets.AssetPath + "/FourSurfaces.asset", new[]
+            {
+                new SurfaceDefinition { Name = "Base" }, new SurfaceDefinition { Name = "Moss" },
+                new SurfaceDefinition { Name = "Dirt" }, new SurfaceDefinition { Name = "Snow" }
+            });
+            var second = TexturePaintSetup.PrepareSection(target, palette, 1, _assets.AssetPath + "/Second.asset");
+            // A data-level fixture, not a resolution-change workflow: selected dimensions must never come from primary.
+            second.Mask.Reinitialize(512, 512);
+            second.Configure(second.Mesh, second.Material, second.Mask, new[] { "Base", "Moss", "Dirt", "Snow" });
+            var primary = (Color32[])target.Paint.Pixels.Clone();
+            var session = Session(); session.Begin(target, 3, false, Settings(), materialSection: 1);
+            Assert.That(target.Paint.SurfaceCount, Is.EqualTo(2)); Assert.That(target.Paint.Mask.width, Is.EqualTo(256));
+            Assert.That(session.Changes.width, Is.EqualTo(512)); Assert.That(session.Changes.height, Is.EqualTo(512));
+            Assert.That(session.Changes.GetPixels32().Any(pixel => pixel.r == 128), Is.True);
+            session.Apply(); Assert.That(second.Pixels.Any(pixel => pixel.b > 0), Is.True);
+            Assert.That(target.Paint.Pixels, Is.EqualTo(primary));
+        }
+
+        [Test]
+        public void ReplacedSectionBindingDuringGenerationCannotPublishOrWriteEitherAsset()
+        {
+            var target = Target(true); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var primary = (Color32[])target.Paint.Pixels.Clone(); var pixels = (Color32[])second.Pixels.Clone(); var edited = false;
+            var session = Session();
+            Assert.Throws<InvalidOperationException>(() => session.Begin(target, 1, false, Settings(), progress: (done, total) =>
+            {
+                if (edited) return; edited = true;
+                var serialized = new SerializedObject(target);
+                serialized.FindProperty("_sectionPaints").GetArrayElementAtIndex(1).objectReferenceValue = target.Paint;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                var materials = target.GetComponent<MeshRenderer>().sharedMaterials; materials[1] = target.Paint.Material;
+                target.GetComponent<MeshRenderer>().sharedMaterials = materials;
+            }, materialSection: 1));
+            Assert.That(session.Active, Is.False); Assert.That(session.Changes == null, Is.True);
+            Assert.That(session.PreviewMaterial == null, Is.True); Assert.That(TextureWeatheringSession.BlocksPaintInput, Is.False);
+            Assert.That(target.Paint.Pixels, Is.EqualTo(primary)); Assert.That(second.Pixels, Is.EqualTo(pixels));
+        }
+
+        private TexturePaintTarget Target(bool splitSections = false)
         {
             var source = GameObject.CreatePrimitive(PrimitiveType.Cube); SceneManager.MoveGameObjectToScene(source, _scene);
+            if (splitSections)
+            {
+                var mesh = Object.Instantiate(source.GetComponent<MeshFilter>().sharedMesh); var indices = mesh.triangles;
+                mesh.subMeshCount = 2; mesh.SetTriangles(indices.Take(indices.Length / 2).ToArray(), 0);
+                mesh.SetTriangles(indices.Skip(indices.Length / 2).ToArray(), 1);
+                AssetDatabase.CreateAsset(mesh, _assets.AssetPath + "/SplitSource.asset");
+                source.GetComponent<MeshFilter>().sharedMesh = mesh;
+                var renderer = source.GetComponent<MeshRenderer>(); renderer.sharedMaterials = new[] { renderer.sharedMaterial, renderer.sharedMaterial };
+            }
             var target = TexturePaintSetup.CreateAutomatic(source, resolution: 256, directory: _assets.AssetPath + "/Paints");
             Selection.activeGameObject = target.gameObject; return target;
         }

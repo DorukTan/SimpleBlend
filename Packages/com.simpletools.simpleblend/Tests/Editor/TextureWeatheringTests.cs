@@ -257,6 +257,150 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(target.Paint.Pixels, Is.EqualTo(expected)); Assert.That(target.Paint.Mask.GetPixels32(), Is.EqualTo(expected));
         }
 
+        [TestCase(TextureWeatheringSource.Noise, false)]
+        [TestCase(TextureWeatheringSource.Noise, true)]
+        [TestCase(TextureWeatheringSource.MeshBorders, false)]
+        [TestCase(TextureWeatheringSource.MeshBorders, true)]
+        [TestCase(TextureWeatheringSource.UvSeams, false)]
+        [TestCase(TextureWeatheringSource.UvSeams, true)]
+        public void SecondaryApplyUsesItsOwnMaskAndPreservesPrimaryWithOneUndo(TextureWeatheringSource source, bool erase)
+        {
+            var target = Target(true); var primary = target.Paint;
+            var paint = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            for (var i = 0; i < primary.Pixels.Length; i++) primary.Pixels[i] = new Color32(71, 0, 83, 37);
+            for (var i = 0; i < paint.Pixels.Length; i++) paint.Pixels[i] = new Color32(erase ? (byte)180 : (byte)0, 0, 91, 41);
+            primary.CommitPixels(); paint.CommitPixels(); SavePaint(primary); SavePaint(paint);
+            Undo.FlushUndoRecordObjects(); Undo.ClearAll();
+            var beforePrimary = (Color32[])primary.Pixels.Clone(); var before = (Color32[])paint.Pixels.Clone();
+            var primaryBytes = System.IO.File.ReadAllBytes(AssetDatabase.GetAssetPath(primary));
+            var atlas = new TexturePaintAtlas(paint.Mesh, 1, paint.Mask.width);
+            using (var preview = new TextureWeatheringPreview(target, 1, erase, 1))
+            {
+                preview.Generate(new TextureWeatheringSettings { Source = source, Coverage = 1, Width = 0.2f, Strength = 0.4f });
+                var expected = preview.CopyPixels();
+                Assert.That(preview.Section, Is.EqualTo(1)); Assert.That(preview.Paint, Is.EqualTo(paint));
+                Assert.That(paint.Pixels, Is.EqualTo(before)); Assert.That(primary.Pixels, Is.EqualTo(beforePrimary));
+                Assert.That(preview.Apply(), Is.GreaterThan(0)); Assert.That(paint.Pixels, Is.EqualTo(expected));
+                for (var i = 0; i < before.Length; i++)
+                {
+                    Assert.That(paint.Pixels[i].a, Is.EqualTo(41)); Assert.That(paint.Pixels[i].b, Is.EqualTo(91));
+                    if (atlas.Coverage[i] < 0) Assert.That(paint.Pixels[i], Is.EqualTo(before[i]));
+                }
+                Undo.PerformUndo(); Assert.That(paint.Pixels, Is.EqualTo(before));
+                Undo.PerformRedo(); Assert.That(paint.Pixels, Is.EqualTo(expected));
+                Assert.That(paint.Mask.GetPixels32(), Is.EqualTo(expected));
+                Assert.That(primary.Pixels, Is.EqualTo(beforePrimary)); Assert.That(primary.Mask.GetPixels32(), Is.EqualTo(beforePrimary));
+                TexturePaintSaveQueue.Flush();
+                Assert.That(System.IO.File.ReadAllBytes(AssetDatabase.GetAssetPath(primary)), Is.EqualTo(primaryBytes));
+                AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(paint), ImportAssetOptions.ForceSynchronousImport);
+                Assert.That(paint.Pixels, Is.EqualTo(expected));
+            }
+        }
+
+        [TestCase(TextureWeatheringSource.Noise)]
+        [TestCase(TextureWeatheringSource.MeshBorders)]
+        [TestCase(TextureWeatheringSource.UvSeams)]
+        public void SecondaryPreviewAndCancelLeaveBothAssetsFilesAndDirtyFlagsUntouched(TextureWeatheringSource source)
+        {
+            var target = Target(true); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var primary = (Color32[])target.Paint.Pixels.Clone(); var pixels = (Color32[])second.Pixels.Clone();
+            SavePaint(target.Paint); SavePaint(second); Undo.FlushUndoRecordObjects(); Undo.ClearAll();
+            var primaryBytes = System.IO.File.ReadAllBytes(AssetDatabase.GetAssetPath(target.Paint));
+            var bytes = System.IO.File.ReadAllBytes(AssetDatabase.GetAssetPath(second)); var group = Undo.GetCurrentGroup();
+            using (var preview = new TextureWeatheringPreview(target, 1, false, 1))
+            {
+                preview.Generate(new TextureWeatheringSettings { Source = source, Coverage = 1, Width = 0.2f });
+                var expected = preview.CopyPixels();
+                preview.Generate(new TextureWeatheringSettings { Source = source, Coverage = 1, Width = 0.2f });
+                Assert.That(preview.CopyPixels(), Is.EqualTo(expected)); preview.Cancel();
+                Assert.Throws<InvalidOperationException>(() => preview.Apply());
+            }
+            Assert.That(target.Paint.Pixels, Is.EqualTo(primary)); Assert.That(second.Pixels, Is.EqualTo(pixels));
+            Assert.That(target.Paint.Mask.GetPixels32(), Is.EqualTo(primary)); Assert.That(second.Mask.GetPixels32(), Is.EqualTo(pixels));
+            Assert.That(EditorUtility.IsDirty(target.Paint), Is.False); Assert.That(EditorUtility.IsDirty(second), Is.False);
+            Assert.That(EditorUtility.IsDirty(target.Paint.Mask), Is.False); Assert.That(EditorUtility.IsDirty(second.Mask), Is.False);
+            Assert.That(System.IO.File.ReadAllBytes(AssetDatabase.GetAssetPath(target.Paint)), Is.EqualTo(primaryBytes));
+            Assert.That(System.IO.File.ReadAllBytes(AssetDatabase.GetAssetPath(second)), Is.EqualTo(bytes));
+            Assert.That(Undo.GetCurrentGroup(), Is.EqualTo(group));
+        }
+
+        [TestCase("unprepared")]
+        [TestCase("section")]
+        [TestCase("surface")]
+        public void SecondaryPreviewRejectsUnpreparedSectionsAndSectionLocalSurfaceLimits(string problem)
+        {
+            var target = Target(true); var section = problem == "section" ? -1 : 1;
+            if (problem != "unprepared") TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            if (problem == "surface") { TextureSurfaceAuthoring.Add(target.Paint); TextureSurfaceAuthoring.Add(target.Paint); }
+            var error = problem == "surface" ? typeof(ArgumentOutOfRangeException) : typeof(InvalidOperationException);
+            Assert.Throws(error, () => new TextureWeatheringPreview(target, problem == "surface" ? 2 : 1, false, section));
+            using (var legacy = new TextureWeatheringPreview(target, 1, false))
+            { Assert.That(legacy.Paint, Is.EqualTo(target.Paint)); Assert.That(legacy.Section, Is.Zero); }
+        }
+
+        [TestCase("paint")]
+        [TestCase("names")]
+        [TestCase("material")]
+        [TestCase("binding")]
+        [TestCase("renderer")]
+        [TestCase("geometry")]
+        [TestCase("mask")]
+        public void SecondaryStalePreviewCannotApplyThroughAChangedBindingOrAsset(string edit)
+        {
+            var target = Target(true); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            using (var preview = new TextureWeatheringPreview(target, 1, false, 1))
+            {
+                preview.Generate(new TextureWeatheringSettings { Coverage = 1 });
+                if (edit == "paint") { second.Pixels[0] = new Color32(12, 0, 0, 0); second.CommitPixels(); }
+                else if (edit == "names") second.SetSurfaceNames(new[] { "Base", "Renamed" });
+                else if (edit == "material") second.Material.SetColor("_Layer1Color", Color.red);
+                else if (edit == "geometry") { var vertices = second.Mesh.vertices; vertices[0] += Vector3.right * 0.01f; second.Mesh.vertices = vertices; }
+                else if (edit == "mask") second.Mask.Reinitialize(128, 128);
+                else
+                {
+                    var materials = target.GetComponent<MeshRenderer>().sharedMaterials;
+                    materials[1] = target.Paint.Material; target.GetComponent<MeshRenderer>().sharedMaterials = materials;
+                    if (edit == "binding")
+                    {
+                        var serialized = new SerializedObject(target);
+                        serialized.FindProperty("_sectionPaints").GetArrayElementAtIndex(1).objectReferenceValue = target.Paint;
+                        serialized.ApplyModifiedPropertiesWithoutUndo();
+                    }
+                }
+                var primary = (Color32[])target.Paint.Pixels.Clone(); var pixels = (Color32[])second.Pixels.Clone(); var group = Undo.GetCurrentGroup();
+                Assert.Throws<InvalidOperationException>(() => preview.Apply());
+                Assert.That(target.Paint.Pixels, Is.EqualTo(primary)); Assert.That(second.Pixels, Is.EqualTo(pixels));
+                Assert.That(Undo.GetCurrentGroup(), Is.EqualTo(group));
+            }
+        }
+
+        [TestCase("pixels")]
+        [TestCase("material")]
+        [TestCase("slot")]
+        public void UnrelatedPrimaryEditsDoNotInvalidateCapturedSecondaryWeathering(string edit)
+        {
+            var target = Target(true); var second = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            using (var preview = new TextureWeatheringPreview(target, 1, false, 1))
+            {
+                preview.Generate(new TextureWeatheringSettings { Coverage = 1 });
+                if (edit == "pixels") { target.Paint.Pixels[0] = new Color32(17, 0, 0, 0); target.Paint.CommitPixels(); }
+                else if (edit == "material") target.Paint.Material.SetColor("_Layer1Color", Color.blue);
+                else
+                {
+                    var materials = target.GetComponent<MeshRenderer>().sharedMaterials; materials[0] = null;
+                    target.GetComponent<MeshRenderer>().sharedMaterials = materials;
+                }
+                var primary = (Color32[])target.Paint.Pixels.Clone();
+                Assert.That(preview.Apply(), Is.GreaterThan(0));
+                Assert.That(target.Paint.Pixels, Is.EqualTo(primary)); Assert.That(second.Pixels.Any(pixel => pixel.r > 0), Is.True);
+            }
+        }
+
+        private static void SavePaint(TexturePaintAsset paint)
+        {
+            EditorUtility.SetDirty(paint); EditorUtility.SetDirty(paint.Mask); AssetDatabase.SaveAssetIfDirty(paint);
+        }
+
         private TexturePaintTarget Target(bool splitSections = false)
         {
             var mesh = new Mesh { name = "Seamed square" };
