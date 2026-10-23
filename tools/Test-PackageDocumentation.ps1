@@ -58,4 +58,8 @@ foreach ($label in @('Painting method','Texture paint','Vertex paint','Start pai
 foreach ($label in @('Brush tip','Brush shape','Stroke settings','Opacity (%)','Flow (%)','Tip texture','Hardness (%)','Roundness (%)','Angle','Spacing (%)','Smoothing (%)','Limit stroke to opacity')) {
     if (!$textureWorkspace.Contains('"' + $label + '"')) { throw ('Documented brush stroke control changed: ' + $label) }
 }
-[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 44; indexedPages = 17; result = 'Passed' } | ConvertTo-Json
+$weatheringWorkspace = [IO.File]::ReadAllText((Join-Path $root 'Editor/Workspace/SimpleBlendWorkspaceWeathering.cs'))
+foreach ($label in @('Weathering','Source','Noise','Mesh borders','UV seams','Seed','Randomize','Noise scale','Coverage (%)','Band width (local)','Softness (%)','Strength (%)','Preview','Refresh preview','Apply','Cancel')) {
+    if (!$weatheringWorkspace.Contains('"' + $label + '"')) { throw ('Documented weathering control changed: ' + $label) }
+}
+[ordered]@{ files = $files.Count; localLinks = $checked; sourceControlChecks = 60; indexedPages = 17; result = 'Passed' } | ConvertTo-Json

@@ -24,13 +24,14 @@ namespace SimpleBlend.Editor
             EditorGUI.BeginChangeCheck();
             _texturePainting = EditorGUILayout.Popup("Painting method", _texturePainting ? 0 : 1,
                 new[] { "Texture paint", "Vertex paint" }) == 0;
-            if (EditorGUI.EndChangeCheck()) StopForSurfaceConfiguration();
+            if (EditorGUI.EndChangeCheck()) { _weathering.Cancel(); StopForSurfaceConfiguration(); }
             if (!_texturePainting) return false;
             using (var scroll = new EditorGUILayout.ScrollViewScope(_scroll))
             {
                 _scroll = scroll.scrollPosition;
                 var source = SimpleBlendTexturePaintTool.IsActiveFor(SimpleBlendTexturePaintTool.Target)
-                    ? SimpleBlendTexturePaintTool.Target.gameObject : Selection.objects.Length == 1 ? Selection.activeGameObject : null;
+                    ? SimpleBlendTexturePaintTool.Target.gameObject : _weathering.Target != null ? _weathering.Target.gameObject
+                    : Selection.objects.Length == 1 ? Selection.activeGameObject : null;
                 var target = source == null ? null : source.GetComponent<TexturePaintTarget>();
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
@@ -91,7 +92,7 @@ namespace SimpleBlend.Editor
         private void DrawTextureTarget(TexturePaintTarget target)
         {
             var problem = TexturePaintStroke.Problem(target);
-            if (!string.IsNullOrEmpty(problem)) { EditorGUILayout.HelpBox(problem, MessageType.Error); return; }
+            if (!string.IsNullOrEmpty(problem)) { _weathering.Cancel(); EditorGUILayout.HelpBox(problem, MessageType.Error); return; }
             var paint = target.Paint;
             if (_textureEditingPaint != paint) { _textureSurfaceEditor = -1; _textureEditingPaint = paint; }
             EditorGUILayout.LabelField($"{paint.Mask.width} × {paint.Mask.height} mask · Section {target.MaterialSection}");
@@ -104,7 +105,7 @@ namespace SimpleBlend.Editor
                 var style = new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleLeft, padding = new RectOffset(38, 6, 3, 3) };
                 var selectRect = new Rect(rect.x, rect.y, Mathf.Max(0, rect.width - 56), rect.height);
                 if (GUI.Toggle(selectRect, i == _textureSurface, label, style) && i != _textureSurface)
-                { _textureSurface = i; SimpleBlendTexturePaintTool.Configure(target, i, _textureErase); }
+                { _weathering.Cancel(); _textureSurface = i; SimpleBlendTexturePaintTool.Configure(target, i, _textureErase); }
                 if (GUI.Button(new Rect(rect.xMax - 52, rect.y, 52, rect.height), _textureSurfaceEditor == i ? "Close" : "Edit"))
                     _textureSurfaceEditor = _textureSurfaceEditor == i ? -1 : i;
                 var color = GUI.color;
@@ -131,7 +132,7 @@ namespace SimpleBlend.Editor
                     : " · paint toward this surface and reduce competing weights. These are blended weights, not an ordered layer stack."), MessageType.None);
             EditorGUI.BeginChangeCheck();
             _textureErase = EditorGUILayout.Popup("Brush action", _textureErase ? 1 : 0, new[] { "Paint", "Erase" }) == 1;
-            if (EditorGUI.EndChangeCheck()) SimpleBlendTexturePaintTool.Configure(target, _textureSurface, _textureErase);
+            if (EditorGUI.EndChangeCheck()) { _weathering.Cancel(); SimpleBlendTexturePaintTool.Configure(target, _textureSurface, _textureErase); }
             var settings = SimpleBlendBrushSettings.instance;
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
@@ -169,11 +170,13 @@ namespace SimpleBlend.Editor
                 if (EditorGUI.EndChangeCheck()) { SimpleBlendTexturePaintTool.FinishCurrentStroke(); settings.SaveSettings(); }
                 _textureStrokePreview.Draw(settings);
             }
+            DrawWeathering(target);
             var active = ToolManager.activeToolType == typeof(SimpleBlendTexturePaintTool) && SimpleBlendTexturePaintTool.Target == target;
             if (GUILayout.Button(active ? "Stop painting" : "Start painting", GUILayout.Height(28)))
             {
                 try
                 {
+                    _weathering.Cancel();
                     if (active) SimpleBlendTexturePaintTool.Stop();
                     else
                     {
@@ -184,7 +187,7 @@ namespace SimpleBlend.Editor
                 catch (System.Exception exception) { _operationMessage = exception.Message; _operationType = MessageType.Error; }
             }
             if (GUILayout.Button("Fill section with selected surface"))
-                SimpleBlendTexturePaintTool.Fill(target, _textureSurface);
+            { _weathering.Cancel(); SimpleBlendTexturePaintTool.Fill(target, _textureSurface); }
             if (SimpleBlendTexturePaintTool.LastPaint == paint && !string.IsNullOrEmpty(SimpleBlendTexturePaintTool.LastStroke))
                 EditorGUILayout.HelpBox(SimpleBlendTexturePaintTool.LastStroke, MessageType.Info);
             if (GUILayout.Button("Save painted asset"))
@@ -278,7 +281,7 @@ namespace SimpleBlend.Editor
 
         private void RunTextureEdit(System.Action action)
         {
-            try { action(); _operationMessage = null; }
+            try { _weathering.Cancel(); action(); _operationMessage = null; }
             catch (System.Exception exception) { _operationMessage = exception.Message; _operationType = MessageType.Error; }
         }
     }

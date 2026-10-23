@@ -9,7 +9,7 @@ Start with installation and the first-stroke guide. Feature availability depends
 - [Paint the first stroke](first-stroke.md)
 - [Texture surface painting](texture-painting.md)
 - [Brush tips and strokes](brush-strokes.md)
-- [Texture weathering engine and current limitations](texture-weathering.md)
+- [Texture weathering and preview safety](texture-weathering.md)
 - [Paint workspace](workspace.md)
 - [Named surfaces and reusable palettes](surface-palettes.md)
 - [Scene feedback and keyboard controls](scene-input.md)

@@ -39,12 +39,15 @@ namespace SimpleBlend.Editor
             SurfacePaletteCreator.Created += OnPaletteCreated;
             SimpleBlendTargetLock.Changed += Refresh;
             SimpleBlendTexturePaintTool.Changed += Repaint;
+            _weathering.Changed += Repaint;
             Refresh();
         }
 
         private void OnDisable()
         {
             _textureStrokePreview.Dispose();
+            _weathering.Changed -= Repaint;
+            _weathering.Dispose();
             Selection.selectionChanged -= OnSelectionChanged;
             EditorApplication.projectChanged -= Refresh;
             EditorApplication.hierarchyChanged -= Refresh;

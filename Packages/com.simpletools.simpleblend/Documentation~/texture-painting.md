@@ -34,6 +34,8 @@ All these edits affect the owned material and paint asset, not the source palett
 
 ## Ownership and saving
 
+For section-wide noise, border and UV-seam treatments, expand the compact **Weathering** panel below Brush. Preview highlights affected texels without saving them; Apply commits one undoable treatment and Cancel discards it. See [Texture weathering](texture-weathering.md) for controls, local-space units and preview limitations.
+
 Each `TexturePaintAsset` owns a mesh, material and mask as sub-assets in one file. Its serialized `Color32[]` is the authority for Undo and reconstruction. The linear RGBA32 mask has bilinear filtering, clamp addressing and no mipmaps. The RGB channels store overlay weights; unused channels are preserved by brush mixing. No PNG import, compression or color-space conversion occurs during a stroke.
 
 Setup generates a unique atlas on the owned mesh using Unity's unwrap API. It stores paint coordinates in **UV4** (zero-based channel 3), leaving surface-texture UV0, static-lightmap UV2 and dynamic-lightmap UV3 intact through vertex remapping. UV4 on the owned copy is reserved for paint; source UV4 is not changed. Topology can gain seam vertices, but setup does not subdivide faces. The atlas includes two-pixel painted gutters to support bilinear sampling at chart edges.

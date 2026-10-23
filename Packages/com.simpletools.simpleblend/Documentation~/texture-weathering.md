@@ -1,6 +1,18 @@
-# Texture weathering engine
+# Texture weathering
 
-This revision adds an internal texture-mode weathering engine, not a user-facing Studio feature. There is no Weathering panel, window, menu command or live Scene preview yet. The layout choice and user-facing preview/apply/cancel workflow remain in roadmap issue #28.
+Open **Window > SimpleBlend > Workspace**, choose **Texture paint**, and select a prepared paint object. Expand **Weathering** below the Brush panel. It uses the selected named surface and the existing Paint/Erase choice; it does not create a separate window.
+
+## Preview a treatment
+
+1. Choose **Noise**, **Mesh borders** or **UV seams** as Source.
+2. Set the **Seed**, or choose **Randomize** for a different deterministic seed. Tune Noise scale, Coverage, Softness and Strength; border/seam sources also show **Band width (local)**.
+3. Choose **Preview**. Generation reports processed mask texels and can be cancelled; the preparation stage may remain at zero while geometry is inspected. No result is applied automatically.
+4. Inspect the temporary Scene highlight and the panel's changed-texel count. The highlight uses Unity's selection color to show affected texels, not the final lit material. Unchanged texels are transparent. The saved paint, original renderer assignments and property blocks are untouched.
+5. Choose **Apply** to commit one undoable operation, or **Cancel** / Scene-view **Esc** to discard it. The paint tool remains active throughout; brush writes pause only while preview is active and resume afterward.
+
+**Refresh preview** rebuilds from saved authoritative paint, not the previous preview. Editing weathering settings or Randomize discards the old preview; choose Preview again. Selecting another surface or Paint/Erase action, editing surfaces, switching target or painting method, collapsing Weathering, changing tools, Undo/redo, closing the workspace, entering Play mode or reloading scripts discards the preview. Starting a preview in another workspace also discards the earlier one. Project-asset selection can retain the bound target. External changes to captured paint/material/geometry invalidate the preview; Apply revalidates immediately, while background validation can discard it within a quarter-second.
+
+Starting/stopping manual painting or choosing Fill discards the preview before that explicit action. Saving an asset while previewing saves only authoritative paint, never the temporary highlight. Settings persist with the workspace; preview resources do not. Finish an in-progress manual stroke before inspecting weathering: starting Preview finishes that prior stroke normally and captures the resulting baseline.
 
 ## Mask sources
 
@@ -14,7 +26,7 @@ Edge distance is Euclidean distance in mesh-local units, not a geodesic distance
 
 ## Parameters
 
-The internal settings store Source, Seed, Noise scale, Coverage, Width, Softness and Strength. Coverage adjusts a noise threshold; it is not a promise that an exact percentage of texels will be affected. Zero coverage or strength changes nothing; full coverage removes noise variation. Width limits the border/seam band in local units; zero width disables that band. Softness feathers the noise threshold and the band's outer edge. Strength is the maximum mixing amount toward the selected named surface, or the erase amount toward Base under the existing erase rules.
+Settings store Source, Seed, Noise scale, Coverage, Width, Softness and Strength. Coverage adjusts a noise threshold; it is not a promise that an exact percentage of texels will be affected. Zero coverage or strength changes nothing; full coverage removes noise variation. Width limits the border/seam band in local units; zero width disables that band. Softness feathers the noise threshold and the band's outer edge. Strength is the maximum mixing amount toward the selected named surface, or the erase amount toward Base under the existing erase rules. Weathering strength is independent of manual brush opacity/flow.
 
 Settings reject nonfinite or out-of-range values. Noise scale must be greater than zero and at most 1000, width is between zero and 1,000,000 local units, and coverage/softness/strength are in [0, 1]. Scaled noise coordinates must lie within ±100,000,000. Noise uses a private integer hash and does not consume Unity's global random state. A deterministic next-seed helper is available for the later Randomize action.
 
@@ -28,8 +40,10 @@ Apply validates the capture again. New paint, changed surface configuration, mat
 
 Generation is limited to the configured material section and its generated gutters. It preserves alpha and unused weight channels, including gutter bytes; painting a selected surface intentionally reduces competing active overlay weights. Uncovered and unselected section texels remain unchanged. Weathering is section-wide and does not use the brush's camera-visibility filter. It never modifies source meshes, source materials, source palettes or texture import settings.
 
-The preview is an internal CPU transaction only. Isolated tests do not establish user-visible preview appearance, first-use clarity, final material appearance or production-scale performance. The Studio controls, Scene preview rendering, vertex-mode operations and native acceptance remain unfinished.
+The Scene overlay draws only the configured section using a temporary change texture/material, with depth testing and no renderer, material-property-block or mesh assignments. It does not replace the object's material, predict final lighting, or display hidden faces through other geometry. Apply still operates on the entire section, including hidden faces. This first UI supports texture weathering only; vertex-mode operations and observed native theme/docking/input/appearance/performance acceptance remain unfinished.
 
 ## Verification
+
+The compact Studio-panel follow-up on 2026-10-23 passed all 471 isolated editor tests, including 16 new session/lifecycle/GPU cases. Checks cover transient-only rendering resources, untouched renderer assignments/property blocks/files/Undo during preview, Apply/Cancel with the texture tool still active, one-operation Undo/redo, single-session ownership, cancellation, stale state, selection/tool/Play-mode transitions, workspace disposal, processed-texel progress, surface/action changes, Fill, no-op Apply and offscreen shader use of UV4 with unchanged-texel discard. Native theme, docking, Scene input delivery and appearance still require observed owner review; offscreen GPU evidence is not a native UI verdict.
 
 The isolated Windows Unity 6000.4.8f1 / URP 17.4.0 / D3D11 run on 2026-10-23 passed all 455 editor tests, including 25 weathering cases. Coverage includes distinct border/UV0 sources, a closed split-vertex cube, material-section boundaries, indexed distances against brute-force segment queries, deterministic settings/asset reload, seed isolation from Unity random state, preview/cancel file and dirty-state safety, cancellation, stale paint/material/position/UV/topology/dimension/target rejection, reserved gutter channels, section isolation, no-op Apply, detached-copy isolation, saved reimport and Undo/redo. These are engine and persistence checks, not approval of a finished artist workflow.
