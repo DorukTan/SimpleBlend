@@ -30,6 +30,9 @@ namespace SimpleBlend.Editor
         private static SimpleBlendTexturePaintTool _active;
         private TextureBrushTip _strokeTip;
         private Vector3 _strokeRight;
+        private TexturePaintView _strokeView;
+        private TexturePaintVisibility _visibility;
+        private Matrix4x4 _strokeTransform;
 
         public override GUIContent toolbarIcon => SimpleBlendEditorIcons.Content("Paint", "", "Paint texture surfaces");
         public override bool IsAvailable() => string.IsNullOrEmpty(TexturePaintStroke.Problem(Target));
@@ -151,6 +154,8 @@ namespace SimpleBlend.Editor
             if (!(window is SceneView view) || _atlas == null) return;
             if (!string.IsNullOrEmpty(TexturePaintStroke.Problem(Target))) { Finish(); return; }
             var e = Event.current;
+            if (_stroke.Active && _view == view
+                && (!_strokeView.Matches(view.camera) || Target.transform.localToWorldMatrix != _strokeTransform)) Finish();
             var id = GUIUtility.GetControlID(0x53425458, FocusType.Passive);
             if (e.type == EventType.Layout && !e.alt && !EditorGUIUtility.editingTextField) HandleUtility.AddDefaultControl(id);
             if (EditorWindow.focusedWindow != view || EditorGUIUtility.editingTextField)
@@ -183,7 +188,10 @@ namespace SimpleBlend.Editor
                     if (!_tipCache.TryGet(SimpleBlendBrushSettings.instance.TextureBrush, out _strokeTip, out var error))
                     { LastStroke = error; LastPaint = Target.Paint; Changed?.Invoke(); e.Use(); break; }
                     _strokeRight = view.camera.transform.right;
-                    _stroke.Begin(Target, _atlas, Surface, Erase, _command, _strokeTip);
+                    _strokeView = new TexturePaintView(view.camera);
+                    _strokeTransform = Target.transform.localToWorldMatrix;
+                    _visibility = new TexturePaintVisibility(_atlas, _strokeView);
+                    _stroke.Begin(Target, _atlas, Surface, Erase, _command, _strokeTip, _visibility);
                     GUIUtility.hotControl = _control = id;
                     _view = view;
                     _sampler.Reset();
@@ -225,8 +233,7 @@ namespace SimpleBlend.Editor
             foreach (var sample in _samples)
             {
                 // Reproject resampled positions onto the actual section instead of painting through empty space.
-                var ray = new Ray(sample + hit.Normal * _command.Radius, -hit.Normal);
-                if (_atlas.Raycast(ray, out var projected) && Vector3.Distance(projected.Point, sample) <= _command.Radius * 0.25f)
+                if (_visibility.Project(sample, out var projected) && Vector3.Distance(projected.Point, sample) <= _command.Radius * 0.25f)
                     _stroke.Dab(projected.Point, projected.Normal, preferredRight: _strokeRight, upload: false);
             }
             _stroke.Upload();
@@ -248,6 +255,7 @@ namespace SimpleBlend.Editor
             _sampler.Reset();
             _hasPoint = false;
             _strokeTip = null;
+            _visibility = null;
         }
     }
 }

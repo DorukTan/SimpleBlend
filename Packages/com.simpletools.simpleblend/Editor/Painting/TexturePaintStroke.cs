@@ -20,10 +20,12 @@ namespace SimpleBlend.Editor
         private TextureBrushTip _tip;
         private float[] _coverage;
         private bool _needsUpload;
+        private TexturePaintVisibility _visibility;
 
         internal bool Active => _paint != null;
 
-        internal void Begin(TexturePaintTarget target, TexturePaintAtlas atlas, int surface, bool erase, VertexBrushCommand command, TextureBrushTip tip = null)
+        internal void Begin(TexturePaintTarget target, TexturePaintAtlas atlas, int surface, bool erase, VertexBrushCommand command,
+            TextureBrushTip tip = null, TexturePaintVisibility visibility = null)
         {
             if (Active) throw new InvalidOperationException("Finish the current texture stroke first.");
             var problem = Problem(target);
@@ -41,6 +43,7 @@ namespace SimpleBlend.Editor
             _tip = tip;
             _coverage = command.Accumulate || (tip != null && tip.LimitOpacity) ? new float[_baseline.Length] : null;
             _needsUpload = false;
+            _visibility = visibility;
         }
 
         internal int Dab(Vector3 center, Vector3 normal, bool fill = false, Vector3? preferredRight = null, bool upload = true)
@@ -76,6 +79,7 @@ namespace SimpleBlend.Editor
                             * _command.Strength * _command.Flow;
                 }
                 if (!float.IsFinite(influence) || influence <= 0) continue;
+                if (!fill && _visibility != null && !_visibility.Allows(index)) continue;
                 if (_coverage != null && (_command.Accumulate || (!fill && _tip != null && _tip.LimitOpacity)))
                 {
                     var limited = !fill && _tip != null && _tip.LimitOpacity;
@@ -123,6 +127,7 @@ namespace SimpleBlend.Editor
             _maximum = null;
             _coverage = null;
             _tip = null;
+            _visibility = null;
             return changed;
         }
 

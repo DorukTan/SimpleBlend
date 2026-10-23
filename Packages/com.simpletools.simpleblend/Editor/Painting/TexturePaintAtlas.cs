@@ -14,6 +14,9 @@ namespace SimpleBlend.Editor
         private readonly Vector3[] _vertices;
         private readonly Vector3[] _normals;
         private readonly int[] _sections;
+        private readonly MeshRaycastIndex _rayIndex;
+        private readonly int _section;
+        internal int TransformRevision { get; private set; }
         private Matrix4x4 _transform;
         private bool _hasTransform;
         private readonly UniformVertexGrid _grid = new UniformVertexGrid();
@@ -28,6 +31,7 @@ namespace SimpleBlend.Editor
             if (mesh == null || !mesh.isReadable || section < 0 || section >= mesh.subMeshCount)
                 throw new ArgumentException("The paint mesh section is unavailable.");
             _vertices = mesh.vertices;
+            _section = section;
             _normals = mesh.normals;
             _rayVertices = new Vector3[_vertices.Length];
             _rayNormals = new Vector3[_normals.Length];
@@ -35,8 +39,16 @@ namespace SimpleBlend.Editor
             var uv = mesh.uv4;
             if (uv.Length != _vertices.Length) throw new ArgumentException("The paint mesh needs its generated UV4 atlas.");
             Triangles = mesh.GetTriangles(section);
-            _sections = new int[Triangles.Length / 3];
-            for (var i = 0; i < _sections.Length; i++) _sections[i] = section;
+            var allTriangles = new List<int>();
+            var sections = new List<int>();
+            for (var slot = 0; slot < mesh.subMeshCount; slot++)
+            {
+                var indices = mesh.GetTriangles(slot);
+                allTriangles.AddRange(indices);
+                for (var i = 0; i < indices.Length / 3; i++) sections.Add(slot);
+            }
+            _sections = sections.ToArray();
+            _rayIndex = new MeshRaycastIndex(_rayVertices, _rayNormals, allTriangles.ToArray(), _sections);
             var count = resolution * resolution;
             Positions = new Vector3[count];
             Normals = new Vector3[count];
@@ -114,12 +126,14 @@ namespace SimpleBlend.Editor
             if (_hasTransform && _transform == matrix) return;
             _transform = matrix;
             _hasTransform = true;
+            TransformRevision++;
             var normalMatrix = matrix.inverse.transpose;
             for (var i = 0; i < _rayVertices.Length; i++)
             {
                 _rayVertices[i] = matrix.MultiplyPoint3x4(_vertices[i]);
                 _rayNormals[i] = normalMatrix.MultiplyVector(_normals[i]).normalized;
             }
+            _rayIndex.Rebuild();
             var bounds = new Bounds(matrix.MultiplyPoint3x4(Vector3.zero), Vector3.zero);
             for (var i = 0; i < _pixels.Length; i++)
             {
@@ -133,8 +147,12 @@ namespace SimpleBlend.Editor
 
         internal bool Raycast(Ray ray, out MeshRaycastHit hit)
         {
-            return MeshTriangleRaycaster.TryRaycast(ray, _rayVertices, _rayNormals, Triangles, _sections, out hit);
+            if (_rayIndex.Raycast(ray, out hit) && hit.SubmeshIndex == _section) return true;
+            hit = default;
+            return false;
         }
+
+        internal bool Occluded(Ray ray, float maximumDistance) => _rayIndex.Raycast(ray, out _, maximumDistance);
 
         private static float Cross(Vector2 a, Vector2 b) => a.x * b.y - a.y * b.x;
     }
