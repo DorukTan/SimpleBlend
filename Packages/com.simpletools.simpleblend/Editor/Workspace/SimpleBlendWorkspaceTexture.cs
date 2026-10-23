@@ -158,6 +158,11 @@ namespace SimpleBlend.Editor
                 settings.Radius = EditorGUILayout.Slider("Brush radius (m)", settings.Radius, 0.001f, 10);
                 settings.Strength = EditorGUILayout.Slider(new GUIContent("Opacity (%)", "Per-dab strength, or a maximum per stroke when Limit stroke to opacity is enabled."), settings.Strength * 100, 0, 100) / 100;
                 settings.Flow = EditorGUILayout.Slider("Flow (%)", settings.Flow * 100, 0, 100) / 100;
+                settings.TextureThroughPaint = EditorGUILayout.Popup(new GUIContent("Paint reach",
+                    "Visible surface protects hidden parts of this mesh. Through nearby surfaces bypasses occlusion only; brush depth, facing and section limits still apply."),
+                    settings.TextureThroughPaint ? 1 : 0, new[] { "Visible surface", "Through nearby surfaces" }) == 1;
+                if (settings.TextureThroughPaint)
+                    EditorGUILayout.HelpBox("Through paint can also affect nearby hidden, same-facing surfaces in this section. Brush depth and opposing-face limits still apply; the pointer stays on the visible surface.", MessageType.Warning);
                 var shape = settings.TextureBrush;
                 shape.Tip = (TextureBrushTipKind)EditorGUILayout.EnumPopup("Brush tip", shape.Tip);
                 if (shape.Tip == TextureBrushTipKind.Custom)
@@ -185,7 +190,7 @@ namespace SimpleBlend.Editor
                     shape.Spacing = EditorGUILayout.Slider(new GUIContent("Spacing (%)", "Distance between dabs, as a percentage of brush diameter."), shape.Spacing * 100, 1, 200) / 100;
                     shape.Smoothing = EditorGUILayout.Slider("Smoothing (%)", shape.Smoothing * 100, 0, 100) / 100;
                     shape.LimitOpacity = EditorGUILayout.Toggle("Limit stroke to opacity", shape.LimitOpacity);
-                    EditorGUILayout.HelpBox("The ring is the projected radius. Paint checks visibility within this mesh from the Scene camera, stays in the selected section and excludes opposing faces. Fill covers the whole section. Other scene objects do not block this brush.", MessageType.None);
+                    EditorGUILayout.HelpBox("The ring is the projected radius. Visible surface checks mesh occlusion from the Scene camera; Through nearby surfaces skips that check. Both stay in the selected section and exclude opposing faces. Fill covers the whole section. Other scene objects do not block this brush.", MessageType.None);
                 }
                 if (EditorGUI.EndChangeCheck()) { SimpleBlendTexturePaintTool.FinishCurrentStroke(); settings.SaveSettings(); }
                 _textureStrokePreview.Draw(settings);

@@ -324,7 +324,8 @@ namespace SimpleBlend.Editor
                     _strokeTransform = Target.transform.localToWorldMatrix;
                     _visibility = new TexturePaintVisibility(_atlas, _strokeView);
                     _strokePaint = Paint;
-                    _stroke.Begin(Target, _atlas, Surface, Erase, _command, _strokeTip, _visibility, Section);
+                    _stroke.Begin(Target, _atlas, Surface, Erase, _command, _strokeTip, _visibility, Section,
+                        SimpleBlendBrushSettings.instance.TextureThroughPaint);
                     GUIUtility.hotControl = _control = id;
                     _view = view;
                     _sampler.Reset();
