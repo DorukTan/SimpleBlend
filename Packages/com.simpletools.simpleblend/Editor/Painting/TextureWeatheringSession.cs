@@ -11,6 +11,9 @@ namespace SimpleBlend.Editor
     {
         internal const string ShaderName = "Hidden/SimpleBlend/Weathering Changes";
         private static TextureWeatheringSession _active;
+        private static TextureWeatheringSession _generating;
+        private int _generationVersion;
+        private TexturePaintTarget _generationTarget;
         private TextureWeatheringPreview _preview;
         private Texture2D _changes;
         private Material _material;
@@ -25,11 +28,16 @@ namespace SimpleBlend.Editor
         internal bool Active => _preview != null;
         internal event Action Changed;
 
-        internal static bool BlocksBrush(TexturePaintTarget target) => _active != null && _active.Active && _active._target == target;
+        internal static bool BlocksPaintInput => _generating != null || (_active != null && _active.Active);
+
+        internal static bool BlocksBrush(TexturePaintTarget target) => target != null
+            && ((_active != null && _active.Active && _active._target == target)
+                || (_generating != null && _generating._generationTarget == target));
 
         internal static void CancelFor(TexturePaintTarget target)
         {
             if (_active != null && _active._target == target) _active.Cancel();
+            if (_generating != null && _generating._generationTarget == target) _generating.Cancel();
         }
 
         internal bool Matches(TexturePaintTarget target, int surface, bool erase)
@@ -38,13 +46,24 @@ namespace SimpleBlend.Editor
         internal void Begin(TexturePaintTarget target, int surface, bool erase, TextureWeatheringSettings settings,
             Func<bool> cancelled = null, Action<int, int> progress = null)
         {
-            Cancel(); _active?.Cancel();
-            SimpleBlendTexturePaintTool.FinishCurrentStroke();
+            Cancel(); _active?.Cancel(); _generating?.Cancel();
+            var version = ++_generationVersion;
+            _generating = this; _generationTarget = target;
             TextureWeatheringPreview preview = null; Texture2D changes = null; Material material = null;
             try
             {
+                SimpleBlendTexturePaintTool.FinishCurrentStroke();
+                SimpleBlendPaintTool.FinishCurrentGesture();
+                EnsureGeneration(version, target);
                 preview = new TextureWeatheringPreview(target, surface, erase);
-                preview.Generate(settings, cancelled, progress);
+                preview.Generate(settings, () =>
+                {
+                    EnsureGeneration(version, target);
+                    var requested = cancelled != null && cancelled();
+                    EnsureGeneration(version, target);
+                    return requested;
+                }, progress);
+                EnsureGeneration(version, target);
                 var shader = Shader.Find(ShaderName);
                 if (shader == null || !shader.isSupported) throw new InvalidOperationException("The weathering preview shader is unavailable. Saved paint was not changed.");
                 var result = preview.CopyPixels(); var baseline = target.Paint.Pixels;
@@ -61,6 +80,7 @@ namespace SimpleBlend.Editor
                 material = new Material(shader) { name = "SimpleBlend Weathering Preview", hideFlags = HideFlags.HideAndDontSave };
                 material.SetTexture("_ChangeMask", changes); material.SetColor("_PreviewColor", Handles.selectedColor);
                 preview.CheckCurrent();
+                EnsureGeneration(version, target);
                 _preview = preview; _changes = changes; _material = material; _target = target; _surface = surface; _erase = erase;
                 _active = this; Subscribe(); Changed?.Invoke(); SceneView.RepaintAll();
             }
@@ -75,6 +95,18 @@ namespace SimpleBlend.Editor
                 }
                 throw;
             }
+            finally
+            {
+                if (_generating == this && _generationVersion == version)
+                { _generating = null; _generationTarget = null; }
+            }
+        }
+
+        private void EnsureGeneration(int version, TexturePaintTarget target)
+        {
+            if (_generating != this || _generationVersion != version
+                || !SimpleBlendTexturePaintTool.KeepTargetForSelection(target, Selection.objects))
+                throw new OperationCanceledException("Weathering preview cancelled because its request or selected target changed. Saved paint was not changed.");
         }
 
         internal int Apply()
@@ -141,6 +173,9 @@ namespace SimpleBlend.Editor
         internal void Cancel()
         {
             var wasActive = Active;
+            _generationVersion++;
+            if (_generating == this) _generating = null;
+            _generationTarget = null;
             Unsubscribe(); _preview?.Dispose(); _preview = null;
             if (_material != null) Object.DestroyImmediate(_material);
             if (_changes != null) Object.DestroyImmediate(_changes);

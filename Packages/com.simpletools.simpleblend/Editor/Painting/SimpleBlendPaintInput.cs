@@ -18,7 +18,8 @@ namespace SimpleBlend.Editor
                 return SimpleBlendPaintInput.CanDispatch(true,
                     EditorGUIUtility.editingTextField || GUIUtility.keyboardControl != 0 || uiHasFocus,
                     EditorApplication.isPlayingOrWillChangePlaymode,
-                    ToolManager.activeToolType == typeof(SimpleBlendPaintTool), false, Event.current?.alt ?? false);
+                    ToolManager.activeToolType == typeof(SimpleBlendPaintTool), false, Event.current?.alt ?? false,
+                    TextureWeatheringSession.BlocksPaintInput);
             }
         }
     }
@@ -44,8 +45,9 @@ namespace SimpleBlend.Editor
             if (!Context.active) { ClearTemporaryErase(); ClearAdjustment(); }
         }
 
-        internal static bool CanDispatch(bool sceneFocused, bool textOrUiFocused, bool playing, bool paintToolActive, bool gestureActive, bool navigating = false)
-            => sceneFocused && !textOrUiFocused && !playing && paintToolActive && !gestureActive && !navigating;
+        internal static bool CanDispatch(bool sceneFocused, bool textOrUiFocused, bool playing, bool paintToolActive, bool gestureActive,
+            bool navigating = false, bool suspended = false)
+            => sceneFocused && !textOrUiFocused && !playing && paintToolActive && !gestureActive && !navigating && !suspended;
 
         private static bool CanAct => Context.active && GUIUtility.hotControl == 0 && AdjustmentHeld == BrushAdjustment.None && !(Event.current?.alt ?? false);
         internal static void ClearAdjustment() => AdjustmentHeld = BrushAdjustment.None;

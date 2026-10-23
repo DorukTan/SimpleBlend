@@ -31,6 +31,8 @@ namespace SimpleBlend.Editor.Tests
         public void TearDown()
         {
             foreach (var session in _sessions) session.Dispose(); _sessions.Clear();
+            if (ToolManager.activeToolType == typeof(SimpleBlendPaintTool)) ToolManager.RestorePreviousTool();
+            SimpleBlendTargetLock.Unlock(); SimpleBlendPaintInput.ClearTemporaryErase();
             SimpleBlendTexturePaintTool.Stop(); Selection.objects = _selection; TexturePaintSaveQueue.Flush(); Undo.ClearAll();
             if (_scene.IsValid()) EditorSceneManager.ClosePreviewScene(_scene); _assets.Dispose();
         }
@@ -210,6 +212,97 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(Undo.GetCurrentGroup(), Is.EqualTo(group)); Assert.That(session.Active, Is.False);
             session.Begin(target, 1, false, Settings()); SimpleBlendTexturePaintTool.Fill(target, 1);
             Assert.That(session.Active, Is.False); Assert.That(TextureWeatheringSession.BlocksBrush(target), Is.False);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CancellationDuringGenerationCannotPublishTheCandidate(bool fromCancellationPoll)
+        {
+            var target = Target(); var session = Session(); var baseline = (Color32[])target.Paint.Pixels.Clone();
+            var cancelled = false;
+            void CancelOnce() { if (!cancelled) { cancelled = true; session.Cancel(); } }
+            Assert.Throws<OperationCanceledException>(() => session.Begin(target, 1, false, Settings(),
+                fromCancellationPoll ? () => { CancelOnce(); return false; } : null,
+                fromCancellationPoll ? null : (done, total) => CancelOnce()));
+            Assert.That(session.Active, Is.False); Assert.That(session.Changes == null, Is.True);
+            Assert.That(target.Paint.Pixels, Is.EqualTo(baseline));
+        }
+
+        [Test]
+        public void ChangingSceneSelectionDuringGenerationCannotPublishForTheOldTarget()
+        {
+            var target = Target(); var session = Session(); var changed = false;
+            var other = _scene.GetRootGameObjects().First(go => go != target.gameObject);
+            Assert.Throws<OperationCanceledException>(() => session.Begin(target, 1, false, Settings(), progress: (done, total) =>
+            { if (!changed) { changed = true; Selection.activeGameObject = other; } }));
+            Assert.That(session.Active, Is.False); Assert.That(session.Changes == null, Is.True);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void NestedGenerationKeepsOnlyTheNewerPreview(bool sameSession)
+        {
+            var target = Target(); var first = Session(); var newer = sameSession ? first : Session();
+            var started = false; Texture2D newerTexture = null;
+            Assert.Throws<OperationCanceledException>(() => first.Begin(target, 1, false, Settings(), progress: (done, total) =>
+            {
+                if (started) return;
+                started = true; newer.Begin(target, 1, false, Settings()); newerTexture = newer.Changes;
+            }));
+            Assert.That(newer.Active, Is.True); Assert.That(newerTexture != null, Is.True);
+            Assert.That(newer.Changes, Is.SameAs(newerTexture));
+            if (!sameSession) Assert.That(first.Active, Is.False);
+            Assert.That(Resources.FindObjectsOfTypeAll<Texture2D>().Count(texture => texture.name == "SimpleBlend Weathering Changes"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ProjectSelectionDuringGenerationRetainsTheBoundTarget()
+        {
+            var target = Target(); var session = Session();
+            session.Begin(target, 1, false, Settings(), progress: (done, total) => Selection.activeObject = target.Paint);
+            Assert.That(session.Active, Is.True); Assert.That(session.Target, Is.SameAs(target));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void GeneratingAndDisplayedPreviewsSuspendInputUntilCancellation(bool cancelDuringGeneration)
+        {
+            var target = Target(); var session = Session(); var observed = false;
+            void Generate() => session.Begin(target, 1, false, Settings(), () => cancelDuringGeneration && observed,
+                (done, total) =>
+                {
+                    observed = true;
+                    Assert.That(TextureWeatheringSession.BlocksPaintInput, Is.True);
+                    Assert.That(TextureWeatheringSession.BlocksBrush(target), Is.True);
+                    Assert.That(SimpleBlendPaintInput.CanDispatch(true, false, false, true, false,
+                        suspended: TextureWeatheringSession.BlocksPaintInput), Is.False);
+                });
+            if (cancelDuringGeneration) Assert.Throws<OperationCanceledException>(() => Generate());
+            else { Generate(); Assert.That(TextureWeatheringSession.BlocksPaintInput, Is.True); session.Cancel(); }
+            Assert.That(observed, Is.True); Assert.That(TextureWeatheringSession.BlocksPaintInput, Is.False);
+            Assert.That(SimpleBlendPaintInput.CanDispatch(true, false, false, true, false,
+                suspended: TextureWeatheringSession.BlocksPaintInput), Is.True);
+        }
+
+        [Test]
+        public void PreviewFinishesLockedVertexGestureWithoutDeactivatingItsToolOrUnlockingTarget()
+        {
+            var target = Target();
+            var vertexObject = GameObject.CreatePrimitive(PrimitiveType.Cube); SceneManager.MoveGameObjectToScene(vertexObject, _scene);
+            Assert.That(VertexPaintSetupUtility.Enable(vertexObject.GetComponent<Renderer>(), false, out var data).IsValid, Is.True);
+            Selection.activeGameObject = vertexObject; ToolManager.SetActiveTool<SimpleBlendPaintTool>();
+            Assert.That(SimpleBlendTargetLock.Lock(data), Is.True); Selection.activeGameObject = target.gameObject;
+            var tool = (SimpleBlendPaintTool)typeof(SimpleBlendPaintTool).GetField("_active", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            var stroke = (VertexPaintStrokeSession)typeof(SimpleBlendPaintTool).GetField("_stroke", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(tool);
+            Assert.That(stroke.Begin(data), Is.True); SimpleBlendPaintInput.SetTemporaryErase(true);
+            var vertexBaseline = (Color32[])data.SerializedColors.Clone(); var paintBaseline = (Color32[])target.Paint.Pixels.Clone();
+            var session = Session(); session.Begin(target, 1, false, Settings());
+            Assert.That(stroke.IsActive, Is.False); Assert.That(SimpleBlendPaintInput.EraseHeld, Is.False);
+            Assert.That(ToolManager.activeToolType, Is.EqualTo(typeof(SimpleBlendPaintTool)));
+            Assert.That(SimpleBlendTargetLock.IsLocked, Is.True); Assert.That(TextureWeatheringSession.BlocksPaintInput, Is.True);
+            session.Cancel(); Assert.That(TextureWeatheringSession.BlocksPaintInput, Is.False);
+            Assert.That(SimpleBlendTargetLock.IsLocked, Is.True);
+            Assert.That(data.SerializedColors, Is.EqualTo(vertexBaseline)); Assert.That(target.Paint.Pixels, Is.EqualTo(paintBaseline));
         }
 
         private TexturePaintTarget Target()
