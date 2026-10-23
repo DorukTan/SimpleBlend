@@ -98,6 +98,92 @@ namespace SimpleBlend.Editor
             }
         }
 
+        internal static TexturePaintAsset PrepareSection(TexturePaintTarget target, SurfacePalette palette, int section, string path)
+        {
+            var problem = TexturePaintStroke.Problem(target);
+            if (!string.IsNullOrEmpty(problem)) throw new InvalidOperationException(problem);
+            if (palette == null) throw new ArgumentNullException(nameof(palette));
+            if (!string.IsNullOrEmpty(palette.Problem)) throw new InvalidOperationException(palette.Problem);
+            var mesh = target.Paint.Mesh;
+            var renderer = target.GetComponent<MeshRenderer>();
+            var beforeMaterials = renderer.sharedMaterials;
+            if (section < 0 || section >= mesh.subMeshCount || section >= beforeMaterials.Length)
+                throw new ArgumentOutOfRangeException(nameof(section));
+            if (target.PaintForSection(section) != null) throw new InvalidOperationException("This material section already has paint.");
+            if (mesh.GetTopology(section) != MeshTopology.Triangles || mesh.GetIndexCount(section) == 0)
+                throw new InvalidOperationException("Choose a non-empty triangle mesh section.");
+            if (mesh.uv4.Length != mesh.vertexCount || !AssetDatabase.Contains(mesh)
+                || AssetDatabase.GetAssetPath(mesh) != AssetDatabase.GetAssetPath(target.Paint))
+                throw new InvalidOperationException("Restore this target's owned paint mesh and UV4 atlas before preparing another section.");
+            var resolution = target.Paint.Mask.width;
+            if (resolution != 256 && resolution != 512 && resolution != 1024)
+                throw new InvalidOperationException("The existing paint mask needs a supported resolution.");
+            ValidateAssetPath(path);
+            TextureWeatheringSession.CancelFor(target);
+            if (SimpleBlendTexturePaintTool.IsActiveFor(target)) SimpleBlendTexturePaintTool.FinishCurrentStroke();
+            var beforeTarget = EditorJsonUtility.ToJson(target);
+            TexturePaintAsset paint = null;
+            Material material = null;
+            Texture2D mask = null;
+            var assetCreated = false;
+            Undo.IncrementCurrentGroup();
+            var group = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Prepare material section for painting");
+            try
+            {
+                mask = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false, true)
+                {
+                    name = target.name + " Section " + section + " Blend Mask",
+                    wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear
+                };
+                material = new Material(palette.Material) { name = target.name + " Section " + section + " Surfaces" };
+                material.SetFloat("_UseTextureWeights", 1);
+                material.SetFloat("_HeightBlendStrength", 0);
+                material.SetTexture("_BlendMask", mask);
+                paint = ScriptableObject.CreateInstance<TexturePaintAsset>();
+                paint.name = target.name + " Section " + section + " Paint";
+                var names = new string[palette.SurfaceCount];
+                for (var i = 0; i < names.Length; i++) names[i] = palette.SurfaceName(i);
+                paint.Configure(mesh, material, mask, names);
+                AssetDatabase.CreateAsset(paint, path);
+                if (AssetDatabase.LoadMainAssetAtPath(path) != paint) throw new InvalidOperationException("The section paint asset could not be saved.");
+                assetCreated = true;
+                // The original paint asset remains the mesh owner. Never re-unwrap or move that mesh.
+                AssetDatabase.AddObjectToAsset(material, paint);
+                AssetDatabase.AddObjectToAsset(mask, paint);
+                EditorUtility.SetDirty(paint);
+                AssetDatabase.SaveAssetIfDirty(paint);
+                Undo.RecordObjects(new Object[] { target, renderer }, "Prepare material section for painting");
+                target.BindSection(paint, section);
+                var materials = (Material[])beforeMaterials.Clone();
+                materials[section] = material;
+                renderer.sharedMaterials = materials;
+                PrefabUtility.RecordPrefabInstancePropertyModifications(target);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
+                Undo.CollapseUndoOperations(group);
+                return paint;
+            }
+            catch
+            {
+                EditorJsonUtility.FromJsonOverwrite(beforeTarget, target);
+                renderer.sharedMaterials = beforeMaterials;
+                if (assetCreated) AssetDatabase.DeleteAsset(path);
+                foreach (var item in new Object[] { paint, material, mask })
+                    if (item != null && !EditorUtility.IsPersistent(item)) Object.DestroyImmediate(item);
+                throw;
+            }
+        }
+
+        private static void ValidateAssetPath(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !path.StartsWith("Assets/", StringComparison.Ordinal)
+                || path.Contains("/../") || path.Contains("/./") || path.Contains("\\")
+                || !path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase)
+                || !AssetDatabase.IsValidFolder(System.IO.Path.GetDirectoryName(path)?.Replace('\\', '/'))
+                || System.IO.File.Exists(path) || AssetDatabase.LoadMainAssetAtPath(path) != null)
+                throw new ArgumentException("Choose a new .asset path inside Assets. Existing assets are never overwritten.", nameof(path));
+        }
+
         private static void CopyBase(Material source, Material destination)
         {
             if (source == null) return;
@@ -121,11 +207,7 @@ namespace SimpleBlend.Editor
             var problem = Problem(source, palette, section);
             if (!string.IsNullOrEmpty(problem)) throw new InvalidOperationException(problem);
             if (resolution != 256 && resolution != 512 && resolution != 1024) throw new ArgumentOutOfRangeException(nameof(resolution));
-            if (string.IsNullOrEmpty(path) || !path.StartsWith("Assets/", StringComparison.Ordinal)
-                || !path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase)
-                || !AssetDatabase.IsValidFolder(System.IO.Path.GetDirectoryName(path)?.Replace('\\', '/'))
-                || System.IO.File.Exists(path) || AssetDatabase.LoadMainAssetAtPath(path) != null)
-                throw new ArgumentException("Choose a new .asset path inside Assets. Existing assets are never overwritten.", nameof(path));
+            ValidateAssetPath(path);
 
             var mesh = Object.Instantiate(source.GetComponent<MeshFilter>().sharedMesh);
             TexturePaintAsset paint = null;

@@ -320,6 +320,185 @@ namespace SimpleBlend.Editor.Tests
         }
 
         [Test]
+        public void LegacySectionLookupsDoNotMutateThePrimaryBinding()
+        {
+            var target = Create(); var before = EditorJsonUtility.ToJson(target);
+            Assert.That(target.PaintForSection(0), Is.SameAs(target.Paint));
+            Assert.That(target.PaintForSection(-1), Is.Null);
+            Assert.That(target.PaintForSection(1), Is.Null);
+            Assert.That(target.PaintForSection(int.MaxValue), Is.Null);
+            Assert.That(EditorJsonUtility.ToJson(target), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void PreparingAnotherSectionPreservesExistingMeshUvsPaintAndSourceInputs()
+        {
+            var target = MultiSectionTarget(); var primary = target.Paint;
+            Fill(target, Atlas(target), 1, 0.6f); TexturePaintSaveQueue.Flush();
+            var mesh = primary.Mesh; var uv = mesh.uv4;
+            var pixels = (Color32[])primary.Pixels.Clone();
+            var primaryBytes = System.IO.File.ReadAllBytes(PaintPath);
+            var sourceMeshJson = EditorJsonUtility.ToJson(_source.GetComponent<MeshFilter>().sharedMesh);
+            var paletteJson = EditorJsonUtility.ToJson(_palette.Material);
+            var second = TexturePaintSetup.PrepareSection(target, _palette, 1, SectionPath);
+            Assert.That(target.Paint, Is.SameAs(primary)); Assert.That(target.MaterialSection, Is.Zero);
+            Assert.That(target.PaintForSection(1), Is.SameAs(second));
+            Assert.That(second.Mesh, Is.SameAs(mesh)); Assert.That(mesh.uv4, Is.EqualTo(uv));
+            Assert.That(second.Material, Is.Not.SameAs(primary.Material)); Assert.That(second.Mask, Is.Not.SameAs(primary.Mask));
+            Assert.That(AssetDatabase.GetAssetPath(mesh), Is.EqualTo(PaintPath));
+            Assert.That(AssetDatabase.GetAssetPath(second.Material), Is.EqualTo(SectionPath));
+            Assert.That(AssetDatabase.GetAssetPath(second.Mask), Is.EqualTo(SectionPath));
+            Assert.That(second.Mask.width, Is.EqualTo(primary.Mask.width));
+            Assert.That(primary.Pixels, Is.EqualTo(pixels)); Assert.That(primary.Mask.GetPixels32(), Is.EqualTo(pixels));
+            Assert.That(System.IO.File.ReadAllBytes(PaintPath), Is.EqualTo(primaryBytes));
+            Assert.That(EditorJsonUtility.ToJson(_source.GetComponent<MeshFilter>().sharedMesh), Is.EqualTo(sourceMeshJson));
+            Assert.That(EditorJsonUtility.ToJson(_palette.Material), Is.EqualTo(paletteJson));
+            Assert.That(_source.GetComponent<MeshRenderer>().enabled, Is.False);
+            Assert.That(_source.GetComponent<MeshRenderer>().sharedMaterials, Is.EqualTo(new[] { _palette.Material, _palette.Material }));
+            Assert.That(target.GetComponent<MeshRenderer>().sharedMaterials, Is.EqualTo(new[] { primary.Material, second.Material }));
+            Assert.That(TexturePaintStroke.Problem(target, 1), Is.Empty);
+        }
+
+        [Test]
+        public void SectionPreparationIsOneUndoAndRetainsItsSavedAssetForRedo()
+        {
+            var target = MultiSectionTarget(); Undo.FlushUndoRecordObjects(); Undo.ClearAll();
+            var second = TexturePaintSetup.PrepareSection(target, _palette, 1, SectionPath);
+            Undo.FlushUndoRecordObjects(); Undo.PerformUndo();
+            Assert.That(target.PaintForSection(1), Is.Null);
+            Assert.That(target.GetComponent<MeshRenderer>().sharedMaterials[1].GetInstanceID(), Is.EqualTo(_palette.Material.GetInstanceID()));
+            Assert.That(AssetDatabase.LoadAssetAtPath<TexturePaintAsset>(SectionPath), Is.EqualTo(second));
+            Assert.That(TexturePaintStroke.Problem(target), Is.Empty);
+            Undo.PerformRedo();
+            Assert.That(target.PaintForSection(1), Is.EqualTo(second));
+            Assert.That(TexturePaintStroke.Problem(target, 1), Is.Empty);
+        }
+
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        public void SectionStrokeWritesOnlyItsOwnMaskAndHasIndependentUndo(bool erase, bool fill)
+        {
+            var target = MultiSectionTarget();
+            Fill(target, Atlas(target), 1, 0.6f);
+            var primaryPixels = (Color32[])target.Paint.Pixels.Clone();
+            var second = TexturePaintSetup.PrepareSection(target, _palette, 1, SectionPath);
+            var atlas = new TexturePaintAtlas(second.Mesh, 1, 256);
+            foreach (var pixel in atlas.Pixels) second.Pixels[pixel] = new Color32((byte)(erase ? 255 : 0), 0, 0, 37);
+            second.CommitPixels(); Undo.FlushUndoRecordObjects(); Undo.ClearAll();
+            var before = (Color32[])second.Pixels.Clone();
+            var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, erase, SectionCommand(), materialSection: 1);
+            stroke.Dab(new Vector3(0.25f, 0, 0), Vector3.forward, fill); Assert.That(stroke.End(), Is.GreaterThan(20));
+            var after = (Color32[])second.Pixels.Clone();
+            Assert.That(target.Paint.Pixels, Is.EqualTo(primaryPixels));
+            foreach (var pixel in atlas.Pixels)
+            {
+                Assert.That(second.Pixels[pixel].a, Is.EqualTo(37));
+                Assert.That(atlas.Positions[pixel].x, Is.GreaterThanOrEqualTo(-0.00001f));
+                if (fill) Assert.That(second.Pixels[pixel].r, Is.EqualTo(128).Within(1));
+            }
+            Undo.PerformUndo(); Assert.That(second.Pixels, Is.EqualTo(before));
+            Undo.PerformRedo(); Assert.That(second.Pixels, Is.EqualTo(after));
+            Assert.That(second.Mask.GetPixels32(), Is.EqualTo(after));
+            Assert.That(target.Paint.Pixels, Is.EqualTo(primaryPixels));
+        }
+
+        [TestCase(0, 256)]
+        [TestCase(1, 128)]
+        public void SectionStrokeRejectsMismatchedAtlasBeforeItBecomesActive(int section, int resolution)
+        {
+            var target = MultiSectionTarget();
+            var second = TexturePaintSetup.PrepareSection(target, _palette, 1, SectionPath);
+            var before = (Color32[])second.Pixels.Clone();
+            var stroke = new TexturePaintStroke();
+            Assert.Throws<ArgumentException>(() => stroke.Begin(target,
+                new TexturePaintAtlas(second.Mesh, section, resolution), 1, false, SectionCommand(), materialSection: 1));
+            Assert.That(stroke.Active, Is.False); Assert.That(second.Pixels, Is.EqualTo(before));
+        }
+
+        [TestCase("Duplicate")]
+        [TestCase("InvalidSlot")]
+        [TestCase("NegativeSlot")]
+        [TestCase("NullPalette")]
+        [TestCase("ExistingPath")]
+        [TestCase("EscapingPath")]
+        [TestCase("EmptySection")]
+        public void InvalidSectionPreparationLeavesBindingsMaterialsAndSavedPaintUntouched(string problem)
+        {
+            var target = MultiSectionTarget(); var section = 1; var path = SectionPath; var palette = _palette;
+            var exception = typeof(ArgumentException);
+            switch (problem)
+            {
+                case "Duplicate": section = 0; exception = typeof(InvalidOperationException); break;
+                case "InvalidSlot": section = 2; exception = typeof(ArgumentOutOfRangeException); break;
+                case "NegativeSlot": section = -1; exception = typeof(ArgumentOutOfRangeException); break;
+                case "NullPalette": palette = null; exception = typeof(ArgumentNullException); break;
+                case "ExistingPath": path = PaintPath; break;
+                case "EscapingPath": path = _assets.AssetPath + "/../Escaping.asset"; break;
+                case "EmptySection": target.Paint.Mesh.SetTriangles(Array.Empty<int>(), 1); exception = typeof(InvalidOperationException); break;
+            }
+            var before = EditorJsonUtility.ToJson(target);
+            var materials = target.GetComponent<MeshRenderer>().sharedMaterials;
+            var bytes = System.IO.File.ReadAllBytes(PaintPath);
+            Assert.Throws(exception, () => TexturePaintSetup.PrepareSection(target, palette, section, path));
+            Assert.That(EditorJsonUtility.ToJson(target), Is.EqualTo(before));
+            Assert.That(target.GetComponent<MeshRenderer>().sharedMaterials, Is.EqualTo(materials));
+            Assert.That(System.IO.File.ReadAllBytes(PaintPath), Is.EqualTo(bytes));
+            Assert.That(AssetDatabase.LoadMainAssetAtPath(SectionPath), Is.Null);
+        }
+
+        [Test]
+        public void UnpreparedOrDamagedSectionCannotPaintThroughAnotherSlotsBinding()
+        {
+            var target = MultiSectionTarget();
+            Assert.That(TexturePaintStroke.Problem(target, 1), Does.Contain("Prepare this material section"));
+            TexturePaintSetup.PrepareSection(target, _palette, 1, SectionPath);
+            var materials = target.GetComponent<MeshRenderer>().sharedMaterials;
+            materials[1] = _palette.Material; target.GetComponent<MeshRenderer>().sharedMaterials = materials;
+            Assert.That(TexturePaintStroke.Problem(target, 1), Does.Contain("restore its painted material slot"));
+            Assert.That(TexturePaintStroke.Problem(target), Is.Empty);
+        }
+
+        [Test]
+        public void PreparingSectionZeroDoesNotReplaceANonzeroPrimaryBinding()
+        {
+            var target = MultiSectionTarget(1); var primary = target.Paint;
+            var second = TexturePaintSetup.PrepareSection(target, _palette, 0, SectionPath);
+            Assert.That(target.MaterialSection, Is.EqualTo(1)); Assert.That(target.Paint, Is.SameAs(primary));
+            Assert.That(target.PaintForSection(0), Is.SameAs(second));
+            Assert.That(target.PaintForSection(1), Is.SameAs(primary));
+            Assert.That(TexturePaintStroke.Problem(target, 0), Is.Empty);
+        }
+
+        [Test]
+        public void PreparedSectionUsesItsOwnPaletteAndSurfaceLimits()
+        {
+            var target = MultiSectionTarget();
+            var palette = SurfacePaletteAuthoring.Create(_assets.AssetPath + "/SecondPalette.asset", new[]
+            {
+                new SurfaceDefinition { Name = "Sand" }, new SurfaceDefinition { Name = "Wet sand" }, new SurfaceDefinition { Name = "Shells" }
+            });
+            var second = TexturePaintSetup.PrepareSection(target, palette, 1, SectionPath);
+            Assert.That(second.SurfaceCount, Is.EqualTo(3)); Assert.That(second.SurfaceName(0), Is.EqualTo("Sand"));
+            Assert.That(target.Paint.SurfaceCount, Is.EqualTo(4)); Assert.That(target.Paint.SurfaceName(0), Is.EqualTo("Stone"));
+            var stroke = new TexturePaintStroke();
+            Assert.Throws<ArgumentOutOfRangeException>(() => stroke.Begin(target,
+                new TexturePaintAtlas(second.Mesh, 1, 256), 3, false, SectionCommand(), materialSection: 1));
+            Assert.That(stroke.Active, Is.False);
+        }
+
+        private string SectionPath => _assets.AssetPath + "/Section1.asset";
+        private TexturePaintTarget MultiSectionTarget(int section = 0)
+        {
+            _source.GetComponent<MeshFilter>().sharedMesh = SplitPlane(true);
+            _source.GetComponent<MeshRenderer>().sharedMaterials = new[] { _palette.Material, _palette.Material };
+            return TexturePaintSetup.Create(_source, _palette, section, 256, PaintPath);
+        }
+        private static VertexBrushCommand SectionCommand() => new VertexBrushCommand(Vector3.zero, 0.15f, 0.5f, 1,
+            new Color32(), AnimationCurve.Constant(0, 1, 1), VertexPaintBrushMode.Paint, VertexPaintChannel.RGB, false, VertexBrushMask.None);
+
+        [Test]
         public void ThreeSurfaceTexturePaintingKeepsUnusedBlueAndUsesOnlyRgWeights()
         {
             var palette = SurfacePaletteAuthoring.Create(_assets.AssetPath + "/Three.asset", new[]
@@ -351,9 +530,15 @@ namespace SimpleBlend.Editor.Tests
         [Test]
         public void PaintedObjectAndOwnedReferencesSurviveSceneSaveAndReopen()
         {
-            var target = Create(); var atlas = Atlas(target);
+            var target = MultiSectionTarget(); var atlas = Atlas(target);
             Fill(target, atlas, 1, 0.6f);
             var expected = (Color32[])target.Paint.Pixels.Clone();
+            var second = TexturePaintSetup.PrepareSection(target, _palette, 1, SectionPath);
+            var stroke = new TexturePaintStroke();
+            stroke.Begin(target, new TexturePaintAtlas(second.Mesh, 1, 256), 1, false, SectionCommand(), materialSection: 1);
+            stroke.Dab(Vector3.zero, Vector3.up, true); stroke.End();
+            var expectedSecond = (Color32[])second.Pixels.Clone();
+            AssetDatabase.SaveAssetIfDirty(second);
             AssetDatabase.SaveAssetIfDirty(target.Paint);
             var savedScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var scenePath = _assets.AssetPath + "/Painted.unity";
@@ -366,6 +551,10 @@ namespace SimpleBlend.Editor.Tests
                 Assert.That(TexturePaintStroke.Problem(loaded), Is.Empty);
                 Assert.That(loaded.Paint.Pixels, Is.EqualTo(expected));
                 Assert.That(loaded.Paint.Mask.GetPixels32(), Is.EqualTo(expected));
+                Assert.That(TexturePaintStroke.Problem(loaded, 1), Is.Empty);
+                Assert.That(loaded.PaintForSection(1).Mesh, Is.SameAs(loaded.Paint.Mesh));
+                Assert.That(loaded.PaintForSection(1).Pixels, Is.EqualTo(expectedSecond));
+                Assert.That(loaded.PaintForSection(1).Mask.GetPixels32(), Is.EqualTo(expectedSecond));
             }
             finally { EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single); }
         }

@@ -7,6 +7,9 @@ namespace SimpleBlend.Editor
     /// <summary>Maps covered mask texels and two-pixel gutters to points on the selected mesh section.</summary>
     internal sealed class TexturePaintAtlas
     {
+        internal Mesh Mesh { get; }
+        internal int MaterialSection => _section;
+        internal int Resolution { get; }
         internal readonly Vector3[] Positions;
         internal readonly Vector3[] Normals;
         internal readonly int[] Coverage;
@@ -30,6 +33,8 @@ namespace SimpleBlend.Editor
         {
             if (mesh == null || !mesh.isReadable || section < 0 || section >= mesh.subMeshCount)
                 throw new ArgumentException("The paint mesh section is unavailable.");
+            Mesh = mesh;
+            Resolution = resolution;
             _vertices = mesh.vertices;
             _section = section;
             _normals = mesh.normals;
