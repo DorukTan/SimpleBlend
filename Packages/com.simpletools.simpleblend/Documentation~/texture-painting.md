@@ -26,7 +26,7 @@ For **Not prepared** sections, choose **Prepare section**. This explicit action 
 
 During an active tool session, each section remembers its explicitly chosen surface. On first automatic routing to another section, an overlay is matched by its exact name, not its channel index. Base maps to Base. If no unambiguous overlay name matches, painting is blocked with a message to select that section and choose a surface in the Workspace. The under-pointer feedback identifies the prospective section/surface or the reason painting is blocked. After an automatic stroke starts, the section selector and surface list follow its destination. Choices are session-local, not saved brush presets. Undo remaps the active choice by name; if that name cannot be resolved, Base is selected instead of another overlay.
 
-Weathering remains available only on the primary section. Secondary selections show that limit explicitly and cannot preview or apply weathering to a different mask by accident.
+Weathering uses the displayed prepared section and its named surfaces too. Switching sections cancels the old preview; it never redirects Apply to another mask. Brush hover alone does not change the weathering destination.
 
 ## Edit surfaces
 
@@ -46,7 +46,7 @@ All these edits affect the owned material and paint asset, not the source palett
 
 ## Ownership and saving
 
-For primary-section noise, border and UV-seam treatments, expand the compact **Weathering** panel below Brush. Preview highlights affected texels without saving them; Apply commits one undoable treatment and Cancel discards it. See [Texture weathering](texture-weathering.md) for controls, local-space units and preview limitations.
+For section-wide noise, border and UV-seam treatments, expand the compact **Weathering** panel below Brush. It uses the displayed section, whether primary or independently prepared. Preview highlights affected texels without saving them; Apply commits one undoable treatment and Cancel discards it. See [Texture weathering](texture-weathering.md) for controls, local-space units and preview limitations.
 
 The initial `TexturePaintAsset` owns a mesh, material and mask as sub-assets in one file. Its serialized `Color32[]` is the authority for Undo and reconstruction. The linear RGBA32 mask has bilinear filtering, clamp addressing and no mipmaps. The RGB channels store overlay weights; unused channels are preserved by brush mixing. No PNG import, compression or color-space conversion occurs during a stroke.
 
@@ -72,11 +72,13 @@ Paint checks visibility against all triangle sections of the painted mesh from t
 
 This is geometric occlusion within the painted mesh, not a complete scene-rendering visibility test. Other scene objects do not block the brush; transparent, cutout, displaced and double-sided shader effects are not evaluated. The test treats every triangle section as an opaque, two-sided occluder. Depth comparisons allow a numerical tolerance of the larger of 0.00001 world units and one millionth of the view-ray distance; surfaces separated by less than that can be indistinguishable. **Fill** deliberately ignores camera visibility and covers the configured section.
 
-The Workspace supports readable static triangle meshes up to 100,000 vertices, multiple independently prepared material sections with one section per stroke, and Paint/Erase/Fill with shaped/textured brush-tip masks. Explicit through-paint/backface/connected-surface controls and skinned/vertex targeting parity remain separate roadmap work. It does not yet offer continuous multi-section gestures, secondary-section weathering, texture Smooth/Sample, color-image decal placement, skinned texture painting, arbitrary UV selection, resolution changes after setup, per-instance asset forking, or texture-mode Shader Graph references. Vertex shortcuts, target locking, diagnostic vertex overlays and advanced vertex masks remain specific to **Vertex paint**.
+The Workspace supports readable static triangle meshes up to 100,000 vertices, multiple independently prepared material sections with one section per stroke or weathering operation, and Paint/Erase/Fill with shaped/textured brush-tip masks. Explicit through-paint/backface/connected-surface controls and skinned/vertex targeting parity remain separate roadmap work. It does not yet offer continuous multi-section gestures, texture Smooth/Sample, color-image decal placement, skinned texture painting, arbitrary UV selection, resolution changes after setup, per-instance asset forking, or texture-mode Shader Graph references. Vertex shortcuts, target locking, diagnostic vertex overlays and advanced vertex masks remain specific to **Vertex paint**.
 
 Forward, deferred, depth-normal and meta passes of the hand-written Layer Blend materials share the texture-weight lookup. Existing materials default to vertex weights. Terrain materials and Shader Graph examples keep their previous contracts. This does not establish visual acceptance for every rendering feature or target platform.
 
 ## Verification
+
+The section-aware weathering follow-up on 2026-10-23 passed all 562 isolated editor tests, including 30 added cases. Weathering now captures the displayed prepared section's asset, surface limits, dimensions and weight channels rather than the primary binding. Preview/Cancel remain read-only, Apply is one selected-asset Undo operation, stale bindings reject safely and section switches cancel pending previews. Detailed evidence and native acceptance boundaries are recorded in [Texture weathering](texture-weathering.md).
 
 The Workspace section-routing follow-up on 2026-10-23 passed all 532 isolated editor tests, including 21 added cases. Coverage includes explicit preparation with one-to-four named surfaces and retained smooth/height settings, unique paths after Undo, read-only nearest-hit routing, prepared/unprepared occluders and locks, mirrored/nonuniform transforms, reordered or unmatched palettes, remembered surface names through removal Undo/redo, active-tool section switching and Fill, preparation Undo cache invalidation, one-mask stroke composition and retained scene context after Project-asset selection. Compilation includes the approved Workspace controls; mouse-driven interaction, native layout/brush feel and production-scale performance have not been visually accepted by these tests. A prior 96-test focused run passed before the final scene-context case was added.
 

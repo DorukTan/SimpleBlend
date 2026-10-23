@@ -190,12 +190,7 @@ namespace SimpleBlend.Editor
                 if (EditorGUI.EndChangeCheck()) { SimpleBlendTexturePaintTool.FinishCurrentStroke(); settings.SaveSettings(); }
                 _textureStrokePreview.Draw(settings);
             }
-            if (_textureSection == target.MaterialSection) DrawWeathering(target);
-            else
-            {
-                _weathering.Cancel();
-                EditorGUILayout.HelpBox($"Weathering is currently available only on the primary section ({target.MaterialSection}). Brush painting and Fill use section {_textureSection}.", MessageType.None);
-            }
+            DrawWeathering(target);
             var active = ToolManager.activeToolType == typeof(SimpleBlendTexturePaintTool) && SimpleBlendTexturePaintTool.Target == target;
             if (GUILayout.Button(active ? "Stop painting" : "Start painting", GUILayout.Height(28)))
             {

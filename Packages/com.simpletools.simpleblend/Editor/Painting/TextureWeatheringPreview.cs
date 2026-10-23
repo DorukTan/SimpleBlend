@@ -22,14 +22,18 @@ namespace SimpleBlend.Editor
         private Color32[] _preview;
         private bool _closed;
         internal int ChangedTexels { get; private set; }
+        internal TexturePaintAsset Paint => _paint;
+        internal int Section => _section;
 
-        internal TextureWeatheringPreview(TexturePaintTarget target, int surface, bool erase)
+        internal TextureWeatheringPreview(TexturePaintTarget target, int surface, bool erase, int? materialSection = null)
         {
-            var problem = TexturePaintStroke.Problem(target);
+            var problem = TexturePaintStroke.Problem(target, materialSection);
             if (!string.IsNullOrEmpty(problem)) throw new InvalidOperationException(problem);
-            if (surface < 0 || surface >= target.Paint.SurfaceCount) throw new ArgumentOutOfRangeException(nameof(surface));
-            _target = target; _paint = target.Paint; _mesh = _paint.Mesh; _material = _paint.Material; _mask = _paint.Mask;
-            _section = target.MaterialSection; _surface = surface; _erase = erase;
+            _section = materialSection ?? target.MaterialSection;
+            _target = target; _paint = target.PaintForSection(_section);
+            if (surface < 0 || surface >= _paint.SurfaceCount) throw new ArgumentOutOfRangeException(nameof(surface));
+            _mesh = _paint.Mesh; _material = _paint.Material; _mask = _paint.Mask;
+            _surface = surface; _erase = erase;
             _resolution = _mask.width;
             _baseline = (Color32[])_paint.Pixels.Clone(); _materialState = EditorJsonUtility.ToJson(_material);
             _names = new string[_paint.SurfaceCount];
@@ -104,8 +108,8 @@ namespace SimpleBlend.Editor
         private void Validate()
         {
             if (_closed) throw new InvalidOperationException("This weathering preview is closed. Create a new preview.");
-            var problem = TexturePaintStroke.Problem(_target);
-            var valid = string.IsNullOrEmpty(problem) && _target.Paint == _paint && _target.MaterialSection == _section
+            var problem = TexturePaintStroke.Problem(_target, _section);
+            var valid = string.IsNullOrEmpty(problem) && _target.PaintForSection(_section) == _paint
                 && _paint.Mesh == _mesh && _paint.Material == _material && _paint.Mask == _mask && _paint.SurfaceCount == _names.Length
                 && _mask.width == _resolution && _mask.height == _resolution && _paint.Pixels.Length == _baseline.Length;
             if (valid)
