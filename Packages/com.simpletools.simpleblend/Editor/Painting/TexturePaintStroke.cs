@@ -7,7 +7,7 @@ namespace SimpleBlend.Editor
 {
     internal enum TexturePaintFacing { WithBrush, AgainstBrush, EitherDirection }
 
-    internal sealed class TexturePaintStroke
+    internal sealed partial class TexturePaintStroke
     {
         private TexturePaintAsset _paint;
         private TexturePaintAtlas _atlas;
@@ -31,7 +31,7 @@ namespace SimpleBlend.Editor
 
         internal void Begin(TexturePaintTarget target, TexturePaintAtlas atlas, int surface, bool erase, VertexBrushCommand command,
             TextureBrushTip tip = null, TexturePaintVisibility visibility = null, int? materialSection = null, bool throughPaint = false,
-            int? connectedTriangle = null, TexturePaintFacing facing = TexturePaintFacing.WithBrush)
+            int? connectedTriangle = null, TexturePaintFacing facing = TexturePaintFacing.WithBrush, bool smooth = false)
         {
             if (Active) throw new InvalidOperationException("Finish the current texture stroke first.");
             var problem = Problem(target, materialSection);
@@ -43,6 +43,7 @@ namespace SimpleBlend.Editor
                 throw new ArgumentException("The paint atlas must match the prepared mesh section and mask resolution.", nameof(atlas));
             if (surface < 0 || surface >= paint.SurfaceCount) throw new ArgumentOutOfRangeException(nameof(surface));
             if ((uint)facing > (uint)TexturePaintFacing.EitherDirection) throw new ArgumentOutOfRangeException(nameof(facing));
+            if (smooth && erase) throw new ArgumentException("Smooth averages all surface weights; choose Smooth or Erase, not both.");
             var component = connectedTriangle.HasValue ? atlas.ComponentForTriangle(connectedTriangle.Value) : -1;
             if (connectedTriangle.HasValue && component < 0)
                 throw new ArgumentException("Start connected painting on a triangle in the prepared section.", nameof(connectedTriangle));
@@ -62,6 +63,7 @@ namespace SimpleBlend.Editor
             _throughPaint = throughPaint;
             _component = component;
             _facing = facing;
+            _smooth = smooth;
         }
 
         internal bool AllowsHit(MeshRaycastHit hit) => Active && hit.SubmeshIndex == _atlas.MaterialSection
@@ -70,6 +72,7 @@ namespace SimpleBlend.Editor
         internal int Dab(Vector3 center, Vector3 normal, bool fill = false, Vector3? preferredRight = null, bool upload = true)
         {
             if (!Active) return 0;
+            if (_smooth && fill) throw new InvalidOperationException("Smooth is a brush operation. Choose Paint or Erase before using Fill.");
             var normalLength = normal.magnitude;
             if (!fill && normalLength < 0.00001f) return 0;
             normal /= Mathf.Max(normalLength, 0.00001f);
@@ -84,27 +87,18 @@ namespace SimpleBlend.Editor
             var bounds = _tip == null ? 1.031f : Mathf.Sqrt(_tip.BoundingRadius * _tip.BoundingRadius + 0.0625f);
             if (!fill) _atlas.Query(center, _command.Radius * bounds, _candidates);
             var candidateCount = fill ? _atlas.Pixels.Count : _candidates.Count;
+            if (_smooth) BuildSmoothTargets(center, normal, right, up);
             for (var candidate = 0; candidate < candidateCount; candidate++)
             {
                 var index = fill ? candidate : _candidates[candidate];
                 var i = _atlas.Pixel(index);
-                if (!fill && _component >= 0 && _atlas.ComponentAt(index) != _component) continue;
-                var influence = _command.Strength * _command.Flow;
-                if (!fill)
+                if (!TryInfluence(index, center, normal, right, up, fill, out var influence)) continue;
+                var destination = target;
+                if (_smooth)
                 {
-                    var delta = _atlas.WorldPosition(index) - center;
-                    var depth = Vector3.Dot(delta, normal);
-                    var alignment = Vector3.Dot(_atlas.WorldNormal(index), normal);
-                    if (_facing == TexturePaintFacing.AgainstBrush) alignment = -alignment;
-                    else if (_facing == TexturePaintFacing.EitherDirection) alignment = Mathf.Abs(alignment);
-                    if (Mathf.Abs(depth) > _command.Radius * 0.25f
-                        || !float.IsFinite(alignment) || alignment < 0.25f) continue;
-                    influence = _tip == null ? _command.EvaluateWeight((delta - normal * depth).magnitude)
-                        : _tip.Evaluate(new Vector2(Vector3.Dot(delta, right), Vector3.Dot(delta, up)) / _command.Radius, _command.Falloff)
-                            * _command.Strength * _command.Flow;
+                    if (!_smoothTargets.TryGetValue(SmoothGroup(index, normal), out var average)) continue;
+                    destination = average.Color(_paint.WeightChannels);
                 }
-                if (!float.IsFinite(influence) || influence <= 0) continue;
-                if (!fill && !_throughPaint && _visibility != null && !_visibility.Allows(index)) continue;
                 if (_coverage != null && (_command.Accumulate || (!fill && _tip != null && _tip.LimitOpacity)))
                 {
                     var limited = !fill && _tip != null && _tip.LimitOpacity;
@@ -115,15 +109,17 @@ namespace SimpleBlend.Editor
                 }
                 if (!_command.Accumulate && influence <= _maximum[i]) continue;
                 var source = _baseline[i];
-                var result = VertexSurfaceWeightUtility.Blend(source, target, channel, influence, _paint.WeightChannels, _erase);
+                var result = VertexSurfaceWeightUtility.Blend(source, destination, _smooth ? VertexPaintChannel.RGB : channel,
+                    influence, _paint.WeightChannels, _erase);
                 _maximum[i] = Mathf.Max(_maximum[i], influence);
                 if (pixels[i].Equals(result)) continue;
                 if (!_recorded)
                 {
                     Undo.IncrementCurrentGroup();
                     _undoGroup = Undo.GetCurrentGroup();
-                    Undo.SetCurrentGroupName("Paint texture surfaces");
-                    Undo.RegisterCompleteObjectUndo(_paint, "Paint texture surfaces");
+                    var operation = _smooth ? "Smooth texture weights" : "Paint texture surfaces";
+                    Undo.SetCurrentGroupName(operation);
+                    Undo.RegisterCompleteObjectUndo(_paint, operation);
                     _recorded = true;
                 }
                 pixels[i] = result;
@@ -156,7 +152,29 @@ namespace SimpleBlend.Editor
             _throughPaint = false;
             _component = -1;
             _facing = TexturePaintFacing.WithBrush;
+            _smooth = false;
+            _smoothTargets.Clear(); _smoothSources.Clear();
             return changed;
+        }
+
+        private bool TryInfluence(int index, Vector3 center, Vector3 normal, Vector3 right, Vector3 up, bool fill, out float influence)
+        {
+            influence = _command.Strength * _command.Flow;
+            if (!fill)
+            {
+                if (_component >= 0 && _atlas.ComponentAt(index) != _component) return false;
+                var delta = _atlas.WorldPosition(index) - center;
+                var depth = Vector3.Dot(delta, normal);
+                var alignment = Vector3.Dot(_atlas.WorldNormal(index), normal);
+                if (_facing == TexturePaintFacing.AgainstBrush) alignment = -alignment;
+                else if (_facing == TexturePaintFacing.EitherDirection) alignment = Mathf.Abs(alignment);
+                if (Mathf.Abs(depth) > _command.Radius * .25f || !float.IsFinite(alignment) || alignment < .25f) return false;
+                influence = _tip == null ? _command.EvaluateWeight((delta - normal * depth).magnitude)
+                    : _tip.Evaluate(new Vector2(Vector3.Dot(delta, right), Vector3.Dot(delta, up)) / _command.Radius, _command.Falloff)
+                        * _command.Strength * _command.Flow;
+            }
+            return float.IsFinite(influence) && influence > 0
+                && (fill || _throughPaint || _visibility == null || _visibility.Allows(index));
         }
 
         internal void Upload()
