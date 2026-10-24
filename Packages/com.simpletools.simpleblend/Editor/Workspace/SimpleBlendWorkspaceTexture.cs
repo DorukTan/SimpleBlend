@@ -10,6 +10,7 @@ namespace SimpleBlend.Editor
         [SerializeField] private int _textureResolution = 512;
         [SerializeField] private int _textureSurface = 1;
         [SerializeField] private bool _textureErase;
+        [SerializeField] private bool _textureSmooth;
         [SerializeField] private bool _textureSetupOptions;
         [SerializeField] private bool _textureBrushOptions;
         [SerializeField] private bool _textureAssetDetails;
@@ -83,6 +84,7 @@ namespace SimpleBlend.Editor
                     Selection.activeGameObject = created.gameObject;
                     _textureSurface = Mathf.Min(1, created.Paint.SurfaceCount - 1);
                     _textureErase = false;
+                    _textureSmooth = false;
                     _textureSectionTarget = created; _textureSection = created.MaterialSection;
                     SimpleBlendTexturePaintTool.Start(created, _textureSurface, false, _textureSection, _textureAutomaticSections);
                     _operationMessage = "Ready to paint. The original renderer is hidden, not deleted. Paint assets save automatically; save your scene too.";
@@ -105,7 +107,10 @@ namespace SimpleBlend.Editor
                 _textureSection = SimpleBlendTexturePaintTool.Section;
                 _textureSurface = SimpleBlendTexturePaintTool.Surface;
                 _textureAutomaticSections = SimpleBlendTexturePaintTool.AutomaticSections;
+                _textureErase = SimpleBlendTexturePaintTool.Erase;
+                _textureSmooth = SimpleBlendTexturePaintTool.Smooth;
             }
+            if (_textureSmooth) _textureErase = false;
             if (!DrawTextureSections(target)) return;
             var problem = TexturePaintStroke.Problem(target, _textureSection);
             if (!string.IsNullOrEmpty(problem)) { _weathering.Cancel(); EditorGUILayout.HelpBox(problem, MessageType.Error); return; }
@@ -143,12 +148,14 @@ namespace SimpleBlend.Editor
                     });
                     GUIUtility.ExitGUI();
                 }
-            EditorGUILayout.HelpBox("Selected: " + paint.SurfaceName(_textureSurface)
+            EditorGUILayout.HelpBox(_textureSmooth ? "Smooth adjusts all surface weights under the brush toward a brush-local average. The selected surface is used only for editing while Smooth is active; separate mesh parts and opposing faces keep separate averages."
+                : "Selected: " + paint.SurfaceName(_textureSurface)
                 + (_textureErase ? (_textureSurface == 0 ? " · erase all overlays toward Base." : " · erase this overlay toward Base; other overlay weights stay unchanged.")
                     : " · paint toward this surface and reduce competing weights. These are blended weights, not an ordered layer stack."), MessageType.None);
             EditorGUI.BeginChangeCheck();
-            _textureErase = EditorGUILayout.Popup("Brush action", _textureErase ? 1 : 0, new[] { "Paint", "Erase" }) == 1;
-            if (EditorGUI.EndChangeCheck()) { _weathering.Cancel(); SimpleBlendTexturePaintTool.Configure(target, _textureSurface, _textureErase); }
+            var action = EditorGUILayout.Popup("Brush action", _textureSmooth ? 2 : _textureErase ? 1 : 0, new[] { "Paint", "Erase", "Smooth" });
+            _textureErase = action == 1; _textureSmooth = action == 2;
+            if (EditorGUI.EndChangeCheck()) { _weathering.Cancel(); SimpleBlendTexturePaintTool.Configure(target, _textureSurface, _textureErase, _textureSmooth); }
             var settings = SimpleBlendBrushSettings.instance;
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
@@ -197,14 +204,19 @@ namespace SimpleBlend.Editor
                 if (_textureBrushOptions)
                 {
                     shape.Spacing = EditorGUILayout.Slider(new GUIContent("Spacing (%)", "Distance between dabs, as a percentage of brush diameter."), shape.Spacing * 100, 1, 200) / 100;
-                    shape.Smoothing = EditorGUILayout.Slider("Smoothing (%)", shape.Smoothing * 100, 0, 100) / 100;
+                    shape.Smoothing = EditorGUILayout.Slider(new GUIContent("Path smoothing (%)", "Stabilizes brush motion. Use the Smooth brush action to soften surface weights."), shape.Smoothing * 100, 0, 100) / 100;
                     shape.LimitOpacity = EditorGUILayout.Toggle("Limit stroke to opacity", shape.LimitOpacity);
                     EditorGUILayout.HelpBox("The ring is the projected radius. Visible surface checks mesh occlusion from the Scene camera; Through nearby surfaces skips that check. Face direction and Surface scope apply independently within the selected section. Fill covers the whole section. Other scene objects do not block this brush.", MessageType.None);
                 }
                 if (EditorGUI.EndChangeCheck()) { SimpleBlendTexturePaintTool.FinishCurrentStroke(); settings.SaveSettings(); }
                 _textureStrokePreview.Draw(settings);
             }
-            DrawWeathering(target);
+            if (_textureSmooth)
+            {
+                _weathering.Cancel();
+                EditorGUILayout.HelpBox("Smooth is brush-only. Choose Paint or Erase to use Fill or weathering. Each stroke averages its starting weights; release and start again for another smoothing pass.", MessageType.None);
+            }
+            else DrawWeathering(target);
             var active = ToolManager.activeToolType == typeof(SimpleBlendTexturePaintTool) && SimpleBlendTexturePaintTool.Target == target;
             if (GUILayout.Button(active ? "Stop painting" : "Start painting", GUILayout.Height(28)))
             {
@@ -215,13 +227,14 @@ namespace SimpleBlend.Editor
                     else
                     {
                         if (ToolManager.activeToolType == typeof(SimpleBlendPaintTool)) ToolManager.RestorePreviousTool();
-                        SimpleBlendTexturePaintTool.Start(target, _textureSurface, _textureErase, _textureSection, _textureAutomaticSections);
+                        SimpleBlendTexturePaintTool.Start(target, _textureSurface, _textureErase, _textureSection, _textureAutomaticSections, _textureSmooth);
                     }
                 }
                 catch (System.Exception exception) { _operationMessage = exception.Message; _operationType = MessageType.Error; }
             }
-            if (GUILayout.Button("Fill section with selected surface"))
-            { _weathering.Cancel(); SimpleBlendTexturePaintTool.Fill(target, _textureSurface, _textureSection); }
+            using (new EditorGUI.DisabledScope(_textureSmooth))
+                if (GUILayout.Button("Fill section with selected surface"))
+                { _weathering.Cancel(); SimpleBlendTexturePaintTool.Fill(target, _textureSurface, _textureSection); }
             if (SimpleBlendTexturePaintTool.LastPaint == paint && !string.IsNullOrEmpty(SimpleBlendTexturePaintTool.LastStroke))
                 EditorGUILayout.HelpBox(SimpleBlendTexturePaintTool.LastStroke, MessageType.Info);
             if (GUILayout.Button("Save painted asset"))
@@ -280,7 +293,7 @@ namespace SimpleBlend.Editor
                 {
                     var paint = TexturePaintSetup.PrepareSectionFromPrimary(target, _textureSection);
                     _textureSurface = Mathf.Min(1, paint.SurfaceCount - 1);
-                    SimpleBlendTexturePaintTool.Start(target, _textureSurface, _textureErase, _textureSection, _textureAutomaticSections);
+                    SimpleBlendTexturePaintTool.Start(target, _textureSurface, _textureErase, _textureSection, _textureAutomaticSections, _textureSmooth);
                     _operationMessage = "Section prepared. Paint assets save automatically; save your scene too.";
                     _operationType = MessageType.Info;
                 });

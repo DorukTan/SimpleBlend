@@ -1,6 +1,6 @@
 # Texture weathering
 
-Open **Window > SimpleBlend > Workspace**, choose **Texture paint**, and select a prepared paint object. Expand **Weathering** below the Brush panel. It uses the selected named surface and the existing Paint/Erase choice; it does not create a separate window.
+Open **Window > SimpleBlend > Workspace**, choose **Texture paint**, and select a prepared paint object. Choose Paint or Erase in **Brush action**, then expand **Weathering** below the Brush panel. It uses the selected named surface and that action; it does not create a separate window. While Smooth is selected, the Workspace hides weathering operations and explains that Paint/Erase must be chosen first. The independent preview backend still finishes and pauses an active Smooth stroke when called directly.
 
 Weathering uses the **Section** currently displayed in the Workspace, including independently prepared secondary sections. The panel identifies that section and its selected named surface. Prepare a section before using it; changing the displayed section cancels any existing preview rather than moving the preview to another mask. Automatic brush targeting does not choose a weathering destination from a hover: treatments always use the displayed section when Preview is requested.
 

@@ -55,7 +55,7 @@ $textureWorkspace = [IO.File]::ReadAllText((Join-Path $root 'Editor/Workspace/Si
 foreach ($label in @('Painting method','Texture paint','Vertex paint','Start painting','Save painted asset','Advanced setup','Quick preset','Saved preset','+ Add surface','Remove surface')) {
     if (!$textureWorkspace.Contains('"' + $label + '"')) { throw ('Documented texture workflow control changed: ' + $label) }
 }
-foreach ($label in @('Brush tip','Brush shape','Stroke settings','Opacity (%)','Flow (%)','Tip texture','Hardness (%)','Roundness (%)','Angle','Spacing (%)','Smoothing (%)','Limit stroke to opacity')) {
+foreach ($label in @('Brush tip','Brush shape','Stroke settings','Opacity (%)','Flow (%)','Tip texture','Hardness (%)','Roundness (%)','Angle','Spacing (%)','Path smoothing (%)','Limit stroke to opacity')) {
     if (!$textureWorkspace.Contains('"' + $label + '"')) { throw ('Documented brush stroke control changed: ' + $label) }
 }
 $weatheringWorkspace = [IO.File]::ReadAllText((Join-Path $root 'Editor/Workspace/SimpleBlendWorkspaceWeathering.cs'))
