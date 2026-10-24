@@ -302,16 +302,21 @@ namespace SimpleBlend.Editor.Tests
             {
                 settings.TextureThroughPaint = true;
                 settings.TextureConnectedOnly = true;
+                settings.TextureFacing = TexturePaintFacing.AgainstBrush;
                 var serialized = EditorJsonUtility.ToJson(settings);
                 settings.TextureThroughPaint = false;
                 settings.TextureConnectedOnly = false;
+                settings.TextureFacing = TexturePaintFacing.WithBrush;
                 EditorJsonUtility.FromJsonOverwrite(serialized, settings);
                 Assert.That(settings.TextureThroughPaint, Is.True);
                 Assert.That(settings.TextureConnectedOnly, Is.True);
+                Assert.That(settings.TextureFacing, Is.EqualTo(TexturePaintFacing.AgainstBrush));
                 preset.Capture(settings);
-                settings.TextureThroughPaint = false; settings.TextureConnectedOnly = false; preset.Apply(settings);
+                settings.TextureThroughPaint = false; settings.TextureConnectedOnly = false;
+                settings.TextureFacing = TexturePaintFacing.EitherDirection; preset.Apply(settings);
                 Assert.That(settings.TextureThroughPaint, Is.False);
                 Assert.That(settings.TextureConnectedOnly, Is.False);
+                Assert.That(settings.TextureFacing, Is.EqualTo(TexturePaintFacing.EitherDirection));
                 settings.TextureThroughPaint = true; settings.TextureConnectedOnly = true; preset.Apply(settings);
                 Assert.That(settings.TextureThroughPaint, Is.True);
                 Assert.That(settings.TextureConnectedOnly, Is.True);
@@ -320,6 +325,7 @@ namespace SimpleBlend.Editor.Tests
                     settings.TextureThroughPaint = false; settings.TextureConnectedOnly = false; SimpleBlendBrushPreset.ApplyBuiltIn(i, settings);
                     Assert.That(settings.TextureThroughPaint, Is.False);
                     Assert.That(settings.TextureConnectedOnly, Is.False);
+                    Assert.That(settings.TextureFacing, Is.EqualTo(TexturePaintFacing.EitherDirection));
                     settings.TextureThroughPaint = true; settings.TextureConnectedOnly = true; SimpleBlendBrushPreset.ApplyBuiltIn(i, settings);
                     Assert.That(settings.TextureThroughPaint, Is.True);
                     Assert.That(settings.TextureConnectedOnly, Is.True);
@@ -426,7 +432,202 @@ namespace SimpleBlend.Editor.Tests
             Assert.That(front, Is.GreaterThan(20));
         }
 
-        private TexturePaintTarget Target(bool occludingSection, float gap = 0.02f, bool reverseOccluder = false, bool reverseHiddenNormals = false)
+        [TestCase(TexturePaintFacing.WithBrush, false)]
+        [TestCase(TexturePaintFacing.AgainstBrush, false)]
+        [TestCase(TexturePaintFacing.EitherDirection, false)]
+        [TestCase(TexturePaintFacing.WithBrush, true)]
+        [TestCase(TexturePaintFacing.AgainstBrush, true)]
+        [TestCase(TexturePaintFacing.EitherDirection, true)]
+        public void FaceDirectionSelectsAlignedOppositeOrBothWithUndo(TexturePaintFacing facing, bool erase)
+        {
+            var target = Target(false, reverseHiddenNormals: true); var atlas = Atlas(target); var paint = target.Paint;
+            for (var i = 0; i < paint.Pixels.Length; i++) paint.Pixels[i] = new Color32(erase ? (byte)180 : (byte)0, 0, 91, 37);
+            paint.CommitPixels(); var before = (Color32[])paint.Pixels.Clone();
+            var material = EditorJsonUtility.ToJson(paint.Material); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, erase, Command(), throughPaint: true, facing: facing);
+            stroke.Dab(new Vector3(.48f, 0, 0), Vector3.back); Assert.That(stroke.End(), Is.GreaterThan(0));
+            var after = (Color32[])paint.Pixels.Clone(); var front = 0; var hidden = 0; var gutters = 0;
+            foreach (var pixel in atlas.Pixels)
+            {
+                Assert.That(after[pixel].b, Is.EqualTo(91)); Assert.That(after[pixel].a, Is.EqualTo(37));
+                if (after[pixel].Equals(before[pixel])) continue;
+                if (atlas.Positions[pixel].z > .01f) hidden++; else front++;
+                if (atlas.Coverage[pixel] != pixel) gutters++;
+            }
+            if (facing == TexturePaintFacing.AgainstBrush) Assert.That(front, Is.Zero);
+            else Assert.That(front, Is.GreaterThan(20));
+            if (facing == TexturePaintFacing.WithBrush) Assert.That(hidden, Is.Zero);
+            else Assert.That(hidden, Is.GreaterThan(20));
+            Assert.That(gutters, Is.GreaterThan(0)); Assert.That(paint.Mask.GetPixels32(), Is.EqualTo(after));
+            for (var i = 0; i < before.Length; i++) if (atlas.Coverage[i] < 0) Assert.That(after[i], Is.EqualTo(before[i]));
+            Assert.That(EditorJsonUtility.ToJson(paint.Material), Is.EqualTo(material));
+            Undo.PerformUndo(); Assert.That(paint.Pixels, Is.EqualTo(before));
+            Undo.PerformRedo(); Assert.That(paint.Pixels, Is.EqualTo(after));
+        }
+
+        [TestCase(TexturePaintFacing.WithBrush, false)]
+        [TestCase(TexturePaintFacing.AgainstBrush, false)]
+        [TestCase(TexturePaintFacing.EitherDirection, false)]
+        [TestCase(TexturePaintFacing.WithBrush, true)]
+        [TestCase(TexturePaintFacing.AgainstBrush, true)]
+        [TestCase(TexturePaintFacing.EitherDirection, true)]
+        public void VisibleReverseNormalsUseCameraFacingBrushWithoutFlippingMeshNormals(TexturePaintFacing facing, bool orthographic)
+        {
+            _camera.orthographic = orthographic;
+            var target = Target(false, reverseFrontNormals: true); var atlas = Atlas(target);
+            var normals = target.Paint.Mesh.normals; var stroke = new TexturePaintStroke();
+            var visibility = new TexturePaintVisibility(atlas, new TexturePaintView(_camera));
+            Assert.That(visibility.Project(Vector3.zero, out var hit), Is.True);
+            Assert.That(Vector3.Dot(hit.Normal, Vector3.back), Is.GreaterThan(.99f));
+            stroke.Begin(target, atlas, 1, false, Command(), visibility: visibility, facing: facing);
+            var undo = Undo.GetCurrentGroup(); stroke.Dab(hit.Point, hit.Normal); var changed = stroke.End();
+            Assert.That(changed > 0, Is.EqualTo(facing != TexturePaintFacing.WithBrush));
+            if (facing == TexturePaintFacing.WithBrush) Assert.That(Undo.GetCurrentGroup(), Is.EqualTo(undo));
+            foreach (var pixel in atlas.Pixels)
+                if (atlas.Positions[pixel].z > .01f) Assert.That(target.Paint.Pixels[pixel].r, Is.Zero);
+            Assert.That(target.Paint.Mesh.normals, Is.EqualTo(normals));
+            Assert.That(target.GetComponent<Collider>(), Is.Null);
+        }
+
+        [TestCase(TexturePaintFacing.WithBrush, .24f, false)]
+        [TestCase(TexturePaintFacing.WithBrush, .26f, true)]
+        [TestCase(TexturePaintFacing.AgainstBrush, -.24f, false)]
+        [TestCase(TexturePaintFacing.AgainstBrush, -.26f, true)]
+        [TestCase(TexturePaintFacing.EitherDirection, .24f, false)]
+        [TestCase(TexturePaintFacing.EitherDirection, -.24f, false)]
+        [TestCase(TexturePaintFacing.EitherDirection, .26f, true)]
+        [TestCase(TexturePaintFacing.EitherDirection, -.26f, true)]
+        public void FaceDirectionsRetainTheExistingGrazingThreshold(TexturePaintFacing facing, float alignment, bool expected)
+        {
+            var normal = new Vector3(Mathf.Sqrt(1 - alignment * alignment), 0, -alignment);
+            var target = Target(false, hiddenNormal: normal); var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(), throughPaint: true, facing: facing);
+            stroke.Dab(Vector3.zero, Vector3.back); stroke.End();
+            Assert.That(atlas.Pixels.Any(pixel => atlas.Positions[pixel].z > .01f && target.Paint.Pixels[pixel].r > 0), Is.EqualTo(expected));
+        }
+
+        [TestCase(TexturePaintFacing.AgainstBrush, false)]
+        [TestCase(TexturePaintFacing.EitherDirection, false)]
+        [TestCase(TexturePaintFacing.AgainstBrush, true)]
+        [TestCase(TexturePaintFacing.EitherDirection, true)]
+        public void OppositeNormalsStillRequireThroughReachWhenHidden(TexturePaintFacing facing, bool through)
+        {
+            var target = Target(false, reverseHiddenNormals: true); var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(), visibility: new TexturePaintVisibility(atlas, new TexturePaintView(_camera)),
+                throughPaint: through, facing: facing);
+            stroke.Dab(Vector3.zero, Vector3.back); stroke.End();
+            Assert.That(atlas.Pixels.Any(pixel => atlas.Positions[pixel].z > .01f && target.Paint.Pixels[pixel].r > 0), Is.EqualTo(through));
+        }
+
+        [TestCase(TexturePaintFacing.AgainstBrush, false)]
+        [TestCase(TexturePaintFacing.EitherDirection, false)]
+        [TestCase(TexturePaintFacing.AgainstBrush, true)]
+        [TestCase(TexturePaintFacing.EitherDirection, true)]
+        public void FaceDirectionCannotBypassDepthOrConnectedScope(TexturePaintFacing facing, bool connected)
+        {
+            var target = Target(false, connected ? .02f : .2f, reverseHiddenNormals: true); var atlas = Atlas(target);
+            var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(), throughPaint: true, connectedTriangle: connected ? 0 : (int?)null, facing: facing);
+            stroke.Dab(Vector3.zero, Vector3.back); stroke.End();
+            foreach (var pixel in atlas.Pixels)
+                if (atlas.Positions[pixel].z > .01f) Assert.That(target.Paint.Pixels[pixel].r, Is.Zero);
+        }
+
+        [TestCase(TexturePaintFacing.WithBrush)]
+        [TestCase(TexturePaintFacing.AgainstBrush)]
+        [TestCase(TexturePaintFacing.EitherDirection)]
+        public void FillRemainsSectionWideForEveryFaceDirection(TexturePaintFacing facing)
+        {
+            var target = Target(false, reverseHiddenNormals: true); var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(), connectedTriangle: 0, facing: facing);
+            stroke.Dab(Vector3.zero, Vector3.back, fill: true); stroke.End();
+            foreach (var pixel in atlas.Pixels) Assert.That(target.Paint.Pixels[pixel].r, Is.EqualTo(255));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void FaceDirectionUsesAuthoredNormalsUnderMirroredAndNonuniformTransforms(bool mirrored)
+        {
+            var target = Target(false, reverseHiddenNormals: true);
+            target.transform.localScale = new Vector3(mirrored ? -2 : 2, .5f, 1.5f);
+            target.transform.rotation = Quaternion.Euler(0, 15, 0);
+            var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(), throughPaint: true, facing: TexturePaintFacing.AgainstBrush);
+            stroke.Dab(target.transform.TransformPoint(Vector3.zero), target.transform.TransformDirection(Vector3.back)); stroke.End();
+            var hidden = 0;
+            foreach (var pixel in atlas.Pixels)
+                if (atlas.Positions[pixel].z < .01f) Assert.That(target.Paint.Pixels[pixel].r, Is.Zero);
+                else if (target.Paint.Pixels[pixel].r > 0) hidden++;
+            Assert.That(hidden, Is.GreaterThan(20));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void OppositeDirectionCannotChangeSectionOwnershipOrBypassThePointerLock(bool orthographic)
+        {
+            _camera.orthographic = orthographic;
+            var target = Target(true, reverseHiddenNormals: true); var secondary = TexturePaintSetup.PrepareSectionFromPrimary(target, 1);
+            var before = (Color32[])secondary.Pixels.Clone(); var atlas = Atlas(target);
+            Assert.That(SimpleBlendTexturePaintTool.ResolveHit(target, atlas, new Ray(_camera.transform.position, Vector3.forward), false,
+                0, 1, null, out var hit, out _, out _), Is.False);
+            Assert.That(hit.SubmeshIndex, Is.EqualTo(1));
+            var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(), throughPaint: true, facing: TexturePaintFacing.AgainstBrush);
+            Assert.That(stroke.Dab(new Vector3(0, 0, .02f), Vector3.back), Is.GreaterThan(0)); stroke.End();
+            Assert.That(secondary.Pixels, Is.EqualTo(before));
+            Assert.That(target.GetComponent<MeshRenderer>().sharedMaterials[1], Is.EqualTo(secondary.Material));
+        }
+
+        [TestCase(-1)]
+        [TestCase(3)]
+        public void InvalidFaceDirectionRejectsBeforeEdits(int value)
+        {
+            var target = Target(false); var before = (Color32[])target.Paint.Pixels.Clone(); var stroke = new TexturePaintStroke();
+            var undo = Undo.GetCurrentGroup();
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => stroke.Begin(target, Atlas(target), 1, false, Command(), facing: (TexturePaintFacing)value));
+            Assert.That(stroke.Active, Is.False); Assert.That(Undo.GetCurrentGroup(), Is.EqualTo(undo));
+            Assert.That(target.Paint.Pixels, Is.EqualTo(before));
+        }
+
+        [Test]
+        public void FaceDirectionIsCapturedAndReuseDefaultsBackToWithBrush()
+        {
+            var target = Target(false, reverseHiddenNormals: true); var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            var settings = SimpleBlendBrushSettings.instance; var original = settings.TextureFacing;
+            try
+            {
+                settings.TextureFacing = TexturePaintFacing.AgainstBrush;
+                stroke.Begin(target, atlas, 1, false, Command(), throughPaint: true, facing: settings.TextureFacing);
+                settings.TextureFacing = TexturePaintFacing.WithBrush;
+                stroke.Dab(Vector3.zero, Vector3.back); stroke.End();
+                Assert.That(atlas.Pixels.Any(pixel => atlas.Positions[pixel].z > .01f && target.Paint.Pixels[pixel].r > 0), Is.True);
+                Undo.PerformUndo();
+                stroke.Begin(target, atlas, 1, false, Command(), throughPaint: true);
+                stroke.Dab(Vector3.zero, Vector3.back); stroke.End();
+                foreach (var pixel in atlas.Pixels)
+                    if (atlas.Positions[pixel].z > .01f) Assert.That(target.Paint.Pixels[pixel].r, Is.Zero);
+            }
+            finally { stroke.End(); settings.TextureFacing = original; }
+        }
+
+        [Test]
+        public void InvalidSerializedFaceDirectionNormalizesToTheSafeDefault()
+        {
+            var settings = SimpleBlendBrushSettings.instance; var original = EditorJsonUtility.ToJson(settings);
+            try
+            {
+                EditorJsonUtility.FromJsonOverwrite("{\"_textureFacing\":99}", settings);
+                Assert.That(settings.TextureFacing, Is.EqualTo(TexturePaintFacing.WithBrush));
+                settings.Normalize();
+                Assert.That(EditorJsonUtility.ToJson(settings), Does.Contain("\"_textureFacing\":0"));
+                settings.TextureFacing = (TexturePaintFacing)(-1);
+                Assert.That(settings.TextureFacing, Is.EqualTo(TexturePaintFacing.WithBrush));
+            }
+            finally { EditorJsonUtility.FromJsonOverwrite(original, settings); }
+        }
+
+        private TexturePaintTarget Target(bool occludingSection, float gap = 0.02f, bool reverseOccluder = false, bool reverseHiddenNormals = false,
+            bool reverseFrontNormals = false, Vector3? hiddenNormal = null)
         {
             var mesh = new Mesh { name = "Overlapping shells" };
             mesh.vertices = new[]
@@ -434,7 +635,8 @@ namespace SimpleBlend.Editor.Tests
                 new Vector3(-0.5f,-0.5f,0), new Vector3(-0.5f,0.5f,0), new Vector3(0.5f,0.5f,0), new Vector3(0.5f,-0.5f,0),
                 new Vector3(-0.5f,-0.5f,gap), new Vector3(-0.5f,0.5f,gap), new Vector3(0.5f,0.5f,gap), new Vector3(0.5f,-0.5f,gap)
             };
-            mesh.normals = Enumerable.Range(0, 8).Select(i => reverseHiddenNormals && i >= 4 ? Vector3.forward : Vector3.back).ToArray();
+            mesh.normals = Enumerable.Range(0, 8).Select(i => i < 4 ? (reverseFrontNormals ? Vector3.forward : Vector3.back)
+                : hiddenNormal ?? (reverseHiddenNormals ? Vector3.forward : Vector3.back)).ToArray();
             mesh.uv = new[] { Vector2.zero, Vector2.up, Vector2.one, Vector2.right, Vector2.zero, Vector2.up, Vector2.one, Vector2.right };
             if (occludingSection)
             {

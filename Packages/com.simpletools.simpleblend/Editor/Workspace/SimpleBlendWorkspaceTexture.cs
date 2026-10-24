@@ -162,11 +162,16 @@ namespace SimpleBlend.Editor
                     "Visible surface protects hidden parts of this mesh. Through nearby surfaces bypasses occlusion only; brush depth, facing and section limits still apply."),
                     settings.TextureThroughPaint ? 1 : 0, new[] { "Visible surface", "Through nearby surfaces" }) == 1;
                 if (settings.TextureThroughPaint)
-                    EditorGUILayout.HelpBox("Through paint can also affect nearby hidden, same-facing surfaces in this section. Brush depth and opposing-face limits still apply; the pointer stays on the visible surface.", MessageType.Warning);
+                    EditorGUILayout.HelpBox("Through paint can also affect nearby hidden surfaces in this section. Brush depth and Face direction still apply; the pointer stays on the visible surface.", MessageType.Warning);
                 settings.TextureConnectedOnly = EditorGUILayout.Popup("Surface scope", settings.TextureConnectedOnly ? 1 : 0,
                     new[] { "Nearby surfaces", "Connected part only" }) == 1;
                 if (settings.TextureConnectedOnly)
                     EditorGUILayout.HelpBox("Each stroke stays on the part where it starts, within this section. Matching full edges connect across UV seams; gaps and corner-only contacts stay separate. Fill and weathering still cover the section.", MessageType.None);
+                settings.TextureFacing = (TexturePaintFacing)EditorGUILayout.Popup(new GUIContent("Face direction",
+                    "Compare authored mesh normals with the camera-facing brush normal. This is independent of material backface culling. All choices exclude grazing faces."),
+                    (int)settings.TextureFacing, new[] { "With brush", "Against brush", "Either direction" });
+                if (settings.TextureFacing != TexturePaintFacing.WithBrush)
+                    EditorGUILayout.HelpBox("Face direction uses mesh normals, not material front/back culling. Against brush targets reverse-facing normals; Either direction accepts both. Hidden surfaces still require Through nearby surfaces. Depth, grazing-angle and connected-part limits remain.", MessageType.None);
                 var shape = settings.TextureBrush;
                 shape.Tip = (TextureBrushTipKind)EditorGUILayout.EnumPopup("Brush tip", shape.Tip);
                 if (shape.Tip == TextureBrushTipKind.Custom)
@@ -194,7 +199,7 @@ namespace SimpleBlend.Editor
                     shape.Spacing = EditorGUILayout.Slider(new GUIContent("Spacing (%)", "Distance between dabs, as a percentage of brush diameter."), shape.Spacing * 100, 1, 200) / 100;
                     shape.Smoothing = EditorGUILayout.Slider("Smoothing (%)", shape.Smoothing * 100, 0, 100) / 100;
                     shape.LimitOpacity = EditorGUILayout.Toggle("Limit stroke to opacity", shape.LimitOpacity);
-                    EditorGUILayout.HelpBox("The ring is the projected radius. Visible surface checks mesh occlusion from the Scene camera; Through nearby surfaces skips that check. Both stay in the selected section and exclude opposing faces. Fill covers the whole section. Other scene objects do not block this brush.", MessageType.None);
+                    EditorGUILayout.HelpBox("The ring is the projected radius. Visible surface checks mesh occlusion from the Scene camera; Through nearby surfaces skips that check. Face direction and Surface scope apply independently within the selected section. Fill covers the whole section. Other scene objects do not block this brush.", MessageType.None);
                 }
                 if (EditorGUI.EndChangeCheck()) { SimpleBlendTexturePaintTool.FinishCurrentStroke(); settings.SaveSettings(); }
                 _textureStrokePreview.Draw(settings);
