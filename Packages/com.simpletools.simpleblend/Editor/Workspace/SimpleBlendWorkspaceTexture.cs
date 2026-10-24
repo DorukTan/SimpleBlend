@@ -163,6 +163,10 @@ namespace SimpleBlend.Editor
                     settings.TextureThroughPaint ? 1 : 0, new[] { "Visible surface", "Through nearby surfaces" }) == 1;
                 if (settings.TextureThroughPaint)
                     EditorGUILayout.HelpBox("Through paint can also affect nearby hidden, same-facing surfaces in this section. Brush depth and opposing-face limits still apply; the pointer stays on the visible surface.", MessageType.Warning);
+                settings.TextureConnectedOnly = EditorGUILayout.Popup("Surface scope", settings.TextureConnectedOnly ? 1 : 0,
+                    new[] { "Nearby surfaces", "Connected part only" }) == 1;
+                if (settings.TextureConnectedOnly)
+                    EditorGUILayout.HelpBox("Each stroke stays on the part where it starts, within this section. Matching full edges connect across UV seams; gaps and corner-only contacts stay separate. Fill and weathering still cover the section.", MessageType.None);
                 var shape = settings.TextureBrush;
                 shape.Tip = (TextureBrushTipKind)EditorGUILayout.EnumPopup("Brush tip", shape.Tip);
                 if (shape.Tip == TextureBrushTipKind.Custom)
