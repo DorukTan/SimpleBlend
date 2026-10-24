@@ -296,6 +296,8 @@ namespace SimpleBlend.Editor
             if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Escape) { Finish(); Stop(); e.Use(); return; }
             var hasHit = ResolveHit(Target, _atlas, HandleUtility.GUIPointToWorldRay(e.mousePosition),
                 AutomaticSections && !_stroke.Active, Section, Surface, SurfaceChoices, out var hit, out var hitSurface, out var problem);
+            if (hasHit && _stroke.Active && !_stroke.AllowsHit(hit))
+            { hasHit = false; problem = "This stroke stays on its starting connected part. Release to paint another part."; }
             var status = hasHit ? $"Under pointer: Section {hit.SubmeshIndex} · {Target.PaintForSection(hit.SubmeshIndex).SurfaceName(hitSurface)}" : problem;
             if (PointerStatus != status) { PointerStatus = status; Changed?.Invoke(); }
             if (e.type == EventType.Repaint && hasHit)
@@ -325,7 +327,8 @@ namespace SimpleBlend.Editor
                     _visibility = new TexturePaintVisibility(_atlas, _strokeView);
                     _strokePaint = Paint;
                     _stroke.Begin(Target, _atlas, Surface, Erase, _command, _strokeTip, _visibility, Section,
-                        SimpleBlendBrushSettings.instance.TextureThroughPaint);
+                        SimpleBlendBrushSettings.instance.TextureThroughPaint,
+                        SimpleBlendBrushSettings.instance.TextureConnectedOnly ? hit.TriangleIndex : (int?)null);
                     GUIUtility.hotControl = _control = id;
                     _view = view;
                     _sampler.Reset();
@@ -367,7 +370,8 @@ namespace SimpleBlend.Editor
             foreach (var sample in _samples)
             {
                 // Reproject resampled positions onto the actual section instead of painting through empty space.
-                if (_visibility.Project(sample, out var projected) && Vector3.Distance(projected.Point, sample) <= _command.Radius * 0.25f)
+                if (_visibility.Project(sample, out var projected) && _stroke.AllowsHit(projected)
+                    && Vector3.Distance(projected.Point, sample) <= _command.Radius * 0.25f)
                     _stroke.Dab(projected.Point, projected.Normal, preferredRight: _strokeRight, upload: false);
             }
             _stroke.Upload();

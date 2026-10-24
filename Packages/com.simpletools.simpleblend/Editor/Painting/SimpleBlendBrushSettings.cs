@@ -31,6 +31,13 @@ namespace SimpleBlend.Editor
         [SerializeField] private bool _thresholdInclusive = true;
         [SerializeField] private TextureBrushShape _textureBrush = new TextureBrushShape();
         [SerializeField] private bool _textureThroughPaint;
+        [SerializeField] private bool _textureConnectedOnly;
+
+        internal bool TextureConnectedOnly
+        {
+            get => _textureConnectedOnly;
+            set => _textureConnectedOnly = value;
+        }
 
         internal bool TextureThroughPaint
         {

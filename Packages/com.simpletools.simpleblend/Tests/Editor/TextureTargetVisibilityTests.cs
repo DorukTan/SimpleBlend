@@ -301,21 +301,28 @@ namespace SimpleBlend.Editor.Tests
             try
             {
                 settings.TextureThroughPaint = true;
+                settings.TextureConnectedOnly = true;
                 var serialized = EditorJsonUtility.ToJson(settings);
                 settings.TextureThroughPaint = false;
+                settings.TextureConnectedOnly = false;
                 EditorJsonUtility.FromJsonOverwrite(serialized, settings);
                 Assert.That(settings.TextureThroughPaint, Is.True);
+                Assert.That(settings.TextureConnectedOnly, Is.True);
                 preset.Capture(settings);
-                settings.TextureThroughPaint = false; preset.Apply(settings);
+                settings.TextureThroughPaint = false; settings.TextureConnectedOnly = false; preset.Apply(settings);
                 Assert.That(settings.TextureThroughPaint, Is.False);
-                settings.TextureThroughPaint = true; preset.Apply(settings);
+                Assert.That(settings.TextureConnectedOnly, Is.False);
+                settings.TextureThroughPaint = true; settings.TextureConnectedOnly = true; preset.Apply(settings);
                 Assert.That(settings.TextureThroughPaint, Is.True);
+                Assert.That(settings.TextureConnectedOnly, Is.True);
                 for (var i = 1; i < SimpleBlendBrushPreset.BuiltInNames.Length; i++)
                 {
-                    settings.TextureThroughPaint = false; SimpleBlendBrushPreset.ApplyBuiltIn(i, settings);
+                    settings.TextureThroughPaint = false; settings.TextureConnectedOnly = false; SimpleBlendBrushPreset.ApplyBuiltIn(i, settings);
                     Assert.That(settings.TextureThroughPaint, Is.False);
-                    settings.TextureThroughPaint = true; SimpleBlendBrushPreset.ApplyBuiltIn(i, settings);
+                    Assert.That(settings.TextureConnectedOnly, Is.False);
+                    settings.TextureThroughPaint = true; settings.TextureConnectedOnly = true; SimpleBlendBrushPreset.ApplyBuiltIn(i, settings);
                     Assert.That(settings.TextureThroughPaint, Is.True);
+                    Assert.That(settings.TextureConnectedOnly, Is.True);
                 }
             }
             finally { Object.DestroyImmediate(preset); EditorJsonUtility.FromJsonOverwrite(original, settings); }
@@ -343,6 +350,80 @@ namespace SimpleBlend.Editor.Tests
                 Assert.That(hiddenGutters, Is.GreaterThan(0));
             }
             finally { stroke.End(); settings.TextureThroughPaint = original; }
+        }
+
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(true, true)]
+        public void ConnectedStrokeNeverRetargetsToAnotherShell(bool through, bool erase)
+        {
+            var target = Target(false); var atlas = Atlas(target); var paint = target.Paint;
+            for (var i = 0; i < paint.Pixels.Length; i++) paint.Pixels[i] = new Color32(erase ? (byte)180 : (byte)0, 0, 91, 37);
+            paint.CommitPixels(); var before = (Color32[])paint.Pixels.Clone();
+            Assert.That(atlas.Raycast(new Ray(_camera.transform.position, Vector3.forward), out var seed), Is.True);
+            var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, erase, Command(), visibility: new TexturePaintVisibility(atlas, new TexturePaintView(_camera)),
+                throughPaint: through, connectedTriangle: seed.TriangleIndex);
+            Assert.That(stroke.AllowsHit(seed), Is.True);
+            Assert.That(stroke.AllowsHit(new MeshRaycastHit(0, Vector3.zero, Vector3.back, Vector3.zero, 2, 0)), Is.False);
+            Assert.That(stroke.AllowsHit(new MeshRaycastHit(0, Vector3.zero, Vector3.back, Vector3.zero, seed.TriangleIndex, 1)), Is.False);
+            stroke.Dab(new Vector3(.48f, 0, 0), Vector3.back);
+            // A later dab on the other shell cannot change the captured component.
+            stroke.Dab(new Vector3(.48f, 0, .02f), Vector3.back); stroke.End();
+            var after = (Color32[])paint.Pixels.Clone(); var front = 0; var gutters = 0; var hidden = 0;
+            foreach (var pixel in atlas.Pixels)
+            {
+                Assert.That(after[pixel].b, Is.EqualTo(91)); Assert.That(after[pixel].a, Is.EqualTo(37));
+                if (atlas.Positions[pixel].z > .01f) { Assert.That(after[pixel], Is.EqualTo(before[pixel])); hidden++; }
+                else if (!after[pixel].Equals(before[pixel])) { front++; if (atlas.Coverage[pixel] != pixel) gutters++; }
+            }
+            Assert.That(front, Is.GreaterThan(20)); Assert.That(hidden, Is.GreaterThan(20)); Assert.That(gutters, Is.GreaterThan(0));
+            Assert.That(paint.Mask.GetPixels32(), Is.EqualTo(after));
+            Undo.PerformUndo(); Assert.That(paint.Pixels, Is.EqualTo(before));
+            Undo.PerformRedo(); Assert.That(paint.Pixels, Is.EqualTo(after));
+            // Reusing this stroke without a seed restores nearby-surface behavior.
+            stroke.Begin(target, atlas, 1, erase, Command(), throughPaint: true);
+            stroke.Dab(Vector3.zero, Vector3.back); stroke.End();
+            Assert.That(atlas.Pixels.Any(pixel => atlas.Positions[pixel].z > .01f && !paint.Pixels[pixel].Equals(before[pixel])), Is.True);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ConnectedFillStillCoversBothParts(bool through)
+        {
+            var target = Target(false); var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(), visibility: new TexturePaintVisibility(atlas, new TexturePaintView(_camera)),
+                throughPaint: through, connectedTriangle: 0);
+            stroke.Dab(Vector3.zero, Vector3.back, fill: true); stroke.End();
+            foreach (var pixel in atlas.Pixels) Assert.That(target.Paint.Pixels[pixel].r, Is.EqualTo(255));
+        }
+
+        [TestCase(-1)]
+        [TestCase(4)]
+        public void InvalidConnectedSeedRejectsBeforeStrokeOrUndo(int seed)
+        {
+            var target = Target(false); var before = (Color32[])target.Paint.Pixels.Clone(); var stroke = new TexturePaintStroke();
+            var undo = Undo.GetCurrentGroup();
+            Assert.Throws<System.ArgumentException>(() => stroke.Begin(target, Atlas(target), 1, false, Command(), connectedTriangle: seed));
+            Assert.That(stroke.Active, Is.False); Assert.That(stroke.End(), Is.Zero);
+            Assert.That(Undo.GetCurrentGroup(), Is.EqualTo(undo)); Assert.That(target.Paint.Pixels, Is.EqualTo(before));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ConnectedStrokePreservesPartUnderNonuniformOrMirroredTransforms(bool mirrored)
+        {
+            var target = Target(false); target.transform.localScale = new Vector3(mirrored ? -2 : 2, .5f, 1.5f);
+            target.transform.rotation = Quaternion.Euler(0, 15, 0);
+            var atlas = Atlas(target); var stroke = new TexturePaintStroke();
+            stroke.Begin(target, atlas, 1, false, Command(), throughPaint: true, connectedTriangle: 0);
+            stroke.Dab(target.transform.TransformPoint(Vector3.zero), target.transform.TransformDirection(Vector3.back)); stroke.End();
+            var front = 0;
+            foreach (var pixel in atlas.Pixels)
+                if (atlas.Positions[pixel].z > .01f) Assert.That(target.Paint.Pixels[pixel].r, Is.Zero);
+                else if (target.Paint.Pixels[pixel].r > 0) front++;
+            Assert.That(front, Is.GreaterThan(20));
         }
 
         private TexturePaintTarget Target(bool occludingSection, float gap = 0.02f, bool reverseOccluder = false, bool reverseHiddenNormals = false)

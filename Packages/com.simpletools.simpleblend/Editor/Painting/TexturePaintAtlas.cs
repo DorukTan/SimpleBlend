@@ -17,6 +17,9 @@ namespace SimpleBlend.Editor
         private readonly Vector3[] _vertices;
         private readonly Vector3[] _normals;
         private readonly int[] _sections;
+        private readonly int[] _pixelTriangles;
+        private readonly int _triangleOffset;
+        private MeshSurfaceConnectivity _connectivity;
         private readonly MeshRaycastIndex _rayIndex;
         private readonly int _section;
         internal int TransformRevision { get; private set; }
@@ -48,6 +51,7 @@ namespace SimpleBlend.Editor
             var sections = new List<int>();
             for (var slot = 0; slot < mesh.subMeshCount; slot++)
             {
+                if (slot == section) _triangleOffset = allTriangles.Count / 3;
                 var indices = mesh.GetTriangles(slot);
                 allTriangles.AddRange(indices);
                 for (var i = 0; i < indices.Length / 3; i++) sections.Add(slot);
@@ -58,6 +62,7 @@ namespace SimpleBlend.Editor
             Positions = new Vector3[count];
             Normals = new Vector3[count];
             Coverage = new int[count];
+            _pixelTriangles = new int[count];
             for (var i = 0; i < count; i++) Coverage[i] = -1;
             for (var t = 0; t < Triangles.Length; t += 3)
             {
@@ -79,6 +84,7 @@ namespace SimpleBlend.Editor
                     if (wa < -0.00001f || wb < -0.00001f || wc < -0.00001f) continue;
                     var pixel = y * resolution + x;
                     Coverage[pixel] = pixel;
+                    _pixelTriangles[pixel] = t / 3;
                     Positions[pixel] = _vertices[a] * wa + _vertices[b] * wb + _vertices[c] * wc;
                     Normals[pixel] = (_normals[a] * wa + _normals[b] * wb + _normals[c] * wc).normalized;
                 }
@@ -115,6 +121,15 @@ namespace SimpleBlend.Editor
         internal Vector3 WorldPosition(int index) => _worldPositions[index];
         internal Vector3 WorldNormal(int index) => _worldNormals[index];
         internal int Pixel(int index) => _pixels[index];
+
+        internal int ComponentForTriangle(int triangle)
+            => Connectivity.Component(triangle - _triangleOffset);
+
+        internal int ComponentAt(int index)
+            => Connectivity.Component(_pixelTriangles[Coverage[_pixels[index]]]);
+
+        private MeshSurfaceConnectivity Connectivity => _connectivity
+            ?? (_connectivity = new MeshSurfaceConnectivity(_vertices, Triangles));
 
         internal void Query(Vector3 center, float radius, List<int> results)
         {

@@ -22,11 +22,13 @@ namespace SimpleBlend.Editor
         private bool _needsUpload;
         private TexturePaintVisibility _visibility;
         private bool _throughPaint;
+        private int _component = -1;
 
         internal bool Active => _paint != null;
 
         internal void Begin(TexturePaintTarget target, TexturePaintAtlas atlas, int surface, bool erase, VertexBrushCommand command,
-            TextureBrushTip tip = null, TexturePaintVisibility visibility = null, int? materialSection = null, bool throughPaint = false)
+            TextureBrushTip tip = null, TexturePaintVisibility visibility = null, int? materialSection = null, bool throughPaint = false,
+            int? connectedTriangle = null)
         {
             if (Active) throw new InvalidOperationException("Finish the current texture stroke first.");
             var problem = Problem(target, materialSection);
@@ -37,6 +39,9 @@ namespace SimpleBlend.Editor
             if (atlas.Mesh != paint.Mesh || atlas.MaterialSection != section || atlas.Resolution != paint.Mask.width)
                 throw new ArgumentException("The paint atlas must match the prepared mesh section and mask resolution.", nameof(atlas));
             if (surface < 0 || surface >= paint.SurfaceCount) throw new ArgumentOutOfRangeException(nameof(surface));
+            var component = connectedTriangle.HasValue ? atlas.ComponentForTriangle(connectedTriangle.Value) : -1;
+            if (connectedTriangle.HasValue && component < 0)
+                throw new ArgumentException("Start connected painting on a triangle in the prepared section.", nameof(connectedTriangle));
             _paint = paint;
             _atlas = atlas;
             _baseline = (Color32[])_paint.Pixels.Clone();
@@ -51,7 +56,11 @@ namespace SimpleBlend.Editor
             _needsUpload = false;
             _visibility = visibility;
             _throughPaint = throughPaint;
+            _component = component;
         }
+
+        internal bool AllowsHit(MeshRaycastHit hit) => Active && hit.SubmeshIndex == _atlas.MaterialSection
+            && (_component < 0 || _atlas.ComponentForTriangle(hit.TriangleIndex) == _component);
 
         internal int Dab(Vector3 center, Vector3 normal, bool fill = false, Vector3? preferredRight = null, bool upload = true)
         {
@@ -74,6 +83,7 @@ namespace SimpleBlend.Editor
             {
                 var index = fill ? candidate : _candidates[candidate];
                 var i = _atlas.Pixel(index);
+                if (!fill && _component >= 0 && _atlas.ComponentAt(index) != _component) continue;
                 var influence = _command.Strength * _command.Flow;
                 if (!fill)
                 {
@@ -136,6 +146,7 @@ namespace SimpleBlend.Editor
             _tip = null;
             _visibility = null;
             _throughPaint = false;
+            _component = -1;
             return changed;
         }
 
