@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace SimpleBlend.Editor
 {
+    internal enum TexturePaintFacing { WithBrush, AgainstBrush, EitherDirection }
+
     internal sealed class TexturePaintStroke
     {
         private TexturePaintAsset _paint;
@@ -23,12 +25,13 @@ namespace SimpleBlend.Editor
         private TexturePaintVisibility _visibility;
         private bool _throughPaint;
         private int _component = -1;
+        private TexturePaintFacing _facing;
 
         internal bool Active => _paint != null;
 
         internal void Begin(TexturePaintTarget target, TexturePaintAtlas atlas, int surface, bool erase, VertexBrushCommand command,
             TextureBrushTip tip = null, TexturePaintVisibility visibility = null, int? materialSection = null, bool throughPaint = false,
-            int? connectedTriangle = null)
+            int? connectedTriangle = null, TexturePaintFacing facing = TexturePaintFacing.WithBrush)
         {
             if (Active) throw new InvalidOperationException("Finish the current texture stroke first.");
             var problem = Problem(target, materialSection);
@@ -39,6 +42,7 @@ namespace SimpleBlend.Editor
             if (atlas.Mesh != paint.Mesh || atlas.MaterialSection != section || atlas.Resolution != paint.Mask.width)
                 throw new ArgumentException("The paint atlas must match the prepared mesh section and mask resolution.", nameof(atlas));
             if (surface < 0 || surface >= paint.SurfaceCount) throw new ArgumentOutOfRangeException(nameof(surface));
+            if ((uint)facing > (uint)TexturePaintFacing.EitherDirection) throw new ArgumentOutOfRangeException(nameof(facing));
             var component = connectedTriangle.HasValue ? atlas.ComponentForTriangle(connectedTriangle.Value) : -1;
             if (connectedTriangle.HasValue && component < 0)
                 throw new ArgumentException("Start connected painting on a triangle in the prepared section.", nameof(connectedTriangle));
@@ -57,6 +61,7 @@ namespace SimpleBlend.Editor
             _visibility = visibility;
             _throughPaint = throughPaint;
             _component = component;
+            _facing = facing;
         }
 
         internal bool AllowsHit(MeshRaycastHit hit) => Active && hit.SubmeshIndex == _atlas.MaterialSection
@@ -89,8 +94,11 @@ namespace SimpleBlend.Editor
                 {
                     var delta = _atlas.WorldPosition(index) - center;
                     var depth = Vector3.Dot(delta, normal);
+                    var alignment = Vector3.Dot(_atlas.WorldNormal(index), normal);
+                    if (_facing == TexturePaintFacing.AgainstBrush) alignment = -alignment;
+                    else if (_facing == TexturePaintFacing.EitherDirection) alignment = Mathf.Abs(alignment);
                     if (Mathf.Abs(depth) > _command.Radius * 0.25f
-                        || Vector3.Dot(_atlas.WorldNormal(index), normal) < 0.25f) continue;
+                        || !float.IsFinite(alignment) || alignment < 0.25f) continue;
                     influence = _tip == null ? _command.EvaluateWeight((delta - normal * depth).magnitude)
                         : _tip.Evaluate(new Vector2(Vector3.Dot(delta, right), Vector3.Dot(delta, up)) / _command.Radius, _command.Falloff)
                             * _command.Strength * _command.Flow;
@@ -147,6 +155,7 @@ namespace SimpleBlend.Editor
             _visibility = null;
             _throughPaint = false;
             _component = -1;
+            _facing = TexturePaintFacing.WithBrush;
             return changed;
         }
 

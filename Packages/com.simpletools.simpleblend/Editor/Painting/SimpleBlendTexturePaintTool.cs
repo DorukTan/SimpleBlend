@@ -328,7 +328,8 @@ namespace SimpleBlend.Editor
                     _strokePaint = Paint;
                     _stroke.Begin(Target, _atlas, Surface, Erase, _command, _strokeTip, _visibility, Section,
                         SimpleBlendBrushSettings.instance.TextureThroughPaint,
-                        SimpleBlendBrushSettings.instance.TextureConnectedOnly ? hit.TriangleIndex : (int?)null);
+                        SimpleBlendBrushSettings.instance.TextureConnectedOnly ? hit.TriangleIndex : (int?)null,
+                        SimpleBlendBrushSettings.instance.TextureFacing);
                     GUIUtility.hotControl = _control = id;
                     _view = view;
                     _sampler.Reset();
@@ -383,7 +384,7 @@ namespace SimpleBlend.Editor
             {
                 var changed = _stroke.End();
                 LastStroke = changed > 0 ? $"Last stroke · Section {Section}: {changed:N0} mask texels changed."
-                    : "Last stroke: no mask texels changed. Check radius, strength/flow, selected surface and projection reach.";
+                    : "Last stroke: no mask texels changed. Check radius, strength/flow, selected surface, Paint reach, Surface scope and Face direction.";
                 LastPaint = _strokePaint;
                 Changed?.Invoke();
             }

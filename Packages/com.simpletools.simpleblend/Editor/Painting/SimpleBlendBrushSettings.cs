@@ -32,6 +32,13 @@ namespace SimpleBlend.Editor
         [SerializeField] private TextureBrushShape _textureBrush = new TextureBrushShape();
         [SerializeField] private bool _textureThroughPaint;
         [SerializeField] private bool _textureConnectedOnly;
+        [SerializeField] private TexturePaintFacing _textureFacing;
+
+        internal TexturePaintFacing TextureFacing
+        {
+            get => (uint)_textureFacing <= (uint)TexturePaintFacing.EitherDirection ? _textureFacing : TexturePaintFacing.WithBrush;
+            set => _textureFacing = (uint)value <= (uint)TexturePaintFacing.EitherDirection ? value : TexturePaintFacing.WithBrush;
+        }
 
         internal bool TextureConnectedOnly
         {
@@ -233,6 +240,7 @@ namespace SimpleBlend.Editor
 
         internal void Normalize()
         {
+            _textureFacing = TextureFacing;
             _adjustmentSensitivity = BrushAdjustmentSession.NormalizeSensitivity(_adjustmentSensitivity);
             _radius = Mathf.Max(0.0001f, _radius);
             _strength = Mathf.Clamp01(_strength);
